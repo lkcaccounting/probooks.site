@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="description" content="Pro Books — Professional Business Accounting & Inventory Management"/>
+<meta name="theme-color" content="#07090f"/>
 <title>Pro Books — Business Accounting</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -45,13 +47,43 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;font-family:var(--fb)}
 body{background:var(--bg);color:var(--text);overflow:hidden;font-size:14px;-webkit-font-smoothing:antialiased}
+
+/* ═══════════════════════════════════════
+   NO-JS / GITHUB PREVIEW FALLBACK
+═══════════════════════════════════════ */
+#nojs-fallback{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);color:var(--text);z-index:9999;padding:24px;text-align:center;
+}
+#nojs-fallback.hidden{display:none!important}
+.nojs-card{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:32px 28px;max-width:480px;width:100%;
+  box-shadow:0 32px 80px rgba(0,0,0,.6);
+}
+.nojs-logo{font-family:var(--fh);font-size:28px;font-weight:800;margin-bottom:8px;letter-spacing:-.5px}
+.nojs-logo em{color:var(--green);font-style:normal}
+.nojs-desc{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6}
+.nojs-steps{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px;text-align:left;font-size:12.5px;color:var(--text2);margin-bottom:18px}
+.nojs-steps strong{color:var(--text);display:block;margin-bottom:6px;font-size:13px}
+.nojs-steps ol{padding-left:18px;margin:0}
+.nojs-steps li{margin:4px 0}
+.nojs-note{font-size:11.5px;color:var(--yellow);background:var(--yellow-g);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:10px 12px;margin-top:8px}
+.nojs-btn{
+  display:inline-block;background:linear-gradient(135deg,var(--green2),var(--green3));
+  color:#fff;text-decoration:none;border-radius:var(--r2);padding:11px 24px;
+  font-size:13px;font-weight:700;margin-top:8px;transition:all .15s;
+}
+.nojs-btn:hover{background:linear-gradient(135deg,var(--green),var(--green2));transform:translateY(-1px)}
+
+/* ── Scrollbar ── */
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
 input,select,textarea,button{font-family:var(--fb)}
 
 /* SCREENS */
-.screen{display:none;height:100dvh}
+.screen{display:none;height:100vh;height:100dvh} /* Fallback + modern */
 .screen.active{display:flex}
 
 /* ═══════════════════════════════════════
@@ -292,7 +324,7 @@ input,select,textarea,button{font-family:var(--fb)}
 .badge{display:inline-flex;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:600}
 
 /* AI */
-.ai-shell{display:flex;flex-direction:column;height:calc(100dvh - 57px);background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.ai-shell{display:flex;flex-direction:column;height:calc(100dvh - 57px);height:calc(100vh - 57px);background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .ai-hd{padding:13px 18px;border-bottom:1px solid var(--border);background:var(--card2);display:flex;align-items:center;gap:11px;flex-shrink:0}
 .ai-hd-icon{font-size:20px}
 .ai-hd-name{font-family:var(--fh);font-size:14px;font-weight:700}
@@ -385,6 +417,29 @@ input,select,textarea,button{font-family:var(--fb)}
 </style>
 </head>
 <body>
+
+<!-- ═══════════════════════════════════════
+   NO-JS / GITHUB PREVIEW FALLBACK (Visible without JS)
+═══════════════════════════════════════ -->
+<div id="nojs-fallback">
+  <div class="nojs-card">
+    <div class="nojs-logo">Pro <em>Books</em></div>
+    <p class="nojs-desc">Professional Business Accounting & Inventory Management for Kenya</p>
+    <div class="nojs-steps">
+      <strong>🚀 To use this app:</strong>
+      <ol>
+        <li>Open this file in a modern browser (Chrome, Firefox, Edge)</li>
+        <li>Enable JavaScript (required for full functionality)</li>
+        <li>Complete the one-time setup with admin password: <code>PB@Admin2025#LKC</code></li>
+        <li>Create your business profile and start managing sales, stock & finances</li>
+      </ol>
+    </div>
+    <p class="nojs-desc" style="margin-bottom:8px"><strong>💡 GitHub Preview Limitation:</strong> GitHub's file viewer doesn't execute JavaScript, so you see this message. The app works perfectly when opened locally or deployed.</p>
+    <p class="nojs-note">⚠️ This is a client-side app. Your data stays in your browser's localStorage. No server required.</p>
+    <a href="#" class="nojs-btn" onclick="document.getElementById('nojs-fallback').classList.add('hidden');return false;">Continue to App →</a>
+  </div>
+</div>
+
 <div id="toast-wrap"></div>
 
 <!-- ════ ADMIN SCREEN ════ -->
@@ -849,6 +904,17 @@ input,select,textarea,button{font-family:var(--fb)}
   </div>
 </div>
 
+<noscript>
+  <style>#nojs-fallback{display:flex!important}</style>
+  <div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#07090f;color:#dde4f0;font-family:Inter,sans-serif;text-align:center;padding:20px;z-index:9999">
+    <div>
+      <h2 style="font-family:Syne,sans-serif;margin-bottom:12px;font-size:24px">Pro Books requires JavaScript</h2>
+      <p style="max-width:400px;margin:0 auto;color:#7a8ba8">This application needs JavaScript enabled to function. Please enable JavaScript and refresh the page.</p>
+      <p style="color:#fbbf24;font-size:13px;margin-top:16px">Note: GitHub's file preview does not support JavaScript.<br/>Open this file in a browser or deploy to GitHub Pages for full functionality.</p>
+    </div>
+  </div>
+</noscript>
+
 <script>
 // ═══════════════════════════════════════════════════════
 //  PRO BOOKS v2  —  Complete App
@@ -882,10 +948,17 @@ function toast(msg,type='success'){
 function showScr(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const s=document.getElementById('screen-'+id);if(s)s.classList.add('active');
+  // Hide no-JS fallback when JS runs
+  const fb=document.getElementById('nojs-fallback');
+  if(fb)fb.classList.add('hidden');
 }
 
 // ── INIT ──────────────────────────────────────────────────
 window.onload=()=>{
+  // Hide no-JS fallback immediately when JS loads
+  const fb=document.getElementById('nojs-fallback');
+  if(fb)fb.classList.add('hidden');
+  
   const s=ld('pb_setup',null);
   if(!s){showScr('admin');}
   else{showScr('login');document.getElementById('login-biz').textContent='Sign in to '+s.bizName;}
