@@ -1,4 +1,3 @@
-cat > /mnt/user-data/outputs/index.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1458,5 +1457,3 @@ document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e
 </script>
 </body>
 </html>
-HTMLEOF
-echo "Done. Size: $(wc -c < /mnt/user-data/outputs/index.html) bytes, Lines: $(wc -l < /mnt/user-data/outputs/index.html)"
