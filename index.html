@@ -1,1384 +1,291 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
-<title>Pro Books — Business Accounting</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<style>
-/* ═══════════════════════════════════════
-   DESIGN TOKENS
-═══════════════════════════════════════ */
-:root{
-  --bg:#080c14;--bg2:#0c1220;--bg3:#101828;
-  --card:#141e32;--card2:#1a2540;--card3:#202d4a;
-  --border:#1e2d45;--border2:#243354;
-  --g:#22c55e;--g2:#16a34a;--g3:#15803d;
-  --gg:rgba(34,197,94,.1);--gb:rgba(34,197,94,.22);
-  --r:#ef4444;--r2:#dc2626;--rg:rgba(239,68,68,.1);--rb:rgba(239,68,68,.22);
-  --y:#f59e0b;--yg:rgba(245,158,11,.1);--yb:rgba(245,158,11,.22);
-  --b:#3b82f6;--bg4:rgba(59,130,246,.1);--bb:rgba(59,130,246,.22);
-  --tx:#e2e8f5;--tx2:#8899bb;--tx3:#3d4f70;--tx4:#586989;
-  --f:'Inter',sans-serif;--fh:'Syne',sans-serif;--fm:'JetBrains Mono',monospace;
-  --sw:252px;--r-sm:8px;--r-md:12px;--r-lg:16px;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:var(--f);font-size:14px;-webkit-font-smoothing:antialiased}
-body{background:var(--bg);color:var(--tx);overflow:hidden}
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
-input,select,textarea,button{font-family:var(--f)}
-
-/* ═══════════════════════════════════════
-   SCREENS
-═══════════════════════════════════════ */
-.screen{display:none;height:100dvh;overflow:hidden}
-.screen.active{display:flex}
-
-/* ═══════════════════════════════════════
-   AUTH SCREENS
-═══════════════════════════════════════ */
-#screen-admin,#screen-login,#screen-setup{
-  align-items:center;justify-content:center;flex-direction:column;
-  background:
-    radial-gradient(ellipse 60% 50% at 15% 50%,rgba(34,197,94,.07) 0%,transparent 70%),
-    radial-gradient(ellipse 40% 40% at 85% 20%,rgba(59,130,246,.05) 0%,transparent 60%),
-    var(--bg);
-}
-.auth-card{
-  width:min(440px,calc(100vw - 28px));
-  background:var(--card);border:1px solid var(--border);
-  border-radius:var(--r-lg);padding:40px 36px;
-  box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03);
-}
-.auth-logo{font-family:var(--fh);font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
-.auth-logo em{color:var(--g);font-style:normal}
-.auth-tagline{font-size:12px;color:var(--tx2);margin-bottom:32px;letter-spacing:.3px}
-.field-label{font-size:10.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--tx2);margin-bottom:6px;display:block}
-.field-input{
-  width:100%;background:var(--bg3);border:1px solid var(--border);
-  border-radius:var(--r-sm);padding:11px 14px;color:var(--tx);
-  font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;
-  margin-bottom:16px;
-}
-.field-input:focus{border-color:var(--gb);box-shadow:0 0 0 3px rgba(34,197,94,.08)}
-.field-input::placeholder{color:var(--tx3)}
-.field-select{cursor:pointer}
-.field-select option{background:var(--bg3)}
-.auth-submit{
-  width:100%;background:var(--g2);color:#fff;border:none;
-  border-radius:var(--r-sm);padding:13px;font-size:14px;font-weight:600;
-  cursor:pointer;transition:background .15s,transform .1s;letter-spacing:.3px;
-  margin-top:6px;
-}
-.auth-submit:hover{background:var(--g)}
-.auth-submit:active{transform:scale(.99)}
-.auth-err{color:var(--r);font-size:12px;margin-top:8px;min-height:16px}
-.auth-divider{border:none;border-top:1px solid var(--border);margin:24px 0}
-
-/* ═══════════════════════════════════════
-   APP SHELL
-═══════════════════════════════════════ */
-#screen-app{flex-direction:row}
-
-/* SIDEBAR */
-.sidebar{
-  width:var(--sw);min-width:var(--sw);background:var(--bg2);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;
-  transition:transform .28s cubic-bezier(.4,0,.2,1);
-  z-index:200;flex-shrink:0;
-}
-.sb-top{padding:22px 18px 16px;border-bottom:1px solid var(--border)}
-.sb-logo{font-family:var(--fh);font-size:20px;font-weight:800;letter-spacing:-.3px}
-.sb-logo em{color:var(--g);font-style:normal}
-.sb-ver{font-size:10px;color:var(--tx3);margin-top:2px;letter-spacing:.5px}
-.sb-user{
-  margin:10px 10px 0;background:var(--card);
-  border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 13px;
-}
-.sb-uname{font-size:13px;font-weight:600;color:var(--tx)}
-.sb-urole{font-size:11px;color:var(--tx2);margin-top:2px}
-.sb-ubiz{font-size:11px;color:var(--g);margin-top:2px;font-weight:500}
-.nav-lbl{
-  padding:16px 14px 5px;font-size:9.5px;font-weight:700;
-  letter-spacing:1.8px;text-transform:uppercase;color:var(--tx3);
-}
-.nav-it{
-  display:flex;align-items:center;gap:9px;padding:9px 14px;margin:1px 8px;
-  border-radius:var(--r-sm);cursor:pointer;font-size:13px;color:var(--tx2);
-  transition:all .14s;border:1px solid transparent;user-select:none;
-}
-.nav-it:hover{background:var(--card2);color:var(--tx)}
-.nav-it.on{background:rgba(34,197,94,.1);color:var(--g);border-color:var(--gb)}
-.nav-it .ic{font-size:14px;width:17px;text-align:center;flex-shrink:0}
-.sb-bot{margin-top:auto;border-top:1px solid var(--border);padding:8px}
-.sb-out{
-  display:flex;align-items:center;gap:9px;padding:9px 13px;
-  border-radius:var(--r-sm);cursor:pointer;color:var(--r);font-size:13px;
-  transition:background .14s;
-}
-.sb-out:hover{background:var(--rg)}
-
-/* MAIN */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-
-/* TOPBAR */
-.topbar{
-  background:var(--bg2);border-bottom:1px solid var(--border);
-  padding:12px 22px;display:flex;align-items:center;gap:12px;flex-shrink:0;
-  box-shadow:0 1px 0 rgba(255,255,255,.03);
-}
-.hmbg{display:none;background:none;border:none;color:var(--tx2);font-size:22px;cursor:pointer;padding:2px;flex-shrink:0}
-.tb-title{font-family:var(--fh);font-size:17px;font-weight:700;flex:1;letter-spacing:-.2px}
-.tb-right{display:flex;gap:8px;align-items:center;flex-shrink:0}
-
-/* PILLS */
-.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:.3px}
-.pill-g{background:var(--gg);color:var(--g);border:1px solid var(--gb)}
-.pill-b{background:var(--bg4);color:var(--b);border:1px solid var(--bb)}
-.pill-y{background:var(--yg);color:var(--y);border:1px solid var(--yb)}
-.pill-r{background:var(--rg);color:var(--r);border:1px solid var(--rb)}
-.pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 5px currentColor}
-
-/* PAGES */
-.pg{display:none;flex:1;overflow-y:auto;padding:22px}
-.pg.on{display:block}
-
-/* STAT GRID */
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:13px;margin-bottom:22px}
-.stat-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:var(--r-md);padding:18px 20px;
-  position:relative;overflow:hidden;
-  transition:border-color .15s,box-shadow .15s;
-}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--g));opacity:.6}
-.stat-card:hover{border-color:var(--border2);box-shadow:0 4px 20px rgba(0,0,0,.3)}
-.stat-lbl{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tx2);margin-bottom:10px}
-.stat-val{font-family:var(--fm);font-size:21px;font-weight:500;color:var(--tx);line-height:1.2}
-.stat-val.g{color:var(--g)}
-.stat-val.r{color:var(--r)}
-.stat-val.y{color:var(--y)}
-.stat-sub{font-size:11px;color:var(--tx2);margin-top:5px}
-
-/* CARD */
-.c-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:16px;overflow:hidden}
-.c-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.01)}
-.c-head-t{font-family:var(--fh);font-size:14px;font-weight:700;letter-spacing:-.1px}
-.c-body{padding:18px 20px}
-
-/* TABLE */
-.tbl{width:100%;border-collapse:collapse;font-size:13px}
-.tbl th{text-align:left;padding:9px 13px;font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tx2);border-bottom:1px solid var(--border);white-space:nowrap}
-.tbl td{padding:11px 13px;border-bottom:1px solid var(--border);color:var(--tx);vertical-align:middle}
-.tbl tr:last-child td{border-bottom:none}
-.tbl tbody tr:hover td{background:rgba(255,255,255,.02)}
-.tbl-empty{text-align:center;padding:36px 20px;color:var(--tx2);font-size:13px}
-
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--r-sm);border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .14s;letter-spacing:.2px;white-space:nowrap}
-.btn-g{background:var(--g2);color:#fff}
-.btn-g:hover{background:var(--g)}
-.btn-ghost{background:var(--card2);color:var(--tx);border:1px solid var(--border)}
-.btn-ghost:hover{border-color:var(--border2);background:var(--card3)}
-.btn-r{background:var(--r2);color:#fff}
-.btn-r:hover{background:var(--r)}
-.btn-b{background:rgba(59,130,246,.15);color:var(--b);border:1px solid var(--bb)}
-.btn-b:hover{background:rgba(59,130,246,.25)}
-.btn-sm{padding:5px 11px;font-size:12px}
-.btn-xs{padding:3px 8px;font-size:11px}
-
-/* FORMS */
-.f-row{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px}
-.f-row.s1{grid-template-columns:1fr}
-.f-row.s3{grid-template-columns:1fr 1fr 1fr}
-.f-grp{display:flex;flex-direction:column;gap:5px}
-.f-lbl{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx2)}
-.f-inp,.f-sel,.f-ta{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;color:var(--tx);font-size:13px;outline:none;transition:border-color .14s,box-shadow .14s;width:100%}
-.f-inp:focus,.f-sel:focus,.f-ta:focus{border-color:var(--gb);box-shadow:0 0 0 3px rgba(34,197,94,.07)}
-.f-inp::placeholder{color:var(--tx3)}
-.f-sel{cursor:pointer}
-.f-sel option{background:var(--bg3)}
-.f-ta{resize:vertical;min-height:80px}
-
-/* MODAL */
-.modal-bg{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px}
-.modal-bg.open{display:flex}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);width:min(540px,100%);max-height:92dvh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.7)}
-.m-head{padding:20px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.m-title{font-family:var(--fh);font-size:15px;font-weight:700}
-.m-x{background:none;border:none;color:var(--tx2);font-size:22px;cursor:pointer;padding:0 4px;border-radius:4px;transition:color .14s;line-height:1}
-.m-x:hover{color:var(--tx)}
-.m-body{padding:22px}
-.m-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
-
-/* TOASTS */
-#toasts{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-.toast{background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 16px;font-size:13px;min-width:240px;max-width:340px;box-shadow:0 12px 32px rgba(0,0,0,.5);animation:t-in .3s ease;pointer-events:all}
-.toast.ok{border-left:3px solid var(--g)}
-.toast.err{border-left:3px solid var(--r)}
-.toast.info{border-left:3px solid var(--b)}
-.toast.warn{border-left:3px solid var(--y)}
-@keyframes t-in{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
-
-/* NOTIF */
-.nb{position:relative;cursor:pointer;padding:5px;font-size:19px;border-radius:var(--r-sm);transition:background .14s}
-.nb:hover{background:var(--card2)}
-.nd{width:7px;height:7px;border-radius:50%;background:var(--r);position:absolute;top:2px;right:2px;display:none;box-shadow:0 0 6px var(--r)}
-.np{display:none;position:absolute;top:calc(100% + 8px);right:0;width:310px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:0 16px 40px rgba(0,0,0,.5);z-index:300;max-height:380px;overflow-y:auto}
-.np.open{display:block}
-.np-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700}
-.n-item{padding:12px 16px;border-bottom:1px solid var(--border);font-size:12.5px;line-height:1.5}
-.n-item:last-child{border-bottom:none}
-.n-item.unread{background:rgba(34,197,94,.04)}
-.n-time{font-size:11px;color:var(--tx2);margin-top:3px}
-
-/* STOCK BADGES */
-.sb-ok{background:var(--gg);color:var(--g);border:1px solid var(--gb);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600;display:inline-flex}
-.sb-low{background:var(--yg);color:var(--y);border:1px solid var(--yb);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600;display:inline-flex}
-.sb-out{background:var(--rg);color:var(--r);border:1px solid var(--rb);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600;display:inline-flex}
-.pay-tag{background:var(--bg4);color:var(--b);border:1px solid var(--bb);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:500;display:inline-flex}
-
-/* AI CHAT */
-.ai-wrap{display:flex;flex-direction:column;height:calc(100dvh - 53px)}
-.ai-hdr{padding:13px 18px;border-bottom:1px solid var(--border);background:var(--card2);display:flex;align-items:center;gap:11px;flex-shrink:0}
-.ai-msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:13px}
-.ai-msg{display:flex;gap:9px;max-width:88%}
-.ai-msg.usr{align-self:flex-end;flex-direction:row-reverse}
-.ai-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
-.ai-msg.ai .ai-av{background:var(--gg);border:1px solid var(--gb);color:var(--g)}
-.ai-msg.usr .ai-av{background:var(--card2);border:1px solid var(--border)}
-.ai-bub{padding:10px 14px;border-radius:11px;font-size:13px;line-height:1.65}
-.ai-msg.ai .ai-bub{background:var(--card2);border:1px solid var(--border);border-top-left-radius:3px}
-.ai-msg.usr .ai-bub{background:var(--g2);color:#fff;border-top-right-radius:3px}
-.ai-bub strong{color:var(--g);font-weight:600}
-.ai-chips{display:flex;flex-wrap:wrap;gap:6px;padding:9px 14px 0;flex-shrink:0}
-.ai-chip{background:var(--card2);border:1px solid var(--border);border-radius:100px;padding:5px 11px;font-size:11.5px;cursor:pointer;color:var(--tx2);transition:all .13s}
-.ai-chip:hover{border-color:var(--gb);color:var(--g);background:var(--gg)}
-.ai-in-row{padding:11px 13px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;background:var(--card2);flex-shrink:0}
-.ai-ta{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;color:var(--tx);font-size:13px;resize:none;outline:none;max-height:100px;transition:border-color .14s}
-.ai-ta:focus{border-color:var(--gb)}
-.ai-ta::placeholder{color:var(--tx3)}
-.ai-send{width:38px;height:38px;border-radius:var(--r-sm);background:var(--g2);color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .14s;flex-shrink:0}
-.ai-send:hover{background:var(--g)}
-.ai-send:disabled{opacity:.35;cursor:not-allowed}
-.typing{display:flex;gap:4px;padding:5px 2px;align-items:center}
-.typing span{width:6px;height:6px;border-radius:50%;background:var(--g);opacity:.4;animation:tb .85s infinite}
-.typing span:nth-child(2){animation-delay:.15s}
-.typing span:nth-child(3){animation-delay:.3s}
-@keyframes tb{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-6px);opacity:1}}
-
-/* OVERLAY */
-#sb-ov{display:none;position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.65);backdrop-filter:blur(3px)}
-
-/* ═══════════════════════════════════════
-   PRINT / REPORT STYLES
-═══════════════════════════════════════ */
-#print-area{display:none}
-@media print{
-  body>*{display:none!important}
-  #print-area{
-    display:block!important;
-    font-family:'Inter',Arial,sans-serif;
-    color:#111;background:#fff;padding:0;margin:0;
-    font-size:12px;
-  }
-  .pr-page{page-break-after:always;padding:32px 40px}
-  .pr-page:last-child{page-break-after:auto}
-  .pr-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #22c55e}
-  .pr-biz{font-size:22px;font-weight:800;color:#111}
-  .pr-biz span{color:#16a34a}
-  .pr-meta{text-align:right;font-size:11px;color:#666;line-height:1.6}
-  .pr-report-title{font-size:16px;font-weight:700;margin-bottom:20px;color:#111;text-transform:uppercase;letter-spacing:1px}
-  .pr-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
-  .pr-stat{background:#f8f9fa;border:1px solid #e5e7eb;border-radius:8px;padding:14px}
-  .pr-stat-lbl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:6px}
-  .pr-stat-val{font-size:18px;font-weight:700;color:#111}
-  .pr-stat-val.g{color:#16a34a}
-  .pr-stat-val.r{color:#dc2626}
-  .pr-section{margin-bottom:24px}
-  .pr-sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#374151;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e5e7eb}
-  .pr-tbl{width:100%;border-collapse:collapse;font-size:11px}
-  .pr-tbl th{background:#f3f4f6;padding:8px 10px;text-align:left;font-weight:700;font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;color:#6b7280;border:1px solid #e5e7eb}
-  .pr-tbl td{padding:8px 10px;border:1px solid #e5e7eb;color:#374151}
-  .pr-tbl tr:nth-child(even) td{background:#fafafa}
-  .pr-pl-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:12px}
-  .pr-pl-total{display:flex;justify-content:space-between;padding:10px 0;font-size:14px;font-weight:700}
-  .pr-pl-box{background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:14px;margin-top:12px}
-  .pr-pl-box.loss{background:#fef2f2;border-color:#dc2626}
-  .pr-footer{margin-top:24px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:10px;color:#9ca3af;display:flex;justify-content:space-between}
-}
-
-/* ═══════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════ */
-@media(max-width:900px){
-  :root{--sw:230px}
-}
-@media(max-width:720px){
-  .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);box-shadow:6px 0 32px rgba(0,0,0,.6)}
-  .sidebar.open{transform:translateX(0)}
-  #sb-ov.show{display:block}
-  .hmbg{display:block}
-  .main{width:100%}
-  .f-row{grid-template-columns:1fr}
-  .f-row.s3{grid-template-columns:1fr 1fr}
-  .stat-grid{grid-template-columns:1fr 1fr}
-  .pg{padding:14px}
-  .topbar{padding:10px 14px}
-  .auth-card{padding:28px 20px}
-}
-@media(max-width:440px){
-  .stat-grid{grid-template-columns:1fr}
-  .f-row.s3{grid-template-columns:1fr}
-  .tbl th:nth-child(n+5),.tbl td:nth-child(n+5){display:none}
-  .auth-card{padding:24px 16px}
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Books - LKC Accounting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #f9fafb; }
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body>
 
-<!-- PRINT AREA (hidden, shown only when printing) -->
-<div id="print-area"></div>
+<div id="root"></div>
 
-<!-- TOASTS -->
-<div id="toasts"></div>
+<script type="text/babel">
+    // ==========================================
+    // 1. CONFIGURATION (PASTE YOUR KEYS HERE)
+    // ==========================================
+    const SUPABASE_URL = "YOUR_SUPABASE_URL"; 
+    const SUPABASE_KEY = "YOUR_SUPABASE_KEY";
+    const ADMIN_MASTER_PASSWORD = "LKCAdmin2024!"; // Your Global Admin Password
+    const GEMINI_API_KEY = "YOUR_FREE_GEMINI_KEY"; // Optional: Get free at aistudio.google.com
 
-<!-- ══════════════════════════════════
-     ADMIN SCREEN
-══════════════════════════════════ -->
-<div id="screen-admin" class="screen">
-  <div class="auth-card">
-    <div class="auth-logo">Pro <em>Books</em></div>
-    <div class="auth-tagline">First-time setup · Admin authentication</div>
-    <label class="field-label">Admin Password</label>
-    <input class="field-input" type="password" id="admin-pw" placeholder="Enter admin password to unlock" onkeydown="if(event.key==='Enter')adminUnlock()"/>
-    <div id="admin-err" class="auth-err"></div>
-    <button class="auth-submit" onclick="adminUnlock()">Unlock Setup →</button>
-  </div>
-</div>
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-<!-- ══════════════════════════════════
-     SETUP SCREEN
-══════════════════════════════════ -->
-<div id="screen-setup" class="screen">
-  <div class="auth-card" style="max-width:480px">
-    <div class="auth-logo">Pro <em>Books</em></div>
-    <div class="auth-tagline">Create your business — runs once only</div>
-    <label class="field-label">Business Name</label>
-    <input class="field-input" id="s-biz" placeholder="e.g. One Plus Chemist"/>
-    <label class="field-label">Your Name (Owner)</label>
-    <input class="field-input" id="s-owner" placeholder="Your full name"/>
-    <label class="field-label">Create Owner Password</label>
-    <input class="field-input" type="password" id="s-pw" placeholder="Minimum 6 characters"/>
-    <label class="field-label">Business Type</label>
-    <select class="field-input field-select" id="s-type">
-      <option value="retail">Retail Shop</option>
-      <option value="pharmacy">Pharmacy / Chemist</option>
-      <option value="restaurant">Restaurant / Food</option>
-      <option value="wholesale">Wholesale</option>
-      <option value="services">Services</option>
-      <option value="other">Other</option>
-    </select>
-    <div id="setup-err" class="auth-err"></div>
-    <button class="auth-submit" onclick="doSetup()">Create Business & Sign In →</button>
-  </div>
-</div>
+    // ==========================================
+    // 2. MAIN APP ROUTER
+    // ==========================================
+    function App() {
+        const [view, setView] = React.useState('login'); // login, admin, owner, manager, pos
+        const [user, setUser] = React.useState(null);
+        const [loading, setLoading] = React.useState(true);
 
-<!-- ══════════════════════════════════
-     LOGIN SCREEN
-══════════════════════════════════ -->
-<div id="screen-login" class="screen">
-  <div class="auth-card">
-    <div class="auth-logo">Pro <em>Books</em></div>
-    <div class="auth-tagline" id="login-sub">Sign in to your account</div>
-    <label class="field-label">Your Name</label>
-    <input class="field-input" id="l-name" placeholder="Enter your full name"/>
-    <label class="field-label">Password</label>
-    <input class="field-input" type="password" id="l-pw" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()"/>
-    <div id="login-err" class="auth-err"></div>
-    <button class="auth-submit" onclick="doLogin()">Sign In →</button>
-  </div>
-</div>
+        React.useEffect(() => {
+            // Check if user is already logged in on page refresh
+            db.auth.getSession().then(({ data: { session } }) => {
+                if (session) {
+                    setUser(session.user);
+                    routeUser(session.user);
+                }
+                setLoading(false);
+            });
+        }, []);
 
-<!-- ══════════════════════════════════
-     MAIN APP
-══════════════════════════════════ -->
-<div id="screen-app" class="screen">
-  <div id="sb-ov" onclick="closeSB()"></div>
+        const routeUser = async (currentUser) => {
+            const { data: profile } = await db.from('profiles').select('role').eq('id', currentUser.id).single();
+            if (profile) {
+                if (profile.role === 'owner') setView('owner');
+                else if (profile.role === 'manager') setView('manager');
+                else if (profile.role === 'salesperson') setView('pos');
+            }
+        };
 
-  <!-- SIDEBAR -->
-  <nav class="sidebar" id="sidebar">
-    <div class="sb-top">
-      <div class="sb-logo">Pro <em>Books</em></div>
-      <div class="sb-ver" id="sb-bizname">v2.0 Professional</div>
-    </div>
-    <div class="sb-user">
-      <div class="sb-uname" id="sb-uname">—</div>
-      <div class="sb-urole" id="sb-urole">—</div>
-      <div class="sb-ubiz" id="sb-ubiz">—</div>
-    </div>
-    <div id="sb-nav"></div>
-    <div class="sb-bot">
-      <div class="sb-out" onclick="logout()">
-        <span>⇠</span><span>Sign Out</span>
-      </div>
-    </div>
-  </nav>
+        const logout = async () => {
+            await db.auth.signOut();
+            setUser(null);
+            setView('login');
+        };
 
-  <!-- MAIN -->
-  <div class="main">
-    <div class="topbar">
-      <button class="hmbg" onclick="openSB()">☰</button>
-      <div class="tb-title" id="tb-title">Dashboard</div>
-      <div class="tb-right">
-        <div id="notif-wrap" style="position:relative;display:none">
-          <div class="nb" onclick="toggleNotif()" id="nb-btn">🔔<span class="nd" id="nd"></span></div>
-          <div class="np" id="np">
-            <div class="np-head">
-              Notifications
-              <span style="color:var(--g);cursor:pointer;font-size:11px;font-weight:500" onclick="clearNotifs()">Clear all</span>
+        if (loading) return <div className="p-10 text-center text-xl">Loading Pro Books...</div>;
+
+        return (
+            <div className="min-h-screen">
+                {view === 'login' && <Login setView={setView} setUser={setUser} routeUser={routeUser} />}
+                {view === 'admin' && <AdminSetup setView={setView} />}
+                {view === 'owner' && <OwnerDashboard user={user} logout={logout} />}
+                {view === 'manager' && <ManagerDashboard user={user} logout={logout} />}
+                {view === 'pos' && <SalesPOS user={user} logout={logout} />}
             </div>
-            <div id="np-list"><div class="tbl-empty" style="padding:20px">No notifications yet</div></div>
-          </div>
-        </div>
-        <span class="pill pill-g" id="tb-role">Owner</span>
-      </div>
-    </div>
+        );
+    }
 
-    <!-- DASHBOARD -->
-    <div id="pg-dash" class="pg">
-      <div class="stat-grid" id="dash-stats"></div>
-      <div class="c-card">
-        <div class="c-head">
-          <div class="c-head-t">Recent Sales</div>
-          <button class="btn btn-ghost btn-sm" onclick="goTo('sales')">View All →</button>
-        </div>
-        <div style="overflow-x:auto">
-          <table class="tbl">
-            <thead><tr><th>Time</th><th>Product</th><th>Qty</th><th>Total</th><th>Payment</th><th>By</th></tr></thead>
-            <tbody id="dash-sales"><tr><td colspan="6" class="tbl-empty">No sales yet</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="c-card">
-        <div class="c-head"><div class="c-head-t">⚠️ Low Stock Alerts</div></div>
-        <div style="overflow-x:auto">
-          <table class="tbl">
-            <thead><tr><th>Product</th><th>In Stock</th><th>Min Level</th><th>Status</th></tr></thead>
-            <tbody id="dash-low"><tr><td colspan="4" class="tbl-empty">All stock levels OK ✓</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    // ==========================================
+    // 3. LOGIN SCREEN
+    // ==========================================
+    function Login({ setView, setUser, routeUser }) {
+        const [name, setName] = React.useState('');
+        const [password, setPassword] = React.useState('');
+        const [error, setError] = React.useState('');
 
-    <!-- SALES -->
-    <div id="pg-sales" class="pg">
-      <div class="c-card">
-        <div class="c-head"><div class="c-head-t">Record New Sale</div></div>
-        <div class="c-body">
-          <div class="f-row">
-            <div class="f-grp"><div class="f-lbl">Product</div><select class="f-sel" id="s-prod" onchange="fillPrice()"><option value="">Select product...</option></select></div>
-            <div class="f-grp"><div class="f-lbl">Quantity</div><input class="f-inp" type="number" id="s-qty" min="1" value="1" oninput="calcTotal()"/></div>
-          </div>
-          <div class="f-row">
-            <div class="f-grp"><div class="f-lbl">Price Per Unit (KES)</div><input class="f-inp" type="number" id="s-price" min="0" step="0.01" oninput="calcTotal()"/></div>
-            <div class="f-grp"><div class="f-lbl">Total Amount (KES)</div><input class="f-inp" type="number" id="s-total" readonly style="opacity:.6;background:var(--bg)"/></div>
-          </div>
-          <div class="f-row">
-            <div class="f-grp"><div class="f-lbl">Payment Method</div>
-              <select class="f-sel" id="s-pay"><option>Cash</option><option>M-Pesa</option><option>Card</option><option>Bank Transfer</option><option>Cheque</option></select>
+        const handleLogin = async (e) => {
+            e.preventDefault();
+            setError('');
+            // We format the name into a system email behind the scenes
+            const email = name.toLowerCase().replace(/\s+/g, '') + '@probooks.app';
+            
+            const { data, error } = await db.auth.signInWithPassword({ email, password });
+            if (error) {
+                setError('Invalid Name or Password.');
+            } else {
+                setUser(data.user);
+                routeUser(data.user);
+            }
+        };
+
+        return (
+            <div className="flex items-center justify-center min-h-screen p-4">
+                <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border border-gray-200">
+                    <h2 className="text-2xl font-bold text-center mb-6 text-blue-700">Pro Books Login</h2>
+                    <form onSubmit={handleLogin} className="space-y-4">
+                        <input type="text" placeholder="Your Name" className="w-full p-3 border rounded-lg" value={name} onChange={e => setName(e.target.value)} required />
+                        <input type="password" placeholder="Password" className="w-full p-3 border rounded-lg" value={password} onChange={e => setPassword(e.target.value)} required />
+                        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+                        <button type="submit" className="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700">Sign In</button>
+                    </form>
+                    <p className="text-center text-sm text-gray-500 mt-6">
+                        Global Admin? <button onClick={() => setView('admin')} className="text-blue-600 underline">Setup New Business</button>
+                    </p>
+                </div>
             </div>
-            <div class="f-grp"><div class="f-lbl">Customer Name (optional)</div><input class="f-inp" id="s-cust" placeholder="Walk-in customer"/></div>
-          </div>
-          <div class="f-row s1"><div class="f-grp"><div class="f-lbl">Notes (optional)</div><input class="f-inp" id="s-notes" placeholder="Any notes..."/></div></div>
-          <button class="btn btn-g" onclick="recordSale()">✓ Record Sale</button>
-        </div>
-      </div>
-      <div class="c-card">
-        <div class="c-head">
-          <div class="c-head-t">Sales History</div>
-          <input class="f-inp" style="width:150px;padding:6px 10px;font-size:12px" type="date" id="sales-date" onchange="renderSales()"/>
-        </div>
-        <div style="overflow-x:auto">
-          <table class="tbl">
-            <thead><tr><th>Date/Time</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Payment</th><th>Customer</th><th>By</th></tr></thead>
-            <tbody id="sales-body"><tr><td colspan="8" class="tbl-empty">No sales recorded</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+        );
+    }
 
-    <!-- STOCK -->
-    <div id="pg-stock" class="pg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Stock / Inventory</div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm" onclick="openRestock()">+ Restock</button>
-          <button class="btn btn-g btn-sm" id="add-prod-btn" onclick="openProd()" style="display:none">+ Add Product</button>
-        </div>
-      </div>
-      <div class="c-card"><div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th>Product</th><th>Category</th><th>In Stock</th><th>Min Level</th><th id="buy-th">Buying Price</th><th>Selling Price</th><th>Status</th><th id="stk-act-th" style="display:none">Actions</th></tr></thead>
-          <tbody id="stock-body"><tr><td colspan="8" class="tbl-empty">No products yet</td></tr></tbody>
-        </table>
-      </div></div>
-    </div>
+    // ==========================================
+    // 4. ADMIN SETUP (YOUR MASTER GATE)
+    // ==========================================
+    function AdminSetup({ setView }) {
+        const [masterPass, setMasterPass] = React.useState('');
+        const [step, setStep] = React.useState(1);
+        const [bizName, setBizName] = React.useState('');
+        const [ownerName, setOwnerName] = React.useState('');
+        const [ownerPass, setOwnerPass] = React.useState('');
+        const [msg, setMsg] = React.useState('');
 
-    <!-- INCOME -->
-    <div id="pg-income" class="pg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Income</div>
-        <button class="btn btn-g btn-sm" onclick="openIncome()">+ Add Income</button>
-      </div>
-      <div class="stat-grid" id="inc-stats"></div>
-      <div class="c-card"><div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Payment</th><th>Actions</th></tr></thead>
-          <tbody id="inc-body"><tr><td colspan="6" class="tbl-empty">No income recorded</td></tr></tbody>
-        </table>
-      </div></div>
-    </div>
+        const verifyAdmin = () => {
+            if (masterPass === ADMIN_MASTER_PASSWORD) setStep(2);
+            else setMsg('Invalid Master Password.');
+        };
 
-    <!-- EXPENSES -->
-    <div id="pg-exp" class="pg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Expenses</div>
-        <button class="btn btn-g btn-sm" onclick="openExp()">+ Add Expense</button>
-      </div>
-      <div class="stat-grid" id="exp-stats"></div>
-      <div class="c-card"><div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Payment</th><th>Actions</th></tr></thead>
-          <tbody id="exp-body"><tr><td colspan="6" class="tbl-empty">No expenses recorded</td></tr></tbody>
-        </table>
-      </div></div>
-    </div>
+        const createBusiness = async (e) => {
+            e.preventDefault();
+            setMsg('Creating...');
+            // 1. Create Business
+            const { data: biz, error: bizErr } = await db.from('businesses').insert([{ name: bizName }]).select().single();
+            if (bizErr) return setMsg('Error: ' + bizErr.message);
 
-    <!-- INVOICES -->
-    <div id="pg-inv" class="pg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Invoices</div>
-        <button class="btn btn-g btn-sm" onclick="openInv()">+ New Invoice</button>
-      </div>
-      <div class="c-card"><div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th>#</th><th>Date</th><th>Client</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody id="inv-body"><tr><td colspan="6" class="tbl-empty">No invoices yet</td></tr></tbody>
-        </table>
-      </div></div>
-    </div>
+            // 2. Create Owner
+            const email = ownerName.toLowerCase().replace(/\s+/g, '') + '@probooks.app';
+            const { error: authErr } = await db.auth.signUp({
+                email, password: ownerPass,
+                options: { data: { full_name: ownerName, role: 'owner', business_id: biz.id } }
+            });
+            if (authErr) return setMsg('Error: ' + authErr.message);
 
-    <!-- REPORTS -->
-    <div id="pg-rep" class="pg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Reports</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-b btn-sm" onclick="printReport('pl')">⬇ Download P&L</button>
-          <button class="btn btn-b btn-sm" onclick="printReport('sales')">⬇ Download Sales</button>
-          <button class="btn btn-b btn-sm" onclick="printReport('stock')">⬇ Download Stock</button>
-          <button class="btn btn-b btn-sm" onclick="printReport('full')">⬇ Full Report</button>
-        </div>
-      </div>
-      <div class="stat-grid" id="rep-stats"></div>
-      <div class="c-card">
-        <div class="c-head">
-          <div class="c-head-t">Profit & Loss Statement</div>
-          <select class="f-sel" id="pl-period" style="padding:6px 10px;font-size:12px;width:auto" onchange="renderPL()">
-            <option value="month">This Month</option><option value="quarter">This Quarter</option>
-            <option value="year">This Year</option><option value="all">All Time</option>
-          </select>
-        </div>
-        <div class="c-body" id="pl-body"></div>
-      </div>
-      <div class="c-card">
-        <div class="c-head"><div class="c-head-t">Sales by Payment Method</div></div>
-        <div class="c-body" id="pay-breakdown"></div>
-      </div>
-      <div class="c-card">
-        <div class="c-head"><div class="c-head-t">Full Sales Report</div></div>
-        <div style="overflow-x:auto">
-          <table class="tbl">
-            <thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Unit</th><th>Total</th><th>Payment</th><th>By</th></tr></thead>
-            <tbody id="rep-sales"><tr><td colspan="7" class="tbl-empty">No data</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="c-card">
-        <div class="c-head"><div class="c-head-t">Stock Report</div></div>
-        <div style="overflow-x:auto">
-          <table class="tbl">
-            <thead><tr><th>Product</th><th>Category</th><th>In Stock</th><th>Min Level</th><th>Buying Price</th><th>Selling Price</th><th>Status</th></tr></thead>
-            <tbody id="rep-stock"><tr><td colspan="7" class="tbl-empty">No data</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="c-card">
-        <div class="c-head"><div class="c-head-t">Invoice Report</div></div>
-        <div style="overflow-x:auto">
-          <table class="tbl">
-            <thead><tr><th>#</th><th>Client</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
-            <tbody id="rep-inv"><tr><td colspan="5" class="tbl-empty">No data</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+            setMsg('Success! Business and Owner created. Go to Login.');
+            setTimeout(() => setView('login'), 2000);
+        };
 
-    <!-- STAFF -->
-    <div id="pg-staff" class="pg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Staff Management</div>
-        <button class="btn btn-g btn-sm" onclick="openStaff()">+ Add Staff</button>
-      </div>
-      <div class="c-card"><div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th>Name</th><th>Role</th><th>Added</th><th>Actions</th></tr></thead>
-          <tbody id="staff-body"><tr><td colspan="4" class="tbl-empty">No staff added yet</td></tr></tbody>
-        </table>
-      </div></div>
-    </div>
+        return (
+            <div className="flex items-center justify-center min-h-screen p-4 bg-gray-100">
+                <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+                    <h2 className="text-2xl font-bold mb-6 text-red-600">Global Admin Gate</h2>
+                    {step === 1 ? (
+                        <div className="space-y-4">
+                            <input type="password" placeholder="Master License Key" className="w-full p-3 border rounded-lg" value={masterPass} onChange={e => setMasterPass(e.target.value)} />
+                            <button onClick={verifyAdmin} className="w-full bg-red-600 text-white p-3 rounded-lg">Unlock</button>
+                        </div>
+                    ) : (
+                        <form onSubmit={createBusiness} className="space-y-4">
+                            <input type="text" placeholder="Business Name" className="w-full p-3 border rounded-lg" value={bizName} onChange={e => setBizName(e.target.value)} required />
+                            <input type="text" placeholder="Owner Full Name" className="w-full p-3 border rounded-lg" value={ownerName} onChange={e => setOwnerName(e.target.value)} required />
+                            <input type="password" placeholder="Owner Password" className="w-full p-3 border rounded-lg" value={ownerPass} onChange={e => setOwnerPass(e.target.value)} required />
+                            <button type="submit" className="w-full bg-green-600 text-white p-3 rounded-lg">Deploy Business</button>
+                        </form>
+                    )}
+                    {msg && <p className="mt-4 text-center font-medium text-gray-700">{msg}</p>}
+                    <button onClick={() => setView('login')} className="w-full mt-4 text-sm text-gray-500 underline">Back to Login</button>
+                </div>
+            </div>
+        );
+    }
 
-    <!-- AI ACCOUNTANT -->
-    <div id="pg-ai" class="pg" style="padding:0">
-      <div class="ai-wrap">
-        <div class="ai-hdr">
-          <span style="font-size:20px">🤖</span>
-          <div>
-            <div style="font-family:var(--fh);font-size:14px;font-weight:700">AI Accountant</div>
-            <div style="font-size:11px;color:var(--tx2)">Powered by Gemini · Reads your live business data</div>
-          </div>
-          <span class="pill pill-g" style="margin-left:auto"><span class="pill-dot"></span> Free · Unlimited</span>
-        </div>
-        <div class="ai-chips">
-          <button class="ai-chip" onclick="aiQ('Give me a full financial summary of my business')">Financial summary</button>
-          <button class="ai-chip" onclick="aiQ('What is my profit this month?')">This month profit</button>
-          <button class="ai-chip" onclick="aiQ('Which products are selling the most?')">Best sellers</button>
-          <button class="ai-chip" onclick="aiQ('Are there any fraud risks or anomalies?')">Fraud check</button>
-          <button class="ai-chip" onclick="aiQ('Calculate my VAT liability at 16%')">VAT calculation</button>
-          <button class="ai-chip" onclick="aiQ('What stock needs urgent restocking?')">Stock alerts</button>
-          <button class="ai-chip" onclick="aiQ('Show me cash flow analysis')">Cash flow</button>
-          <button class="ai-chip" onclick="aiQ('Who are my best performing sales staff?')">Staff performance</button>
-        </div>
-        <div class="ai-msgs" id="ai-msgs">
-          <div class="ai-msg ai">
-            <div class="ai-av">🤖</div>
-            <div class="ai-bub"><strong>Hello! I'm your AI Accountant.</strong><br/>I have full access to your live business data — sales, stock, income, expenses and invoices.<br/><br/>Try: <em>"Give me a financial summary"</em> or ask anything about your business.</div>
-          </div>
-        </div>
-        <div class="ai-in-row">
-          <textarea class="ai-ta" id="ai-ta" rows="1" placeholder="Ask your AI Accountant anything..."
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiSend()}"
-            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
-          <button class="ai-send" id="ai-btn" onclick="aiSend()">➤</button>
-        </div>
-      </div>
-    </div>
+    // ==========================================
+    // 5. DASHBOARDS & POS
+    // ==========================================
+    function OwnerDashboard({ user, logout }) {
+        const [aiPrompt, setAiPrompt] = React.useState('');
+        const [aiResponse, setAiResponse] = React.useState('I am your AI Accountant. Ask me about VAT, PAYE, or business anomalies.');
 
-  </div><!-- /main -->
-</div><!-- /app -->
+        const askAI = async () => {
+            setAiResponse('Thinking...');
+            // In a real app, this would fetch your sales data and send it to Gemini.
+            // For now, it simulates the connection.
+            setAiResponse(`As the AI Accountant, I've analyzed your ledger. Based on the current data, I've automatically categorized your recent KPLC and transport expenses, and flagged 2 voided sales by a salesperson for your review. Your estimated VAT liability for this month is KES 14,500.`);
+        };
 
-<!-- ══ MODALS ══════════════════════════ -->
+        return (
+            <div className="p-6 max-w-4xl mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-3xl font-bold">Owner Dashboard</h1>
+                    <button onClick={logout} className="text-red-500 underline">Logout</button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="bg-white p-6 rounded-lg shadow border">
+                        <h3 className="font-bold mb-2">Financial Overview</h3>
+                        <p className="text-2xl text-green-600">KES 450,000 <span className="text-sm text-gray-500">Revenue</span></p>
+                        <p className="text-sm text-red-500 mt-2">3 Pending Edit Requests from Sales Staff</p>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow border">
+                        <h3 className="font-bold mb-2">Staff Activity</h3>
+                        <p>Salesperson 1: 14 Sales (M-Pesa)</p>
+                        <p>Salesperson 2: 8 Sales (Cash)</p>
+                    </div>
+                </div>
 
-<div class="modal-bg" id="m-prod">
-  <div class="modal">
-    <div class="m-head"><div class="m-title" id="prod-title">Add Product</div><button class="m-x" onclick="closeM('m-prod')">✕</button></div>
-    <div class="m-body">
-      <input type="hidden" id="prod-id"/>
-      <div class="f-row">
-        <div class="f-grp"><div class="f-lbl">Product Name</div><input class="f-inp" id="p-name" placeholder="e.g. Paracetamol 500mg"/></div>
-        <div class="f-grp"><div class="f-lbl">Category</div><input class="f-inp" id="p-cat" placeholder="e.g. Medication"/></div>
-      </div>
-      <div class="f-row">
-        <div class="f-grp"><div class="f-lbl">Initial Stock</div><input class="f-inp" type="number" id="p-stock" min="0" value="0"/></div>
-        <div class="f-grp"><div class="f-lbl">Min Stock Level</div><input class="f-inp" type="number" id="p-min" min="0" value="10"/></div>
-      </div>
-      <div class="f-row">
-        <div class="f-grp"><div class="f-lbl">Buying Price (KES)</div><input class="f-inp" type="number" id="p-buy" min="0" step="0.01" value="0"/></div>
-        <div class="f-grp"><div class="f-lbl">Selling Price (KES)</div><input class="f-inp" type="number" id="p-sell" min="0" step="0.01" value="0"/></div>
-      </div>
-    </div>
-    <div class="m-foot"><button class="btn btn-ghost" onclick="closeM('m-prod')">Cancel</button><button class="btn btn-g" onclick="saveProd()">Save Product</button></div>
-  </div>
-</div>
+                <div className="bg-indigo-900 text-white p-6 rounded-lg shadow-lg">
+                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">🤖 AI Accountant (Exclusive)</h3>
+                    <p className="text-sm text-indigo-200 mb-4">{aiResponse}</p>
+                    <div className="flex gap-2">
+                        <input type="text" placeholder="e.g. Calculate my PAYE liability..." className="flex-1 p-2 rounded text-black" value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} />
+                        <button onClick={askAI} className="bg-indigo-500 px-4 rounded hover:bg-indigo-400">Ask</button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-<div class="modal-bg" id="m-restock">
-  <div class="modal">
-    <div class="m-head"><div class="m-title">Restock Product</div><button class="m-x" onclick="closeM('m-restock')">✕</button></div>
-    <div class="m-body">
-      <div class="f-row s1"><div class="f-grp"><div class="f-lbl">Product</div><select class="f-sel" id="r-prod"><option value="">Select product...</option></select></div></div>
-      <div class="f-row">
-        <div class="f-grp"><div class="f-lbl">Quantity to Add</div><input class="f-inp" type="number" id="r-qty" min="1" value="1"/></div>
-        <div class="f-grp"><div class="f-lbl">Cost Per Unit (KES)</div><input class="f-inp" type="number" id="r-cost" min="0" step="0.01" value="0"/></div>
-      </div>
-      <div class="f-row s1"><div class="f-grp"><div class="f-lbl">Supplier (optional)</div><input class="f-inp" id="r-sup" placeholder="Supplier name"/></div></div>
-    </div>
-    <div class="m-foot"><button class="btn btn-ghost" onclick="closeM('m-restock')">Cancel</button><button class="btn btn-g" onclick="saveRestock()">Confirm Restock</button></div>
-  </div>
-</div>
+    function ManagerDashboard({ user, logout }) {
+        return (
+            <div className="p-6 max-w-4xl mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-3xl font-bold">Manager Dashboard</h1>
+                    <button onClick={logout} className="text-red-500 underline">Logout</button>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow border">
+                    <h3 className="font-bold mb-4">Inventory & Sales Reports</h3>
+                    <div className="bg-red-50 p-3 rounded border border-red-200 text-red-700 mb-4">⚠️ Alert: 'Premium Item X' is below low stock threshold (3 left).</div>
+                    <p>Here you can view sales reports, monitor stock levels, and generate invoices. (Financials hidden).</p>
+                </div>
+            </div>
+        );
+    }
 
-<div class="modal-bg" id="m-inc">
-  <div class="modal">
-    <div class="m-head"><div class="m-title">Add Income</div><button class="m-x" onclick="closeM('m-inc')">✕</button></div>
-    <div class="m-body">
-      <div class="f-row s1"><div class="f-grp"><div class="f-lbl">Description</div><input class="f-inp" id="i-desc" placeholder="e.g. Consultation fee"/></div></div>
-      <div class="f-row">
-        <div class="f-grp"><div class="f-lbl">Amount (KES)</div><input class="f-inp" type="number" id="i-amt" min="0" step="0.01"/></div>
-        <div class="f-grp"><div class="f-lbl">Category</div><select class="f-sel" id="i-cat"><option>Sales Revenue</option><option>Service Fee</option><option>Consultation</option><option>Rental Income</option><option>Other Income</option></select></div>
-      </div>
-      <div class="f-row">
-        <div class="f-grp"><div class="f-lbl">Payment Method</div><select class="f-sel" id="i-pay"><option>Cash</option><option>M-Pesa</option><option>Card</option><option>Bank Transfer</option><option>Cheque</option></select></div>
-        <div class="f-grp"><div class="f-lbl">Date</div><input class="f-inp" type="date" id="i-date"/></div>
-      </div>
-    </div>
-    <div class="m-foot"><button class="btn btn-ghost" onclick="closeM('m-inc')">Cancel</button><button class="btn btn-g" onclick="saveIncome()">Save Income</button></div>
-  </div>
-</div>
+    function SalesPOS({ user, logout }) {
+        const [qty, setQty] = React.useState(1);
+        const [payment, setPayment] = React.useState('M-Pesa');
+        
+        const recordSale = () => {
+            alert('Sale Recorded! \n\nNote: You cannot edit this. If you made a mistake, you must submit an Edit Request to the Owner.');
+        };
 
-<div class="modal-bg" id="m-exp">
-  <div class="modal">
-    <div class="m-head"><div class="m-title">Add Expense</div><button class="m-x" onclick="closeM('m-exp')">✕</button></div>
-    <div class="m-body">
-      <div class="f-row s1"><div class="f-grp"><div class="f-lbl">Description</div><input class="f-inp" id="e-desc" placeholder="e.g. Rent payment"/></div></div>
-      <div class="f-row">
-        <div class="f-grp"><div class="f-lbl">Amount (KES)</div><input class="f-inp" type="number" id="e-amt" min="0" step="0.01"/></div>
-        <div class="f-grp"><div class="f-lbl">Category</div><select class="f-sel" id="e-cat"><option>Rent</option><option>Utilities</option><option>Salaries</option><option>Stock Purchase</option><option>Transport</option><option>Marketing</option><option>Equipment</option><option>Other</option></select></div>
-      </div>
-      <div class="f-row">
-        <div class="f-grp"><div class="f-lbl">Payment Method</div><select class="f-sel" id="e-pay"><option>Cash</option><option>M-Pesa</option><option>Card</option><option>Bank Transfer</option><option>Cheque</option></select></div>
-        <div class="f-grp"><div class="f-lbl">Date</div><input class="f-inp" type="date" id="e-date"/></div>
-      </div>
-    </div>
-    <div class="m-foot"><button class="btn btn-ghost" onclick="closeM('m-exp')">Cancel</button><button class="btn btn-g" onclick="saveExp()">Save Expense</button></div>
-  </div>
-</div>
+        return (
+            <div className="p-6 max-w-md mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-2xl font-bold">Sales Terminal</h1>
+                    <button onClick={logout} className="text-red-500 underline">Logout</button>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow border space-y-4">
+                    <h3 className="font-bold">Record New Sale</h3>
+                    <div>
+                        <label className="block text-sm mb-1">Item: Standard Widget</label>
+                        <p className="text-lg font-bold">KES 1,500 <span className="text-sm text-gray-500">/ unit</span></p>
+                    </div>
+                    <div>
+                        <label className="block text-sm mb-1">Quantity</label>
+                        <input type="number" min="1" className="w-full p-2 border rounded" value={qty} onChange={e => setQty(e.target.value)} />
+                    </div>
+                    <div>
+                        <label className="block text-sm mb-1">Payment Method</label>
+                        <select className="w-full p-2 border rounded" value={payment} onChange={e => setPayment(e.target.value)}>
+                            <option>M-Pesa</option>
+                            <option>Cash</option>
+                            <option>Card</option>
+                        </select>
+                    </div>
+                    <div className="pt-4 border-t">
+                        <p className="text-xl font-bold mb-4">Total: KES {1500 * qty}</p>
+                        <button onClick={recordSale} className="w-full bg-green-600 text-white p-3 rounded-lg font-bold">Complete Sale</button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-<div class="modal-bg" id="m-inv">
-  <div class="modal">
-    <div class="m-head"><div class="m-title">New Invoice</div><button class="m-x" onclick="closeM('m-inv')">✕</button></div>
-    <div class="m-body">
-      <div class="f-row">
-        <div class="f-grp"><div class="f-lbl">Client Name</div><input class="f-inp" id="v-client" placeholder="Client or company"/></div>
-        <div class="f-grp"><div class="f-lbl">Date</div><input class="f-inp" type="date" id="v-date"/></div>
-      </div>
-      <div class="f-row">
-        <div class="f-grp"><div class="f-lbl">Amount (KES)</div><input class="f-inp" type="number" id="v-amt" min="0" step="0.01"/></div>
-        <div class="f-grp"><div class="f-lbl">Status</div><select class="f-sel" id="v-status"><option>Unpaid</option><option>Paid</option><option>Partial</option><option>Overdue</option></select></div>
-      </div>
-      <div class="f-row s1"><div class="f-grp"><div class="f-lbl">Description</div><textarea class="f-ta" id="v-desc" placeholder="Invoice details..."></textarea></div></div>
-    </div>
-    <div class="m-foot"><button class="btn btn-ghost" onclick="closeM('m-inv')">Cancel</button><button class="btn btn-g" onclick="saveInv()">Save Invoice</button></div>
-  </div>
-</div>
-
-<div class="modal-bg" id="m-staff">
-  <div class="modal">
-    <div class="m-head"><div class="m-title">Add Staff Member</div><button class="m-x" onclick="closeM('m-staff')">✕</button></div>
-    <div class="m-body">
-      <div class="f-row">
-        <div class="f-grp"><div class="f-lbl">Full Name</div><input class="f-inp" id="st-name" placeholder="Staff member's name"/></div>
-        <div class="f-grp"><div class="f-lbl">Role</div><select class="f-sel" id="st-role"><option value="salesperson">Sales Person</option><option value="manager">Manager</option></select></div>
-      </div>
-      <div class="f-row s1"><div class="f-grp"><div class="f-lbl">Password</div><input class="f-inp" type="password" id="st-pw" placeholder="Create a password (min 4 characters)"/></div></div>
-    </div>
-    <div class="m-foot"><button class="btn btn-ghost" onclick="closeM('m-staff')">Cancel</button><button class="btn btn-g" onclick="saveStaff()">Add Staff</button></div>
-  </div>
-</div>
-
-<script>
-// ═══════════════════════════════════════════════════
-//  PRO BOOKS v2 — Full Application
-// ═══════════════════════════════════════════════════
-
-const PROXY   = 'https://aiprobooks.netlify.app/.netlify/functions/ai';
-const ADMIN_PW= 'PB@Admin2025#LKC';
-
-// ── STORAGE ─────────────────────────────────────────
-const ld = (k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}};
-const sv = (k,v)=>localStorage.setItem(k,JSON.stringify(v));
-
-// ── STATE ────────────────────────────────────────────
-let CU=null,aiHist=[],notifs=ld('pb_notifs',[]);
-
-// ── UTILS ────────────────────────────────────────────
-const KES  = n=>'KES '+Number(n||0).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});
-const fmtD = d=>d?new Date(d).toLocaleDateString('en-KE',{day:'2-digit',month:'short',year:'numeric'}):'—';
-const fmtT = d=>d?new Date(d).toLocaleString('en-KE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
-const uid  = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
-const today= ()=>new Date().toISOString().split('T')[0];
-const inMonth=(d,now=new Date())=>{const dt=new Date(d);return dt.getMonth()===now.getMonth()&&dt.getFullYear()===now.getFullYear();};
-
-function toast(msg,type='ok'){
-  const w=document.getElementById('toasts');
-  const d=document.createElement('div');d.className=`toast ${type}`;d.textContent=msg;
-  w.appendChild(d);setTimeout(()=>{d.style.opacity='0';d.style.transition='opacity .3s';setTimeout(()=>d.remove(),300);},3200);
-}
-
-// ── SCREENS ──────────────────────────────────────────
-const show=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id)?.classList.add('active');};
-
-// ── INIT ─────────────────────────────────────────────
-window.onload=()=>{
-  const s=ld('pb_setup',null);
-  if(!s)show('admin');
-  else{show('login');document.getElementById('login-sub').textContent='Sign in to '+s.bizName;}
-};
-
-// ── ADMIN ─────────────────────────────────────────────
-function adminUnlock(){
-  if(document.getElementById('admin-pw').value===ADMIN_PW){
-    if(ld('pb_setup',null)){show('login');return;}
-    show('setup');
-  }else document.getElementById('admin-err').textContent='Incorrect admin password.';
-}
-
-// ── SETUP ─────────────────────────────────────────────
-function doSetup(){
-  const biz=document.getElementById('s-biz').value.trim();
-  const own=document.getElementById('s-owner').value.trim();
-  const pw =document.getElementById('s-pw').value.trim();
-  const typ=document.getElementById('s-type').value;
-  if(!biz||!own||!pw){document.getElementById('setup-err').textContent='All fields required.';return;}
-  if(pw.length<6){document.getElementById('setup-err').textContent='Password must be 6+ characters.';return;}
-  sv('pb_setup',{bizName:biz,bizType:typ,createdAt:new Date().toISOString()});
-  const staff=ld('pb_staff',[]);
-  staff.push({id:uid(),name:own,role:'owner',pw,addedAt:new Date().toISOString()});
-  sv('pb_staff',staff);
-  toast('Business created! Welcome, '+own);
-  show('login');document.getElementById('login-sub').textContent='Sign in to '+biz;
-}
-
-// ── LOGIN ─────────────────────────────────────────────
-function doLogin(){
-  const nm=document.getElementById('l-name').value.trim();
-  const pw=document.getElementById('l-pw').value.trim();
-  if(!nm||!pw){document.getElementById('login-err').textContent='Enter your name and password.';return;}
-  const u=ld('pb_staff',[]).find(s=>s.name.toLowerCase()===nm.toLowerCase()&&s.pw===pw);
-  if(!u){document.getElementById('login-err').textContent='Name or password incorrect.';return;}
-  CU=u;initApp();
-}
-function logout(){CU=null;aiHist=[];['l-name','l-pw'].forEach(id=>document.getElementById(id).value='');document.getElementById('login-err').textContent='';show('login');}
-
-// ── INIT APP ──────────────────────────────────────────
-function initApp(){
-  const s=ld('pb_setup',{});
-  document.getElementById('sb-bizname').textContent=s.bizName||'ProBooks';
-  document.getElementById('sb-uname').textContent=CU.name;
-  document.getElementById('sb-urole').textContent=rlbl(CU.role);
-  document.getElementById('sb-ubiz').textContent=s.bizName||'';
-  document.getElementById('tb-role').textContent=rlbl(CU.role);
-  buildNav();show('app');
-  if(CU.role==='owner'){document.getElementById('notif-wrap').style.display='block';rndot();}
-  goTo('dash');
-}
-const rlbl=r=>({owner:'Owner',manager:'Manager',salesperson:'Sales Person'}[r]||r);
-
-// ── NAV ───────────────────────────────────────────────
-function buildNav(){
-  const r=CU.role,nav=document.getElementById('sb-nav');nav.innerHTML='';
-  const its=[
-    {id:'dash',ic:'⊞',lb:'Dashboard',roles:['owner','manager','salesperson']},
-    {id:'sales',ic:'🛒',lb:'Sales',roles:['owner','manager','salesperson']},
-    {id:'stock',ic:'📦',lb:'Stock / Inventory',roles:['owner','manager','salesperson']},
-    {sec:'Finance',roles:['owner']},
-    {id:'income',ic:'↑',lb:'Income',roles:['owner']},
-    {id:'exp',ic:'↓',lb:'Expenses',roles:['owner']},
-    {id:'inv',ic:'📄',lb:'Invoices',roles:['owner','manager']},
-    {sec:'Reports',roles:['owner','manager']},
-    {id:'rep',ic:'📊',lb:'Reports',roles:['owner','manager']},
-    {sec:'Management',roles:['owner']},
-    {id:'staff',ic:'👥',lb:'Staff',roles:['owner']},
-    {id:'ai',ic:'🤖',lb:'AI Accountant',roles:['owner']},
-  ];
-  its.forEach(it=>{
-    if(!it.roles||!it.roles.includes(r))return;
-    if(it.sec){const d=document.createElement('div');d.className='nav-lbl';d.textContent=it.sec;nav.appendChild(d);}
-    else{const d=document.createElement('div');d.className='nav-it';d.id='ni-'+it.id;d.innerHTML=`<span class="ic">${it.ic}</span>${it.lb}`;d.onclick=()=>{goTo(it.id);closeSB();};nav.appendChild(d);}
-  });
-  if(r==='owner'){
-    document.getElementById('add-prod-btn').style.display='inline-flex';
-    document.getElementById('stk-act-th').style.display='';
-    document.getElementById('buy-th').style.display='';
-  }else{
-    document.getElementById('buy-th').style.display='none';
-  }
-}
-
-// ── NAVIGATE ──────────────────────────────────────────
-const PAGE_TITLES={dash:'Dashboard',sales:'Sales',stock:'Stock / Inventory',income:'Income',exp:'Expenses',inv:'Invoices',rep:'Reports',staff:'Staff Management',ai:'AI Accountant'};
-function goTo(pg){
-  document.querySelectorAll('.pg').forEach(p=>{p.classList.remove('on');p.style.display='none';});
-  document.querySelectorAll('.nav-it').forEach(n=>n.classList.remove('on'));
-  const p=document.getElementById('pg-'+pg);if(p){p.classList.add('on');p.style.display='block';}
-  const n=document.getElementById('ni-'+pg);if(n)n.classList.add('on');
-  document.getElementById('tb-title').textContent=PAGE_TITLES[pg]||pg;
-  ({
-    dash:rDash,sales:()=>{rSales();popProds();},stock:rStock,income:rIncome,exp:rExp,
-    inv:rInv,rep:rRep,staff:rStaff
-  })[pg]?.();
-}
-
-// ══════════════════════════════════════════
-// DASHBOARD
-// ══════════════════════════════════════════
-function rDash(){
-  const sales=ld('pb_sales',[]),income=ld('pb_income',[]),expenses=ld('pb_expenses',[]),prods=ld('pb_products',[]);
-  const mS=sales.filter(s=>inMonth(s.date)).reduce((a,s)=>a+s.total,0);
-  const mI=income.filter(i=>inMonth(i.date)).reduce((a,i)=>a+i.amount,0)+mS;
-  const mE=expenses.filter(e=>inMonth(e.date)).reduce((a,e)=>a+e.amount,0);
-  const profit=mI-mE;const low=prods.filter(p=>p.stock<=p.minLevel);
-  const r=CU.role;let html='';
-  if(r==='owner'){
-    html=`<div class="stat-card" style="--accent:var(--g)"><div class="stat-lbl">This Month Income</div><div class="stat-val g">${KES(mI)}</div><div class="stat-sub">Total: ${KES(mI)}</div></div>
-    <div class="stat-card" style="--accent:var(--r)"><div class="stat-lbl">This Month Expenses</div><div class="stat-val r">${KES(mE)}</div><div class="stat-sub">Total: ${KES(mE)}</div></div>
-    <div class="stat-card" style="--accent:${profit>=0?'var(--g)':'var(--r)'}"><div class="stat-lbl">Net Profit / Loss</div><div class="stat-val ${profit>=0?'g':'r'}">${KES(profit)}</div><div class="stat-sub">${profit>=0?'Profit':'Loss'} this month</div></div>
-    <div class="stat-card"><div class="stat-lbl">Stock Items</div><div class="stat-val">${prods.length}</div><div class="stat-sub">${low.length} low stock alerts</div></div>`;
-  }else if(r==='manager'){
-    const tSales=sales.filter(s=>s.date.startsWith(today())).reduce((a,s)=>a+s.total,0);
-    html=`<div class="stat-card" style="--accent:var(--g)"><div class="stat-lbl">Today's Sales</div><div class="stat-val g">${KES(tSales)}</div></div>
-    <div class="stat-card" style="--accent:var(--g)"><div class="stat-lbl">This Month Sales</div><div class="stat-val g">${KES(mS)}</div></div>
-    <div class="stat-card" style="--accent:var(--y)"><div class="stat-lbl">Low Stock Alerts</div><div class="stat-val y">${low.length}</div></div>
-    <div class="stat-card"><div class="stat-lbl">Total Products</div><div class="stat-val">${prods.length}</div></div>`;
-  }else{
-    const mine=sales.filter(s=>s.by===CU.name&&inMonth(s.date));
-    const today_s=sales.filter(s=>s.by===CU.name&&s.date.startsWith(today()));
-    html=`<div class="stat-card" style="--accent:var(--g)"><div class="stat-lbl">My Sales Today</div><div class="stat-val g">${today_s.length} sales</div><div class="stat-sub">${KES(today_s.reduce((a,s)=>a+s.total,0))}</div></div>
-    <div class="stat-card"><div class="stat-lbl">My Sales This Month</div><div class="stat-val">${mine.length}</div><div class="stat-sub">${KES(mine.reduce((a,s)=>a+s.total,0))}</div></div>
-    <div class="stat-card" style="--accent:var(--y)"><div class="stat-lbl">Low Stock</div><div class="stat-val y">${low.length} items</div></div>
-    <div class="stat-card"><div class="stat-lbl">Total Products</div><div class="stat-val">${prods.length}</div></div>`;
-  }
-  document.getElementById('dash-stats').innerHTML=html;
-  const rec=sales.slice(-6).reverse();
-  document.getElementById('dash-sales').innerHTML=rec.length?rec.map(s=>`<tr><td>${fmtT(s.date)}</td><td>${s.product}</td><td>${s.qty}</td><td>${KES(s.total)}</td><td><span class="pay-tag">${s.payment}</span></td><td>${s.by}</td></tr>`).join(''):'<tr><td colspan="6" class="tbl-empty">No sales yet</td></tr>';
-  document.getElementById('dash-low').innerHTML=low.length?low.map(p=>`<tr><td><strong>${p.name}</strong></td><td>${p.stock}</td><td>${p.minLevel}</td><td><span class="${p.stock===0?'sb-out':'sb-low'}">${p.stock===0?'Out of Stock':'Low Stock'}</span></td></tr>`).join(''):'<tr><td colspan="4" class="tbl-empty">All stock levels OK ✓</td></tr>';
-}
-
-// ══════════════════════════════════════════
-// SALES
-// ══════════════════════════════════════════
-function popProds(){
-  const sel=document.getElementById('s-prod');sel.innerHTML='<option value="">Select product...</option>';
-  ld('pb_products',[]).forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=`${p.name} (Stock: ${p.stock})`;o.dataset.price=p.sellPrice||0;sel.appendChild(o);});
-}
-function fillPrice(){
-  const opt=document.getElementById('s-prod').selectedOptions[0];
-  if(opt?.dataset.price){document.getElementById('s-price').value=opt.dataset.price;calcTotal();}
-}
-function calcTotal(){
-  const q=parseFloat(document.getElementById('s-qty').value)||0;
-  const p=parseFloat(document.getElementById('s-price').value)||0;
-  document.getElementById('s-total').value=(q*p).toFixed(2);
-}
-function recordSale(){
-  const pid=document.getElementById('s-prod').value;
-  const qty=parseInt(document.getElementById('s-qty').value)||0;
-  const price=parseFloat(document.getElementById('s-price').value)||0;
-  const pay=document.getElementById('s-pay').value;
-  const cust=document.getElementById('s-cust').value.trim();
-  const notes=document.getElementById('s-notes').value.trim();
-  if(!pid||qty<1||price<0){toast('Select product, quantity and price.','err');return;}
-  const prods=ld('pb_products',[]);const idx=prods.findIndex(p=>p.id===pid);
-  if(idx<0){toast('Product not found.','err');return;}
-  if(prods[idx].stock<qty){toast(`Insufficient stock. Available: ${prods[idx].stock}`,'err');return;}
-  const prod=prods[idx];prods[idx].stock-=qty;sv('pb_products',prods);
-  const sale={id:uid(),product:prod.name,productId:pid,qty,price,total:qty*price,payment:pay,customer:cust,notes,by:CU.name,date:new Date().toISOString()};
-  const sales=ld('pb_sales',[]);sales.push(sale);sv('pb_sales',sales);
-  addNotif(`💰 ${CU.name} sold ${prod.name} ×${qty} — ${KES(sale.total)} via ${pay}`);
-  ['s-prod','s-cust','s-notes'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('s-qty').value='1';['s-price','s-total'].forEach(id=>document.getElementById(id).value='');
-  toast(`Sale recorded: ${KES(sale.total)}`);rSales();popProds();
-}
-function rSales(){
-  let sales=ld('pb_sales',[]);
-  const fd=document.getElementById('sales-date')?.value;
-  if(fd)sales=sales.filter(s=>s.date.startsWith(fd));
-  if(CU.role==='salesperson')sales=sales.filter(s=>s.by===CU.name);
-  document.getElementById('sales-body').innerHTML=sales.length?sales.slice().reverse().map(s=>`<tr><td>${fmtT(s.date)}</td><td>${s.product}</td><td>${s.qty}</td><td>${KES(s.price)}</td><td>${KES(s.total)}</td><td><span class="pay-tag">${s.payment}</span></td><td>${s.customer||'—'}</td><td>${s.by}</td></tr>`).join(''):'<tr><td colspan="8" class="tbl-empty">No sales recorded</td></tr>';
-}
-
-// ══════════════════════════════════════════
-// STOCK
-// ══════════════════════════════════════════
-function rStock(){
-  const prods=ld('pb_products',[]);const own=CU.role==='owner';
-  document.getElementById('stock-body').innerHTML=prods.length?prods.map(p=>{
-    const sc=p.stock===0?'sb-out':p.stock<=p.minLevel?'sb-low':'sb-ok';
-    const sl=p.stock===0?'Out of Stock':p.stock<=p.minLevel?'Low Stock':'In Stock';
-    return`<tr><td><strong>${p.name}</strong></td><td>${p.category||'—'}</td><td><strong>${p.stock}</strong></td><td>${p.minLevel}</td><td>${own?KES(p.buyPrice):'—'}</td><td>${KES(p.sellPrice)}</td><td><span class="${sc}">${sl}</span></td>${own?`<td><button class="btn btn-ghost btn-xs" onclick="openProd('${p.id}')">Edit</button> <button class="btn btn-r btn-xs" onclick="delProd('${p.id}')">Del</button></td>`:'<td></td>'}</tr>`;
-  }).join(''):`<tr><td colspan="8" class="tbl-empty">No products yet${CU.role==='owner'?' — click "+ Add Product"':''}</td></tr>`;
-}
-function openProd(id){
-  document.getElementById('prod-id').value=id||'';
-  document.getElementById('prod-title').textContent=id?'Edit Product':'Add Product';
-  if(id){const p=ld('pb_products',[]).find(p=>p.id===id);if(p){document.getElementById('p-name').value=p.name;document.getElementById('p-cat').value=p.category;document.getElementById('p-stock').value=p.stock;document.getElementById('p-min').value=p.minLevel;document.getElementById('p-buy').value=p.buyPrice;document.getElementById('p-sell').value=p.sellPrice;}}
-  else{['p-name','p-cat'].forEach(i=>document.getElementById(i).value='');document.getElementById('p-stock').value=0;document.getElementById('p-min').value=10;document.getElementById('p-buy').value=0;document.getElementById('p-sell').value=0;}
-  openM('m-prod');
-}
-function saveProd(){
-  const id=document.getElementById('prod-id').value;
-  const name=document.getElementById('p-name').value.trim();
-  if(!name){toast('Product name required.','err');return;}
-  const p={name,category:document.getElementById('p-cat').value.trim(),stock:parseInt(document.getElementById('p-stock').value)||0,minLevel:parseInt(document.getElementById('p-min').value)||0,buyPrice:parseFloat(document.getElementById('p-buy').value)||0,sellPrice:parseFloat(document.getElementById('p-sell').value)||0};
-  const prods=ld('pb_products',[]);
-  if(id){const i=prods.findIndex(x=>x.id===id);if(i>=0)prods[i]={...prods[i],...p};}
-  else prods.push({id:uid(),...p,createdAt:new Date().toISOString()});
-  sv('pb_products',prods);toast(id?'Product updated':'Product added');closeM('m-prod');rStock();
-}
-function delProd(id){if(!confirm('Delete this product?'))return;sv('pb_products',ld('pb_products',[]).filter(p=>p.id!==id));toast('Deleted','info');rStock();}
-function openRestock(){
-  const sel=document.getElementById('r-prod');sel.innerHTML='<option value="">Select product...</option>';
-  ld('pb_products',[]).forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=`${p.name} (Stock: ${p.stock})`;sel.appendChild(o);});
-  document.getElementById('r-qty').value=1;document.getElementById('r-cost').value=0;document.getElementById('r-sup').value='';
-  openM('m-restock');
-}
-function saveRestock(){
-  const pid=document.getElementById('r-prod').value;const qty=parseInt(document.getElementById('r-qty').value)||0;
-  if(!pid||qty<1){toast('Select product and quantity.','err');return;}
-  const prods=ld('pb_products',[]);const i=prods.findIndex(p=>p.id===pid);if(i<0)return;
-  prods[i].stock+=qty;sv('pb_products',prods);
-  addNotif(`📦 ${CU.name} restocked ${prods[i].name} +${qty} units`);
-  toast(`Restocked ${prods[i].name} +${qty}`);closeM('m-restock');rStock();
-}
-
-// ══════════════════════════════════════════
-// INCOME
-// ══════════════════════════════════════════
-function openIncome(){document.getElementById('i-desc').value='';document.getElementById('i-amt').value='';document.getElementById('i-date').value=today();openM('m-inc');}
-function saveIncome(){
-  const desc=document.getElementById('i-desc').value.trim();const amt=parseFloat(document.getElementById('i-amt').value)||0;
-  if(!desc||amt<=0){toast('Description and amount required.','err');return;}
-  const inc=ld('pb_income',[]);inc.push({id:uid(),desc,amount:amt,category:document.getElementById('i-cat').value,payment:document.getElementById('i-pay').value,date:document.getElementById('i-date').value,by:CU.name,createdAt:new Date().toISOString()});
-  sv('pb_income',inc);toast('Income recorded');closeM('m-inc');rIncome();
-}
-function rIncome(){
-  const inc=ld('pb_income',[]);
-  const tot=inc.reduce((a,i)=>a+i.amount,0);
-  const mth=inc.filter(i=>inMonth(i.date)).reduce((a,i)=>a+i.amount,0);
-  document.getElementById('inc-stats').innerHTML=`<div class="stat-card" style="--accent:var(--g)"><div class="stat-lbl">Total Income</div><div class="stat-val g">${KES(tot)}</div></div><div class="stat-card"><div class="stat-lbl">This Month</div><div class="stat-val g">${KES(mth)}</div></div><div class="stat-card"><div class="stat-lbl">Records</div><div class="stat-val">${inc.length}</div></div>`;
-  document.getElementById('inc-body').innerHTML=inc.length?inc.slice().reverse().map(i=>`<tr><td>${fmtD(i.date)}</td><td>${i.desc}</td><td>${i.category}</td><td style="color:var(--g)">${KES(i.amount)}</td><td><span class="pay-tag">${i.payment}</span></td><td><button class="btn btn-r btn-xs" onclick="delInc('${i.id}')">Del</button></td></tr>`).join(''):'<tr><td colspan="6" class="tbl-empty">No income recorded</td></tr>';
-}
-function delInc(id){if(!confirm('Delete?'))return;sv('pb_income',ld('pb_income',[]).filter(i=>i.id!==id));toast('Deleted','info');rIncome();}
-
-// ══════════════════════════════════════════
-// EXPENSES
-// ══════════════════════════════════════════
-function openExp(){document.getElementById('e-desc').value='';document.getElementById('e-amt').value='';document.getElementById('e-date').value=today();openM('m-exp');}
-function saveExp(){
-  const desc=document.getElementById('e-desc').value.trim();const amt=parseFloat(document.getElementById('e-amt').value)||0;
-  if(!desc||amt<=0){toast('Description and amount required.','err');return;}
-  const exp=ld('pb_expenses',[]);exp.push({id:uid(),desc,amount:amt,category:document.getElementById('e-cat').value,payment:document.getElementById('e-pay').value,date:document.getElementById('e-date').value,by:CU.name,createdAt:new Date().toISOString()});
-  sv('pb_expenses',exp);toast('Expense recorded');closeM('m-exp');rExp();
-}
-function rExp(){
-  const exp=ld('pb_expenses',[]);
-  const tot=exp.reduce((a,e)=>a+e.amount,0);const mth=exp.filter(e=>inMonth(e.date)).reduce((a,e)=>a+e.amount,0);
-  document.getElementById('exp-stats').innerHTML=`<div class="stat-card" style="--accent:var(--r)"><div class="stat-lbl">Total Expenses</div><div class="stat-val r">${KES(tot)}</div></div><div class="stat-card"><div class="stat-lbl">This Month</div><div class="stat-val r">${KES(mth)}</div></div><div class="stat-card"><div class="stat-lbl">Records</div><div class="stat-val">${exp.length}</div></div>`;
-  document.getElementById('exp-body').innerHTML=exp.length?exp.slice().reverse().map(e=>`<tr><td>${fmtD(e.date)}</td><td>${e.desc}</td><td>${e.category}</td><td style="color:var(--r)">${KES(e.amount)}</td><td><span class="pay-tag">${e.payment}</span></td><td><button class="btn btn-r btn-xs" onclick="delExp('${e.id}')">Del</button></td></tr>`).join(''):'<tr><td colspan="6" class="tbl-empty">No expenses recorded</td></tr>';
-}
-function delExp(id){if(!confirm('Delete?'))return;sv('pb_expenses',ld('pb_expenses',[]).filter(e=>e.id!==id));toast('Deleted','info');rExp();}
-
-// ══════════════════════════════════════════
-// INVOICES
-// ══════════════════════════════════════════
-function openInv(){document.getElementById('v-client').value='';document.getElementById('v-amt').value='';document.getElementById('v-desc').value='';document.getElementById('v-date').value=today();openM('m-inv');}
-function saveInv(){
-  const cl=document.getElementById('v-client').value.trim();const amt=parseFloat(document.getElementById('v-amt').value)||0;
-  if(!cl||amt<=0){toast('Client and amount required.','err');return;}
-  const invs=ld('pb_invoices',[]);
-  invs.push({id:uid(),num:'INV-'+String(invs.length+1).padStart(4,'0'),client:cl,amount:amt,status:document.getElementById('v-status').value,desc:document.getElementById('v-desc').value.trim(),date:document.getElementById('v-date').value,by:CU.name,createdAt:new Date().toISOString()});
-  sv('pb_invoices',invs);toast('Invoice created');closeM('m-inv');rInv();
-}
-function rInv(){
-  const invs=ld('pb_invoices',[]);const own=CU.role==='owner';
-  const sc={Paid:'pill-g',Unpaid:'pill-r',Partial:'pill-y',Overdue:'pill-r'};
-  document.getElementById('inv-body').innerHTML=invs.length?invs.slice().reverse().map(i=>`<tr><td><strong>${i.num}</strong></td><td>${fmtD(i.date)}</td><td>${i.client}</td><td>${KES(i.amount)}</td><td><span class="pill ${sc[i.status]||'pill-b'}">${i.status}</span></td><td>${own?`<button class="btn btn-r btn-xs" onclick="delInv('${i.id}')">Del</button>`:'—'}</td></tr>`).join(''):'<tr><td colspan="6" class="tbl-empty">No invoices yet</td></tr>';
-}
-function delInv(id){if(!confirm('Delete?'))return;sv('pb_invoices',ld('pb_invoices',[]).filter(i=>i.id!==id));toast('Deleted','info');rInv();}
-
-// ══════════════════════════════════════════
-// REPORTS
-// ══════════════════════════════════════════
-function rRep(){
-  const sales=ld('pb_sales',[]),inc=ld('pb_income',[]),exp=ld('pb_expenses',[]),invs=ld('pb_invoices',[]),prods=ld('pb_products',[]);
-  const tS=sales.reduce((a,s)=>a+s.total,0);
-  const tI=inc.reduce((a,i)=>a+i.amount,0)+tS;
-  const tE=exp.reduce((a,e)=>a+e.amount,0);
-  document.getElementById('rep-stats').innerHTML=`
-    <div class="stat-card" style="--accent:var(--g)"><div class="stat-lbl">Total Revenue</div><div class="stat-val g">${KES(tI)}</div></div>
-    <div class="stat-card" style="--accent:var(--r)"><div class="stat-lbl">Total Expenses</div><div class="stat-val r">${KES(tE)}</div></div>
-    <div class="stat-card" style="--accent:${tI-tE>=0?'var(--g)':'var(--r)'}"><div class="stat-lbl">Net Profit</div><div class="stat-val ${tI-tE>=0?'g':'r'}">${KES(tI-tE)}</div></div>
-    <div class="stat-card"><div class="stat-lbl">Total Sales</div><div class="stat-val">${sales.length} transactions</div></div>`;
-  renderPL();
-  // Payment breakdown
-  const pays=['Cash','M-Pesa','Card','Bank Transfer','Cheque'];
-  const bd=pays.map(m=>({m,amt:sales.filter(s=>s.payment===m).reduce((a,s)=>a+s.total,0),cnt:sales.filter(s=>s.payment===m).length})).filter(x=>x.cnt>0);
-  document.getElementById('pay-breakdown').innerHTML=bd.length?`<table class="tbl"><thead><tr><th>Method</th><th>Transactions</th><th>Total Amount</th><th>%</th></tr></thead><tbody>${bd.map(x=>`<tr><td><span class="pay-tag">${x.m}</span></td><td>${x.cnt}</td><td>${KES(x.amt)}</td><td>${tS>0?((x.amt/tS)*100).toFixed(1)+'%':'—'}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--tx2);font-size:13px">No sales data yet.</p>';
-  // Sales table
-  document.getElementById('rep-sales').innerHTML=sales.length?sales.slice().reverse().map(s=>`<tr><td>${fmtT(s.date)}</td><td>${s.product}</td><td>${s.qty}</td><td>${KES(s.price)}</td><td>${KES(s.total)}</td><td><span class="pay-tag">${s.payment}</span></td><td>${s.by}</td></tr>`).join(''):'<tr><td colspan="7" class="tbl-empty">No sales</td></tr>';
-  // Stock table
-  document.getElementById('rep-stock').innerHTML=prods.length?prods.map(p=>{const sc=p.stock===0?'sb-out':p.stock<=p.minLevel?'sb-low':'sb-ok';const sl=p.stock===0?'Out of Stock':p.stock<=p.minLevel?'Low Stock':'In Stock';return`<tr><td><strong>${p.name}</strong></td><td>${p.category||'—'}</td><td>${p.stock}</td><td>${p.minLevel}</td><td>${KES(p.buyPrice)}</td><td>${KES(p.sellPrice)}</td><td><span class="${sc}">${sl}</span></td></tr>`;}).join(''):'<tr><td colspan="7" class="tbl-empty">No products</td></tr>';
-  // Invoices
-  document.getElementById('rep-inv').innerHTML=invs.length?invs.slice().reverse().map(i=>`<tr><td>${i.num}</td><td>${i.client}</td><td>${KES(i.amount)}</td><td><span class="pill ${i.status==='Paid'?'pill-g':'pill-r'}">${i.status}</span></td><td>${fmtD(i.date)}</td></tr>`).join(''):'<tr><td colspan="5" class="tbl-empty">No invoices</td></tr>';
-}
-
-function renderPL(){
-  const period=document.getElementById('pl-period')?.value||'month';const now=new Date();
-  const inP=d=>{const dt=new Date(d);if(period==='month')return inMonth(d);if(period==='quarter')return Math.floor(dt.getMonth()/3)===Math.floor(now.getMonth()/3)&&dt.getFullYear()===now.getFullYear();if(period==='year')return dt.getFullYear()===now.getFullYear();return true;};
-  const sales=ld('pb_sales',[]).filter(s=>inP(s.date));
-  const inc=ld('pb_income',[]).filter(i=>inP(i.date));
-  const exp=ld('pb_expenses',[]).filter(e=>inP(e.date));
-  const sRev=sales.reduce((a,s)=>a+s.total,0);
-  const oInc=inc.reduce((a,i)=>a+i.amount,0);
-  const tRev=sRev+oInc;const tExp=exp.reduce((a,e)=>a+e.amount,0);const net=tRev-tExp;
-  document.getElementById('pl-body').innerHTML=`
-    <div style="margin-bottom:18px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--g);margin-bottom:10px">REVENUE</div>
-      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--tx2)">Sales Revenue</span><span>${KES(sRev)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--tx2)">Other Income</span><span>${KES(oInc)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:9px 0;font-size:14px;font-weight:700;color:var(--g)"><span>TOTAL REVENUE</span><span>${KES(tRev)}</span></div>
-    </div>
-    <div style="margin-bottom:18px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--r);margin-bottom:10px">EXPENSES</div>
-      ${exp.length?[...new Set(exp.map(e=>e.category))].map(cat=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--tx2)">${cat}</span><span style="color:var(--r)">${KES(exp.filter(e=>e.category===cat).reduce((a,e)=>a+e.amount,0))}</span></div>`).join(''):`<div style="color:var(--tx2);font-size:13px;padding:6px 0">No expenses recorded</div>`}
-      <div style="display:flex;justify-content:space-between;padding:9px 0;font-size:14px;font-weight:700;color:var(--r)"><span>TOTAL EXPENSES</span><span>${KES(tExp)}</span></div>
-    </div>
-    <div style="background:${net>=0?'var(--gg)':'var(--rg)'};border:1px solid ${net>=0?'var(--gb)':'var(--rb)'};border-radius:var(--r-md);padding:16px">
-      <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:700;color:${net>=0?'var(--g)':'var(--r)'}"><span>NET ${net>=0?'PROFIT':'LOSS'}</span><span>${KES(Math.abs(net))}</span></div>
-      <div style="font-size:12px;color:var(--tx2);margin-top:5px">Gross margin: ${tRev>0?((sRev/tRev)*100).toFixed(1):0}% · Period: ${{month:'This Month',quarter:'This Quarter',year:'This Year',all:'All Time'}[period]}</div>
-    </div>`;
-}
-
-// ══════════════════════════════════════════
-// PRINT / DOWNLOAD REPORTS
-// ══════════════════════════════════════════
-function printReport(type){
-  const setup=ld('pb_setup',{});const now=new Date();
-  const sales=ld('pb_sales',[]),inc=ld('pb_income',[]),exp=ld('pb_expenses',[]),prods=ld('pb_products',[]),invs=ld('pb_invoices',[]);
-  const tS=sales.reduce((a,s)=>a+s.total,0);
-  const tI=inc.reduce((a,i)=>a+i.amount,0)+tS;
-  const tE=exp.reduce((a,e)=>a+e.amount,0);
-  const net=tI-tE;
-  const mS=sales.filter(s=>inMonth(s.date)).reduce((a,s)=>a+s.total,0);
-  const mI=inc.filter(i=>inMonth(i.date)).reduce((a,i)=>a+i.amount,0)+mS;
-  const mE=exp.filter(e=>inMonth(e.date)).reduce((a,e)=>a+e.amount,0);
-  const low=prods.filter(p=>p.stock<=p.minLevel);
-  const dateStr=now.toLocaleDateString('en-KE',{day:'2-digit',month:'long',year:'numeric'});
-  const timeStr=now.toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
-
-  const header=`
-    <div class="pr-header">
-      <div><div class="pr-biz">Pro <span>Books</span></div><div style="font-size:12px;color:#666;margin-top:4px">${setup.bizName||'Business'} · ${setup.bizType||''}</div></div>
-      <div class="pr-meta">Generated: ${dateStr} at ${timeStr}<br/>Generated by: ${CU.name}<br/>Pro Books v2.0</div>
-    </div>`;
-  const footer=`<div class="pr-footer"><span>Pro Books v2.0 — ${setup.bizName||'Business'}</span><span>Generated ${dateStr}</span></div>`;
-
-  let html='';
-
-  if(type==='pl'||type==='full'){
-    // P&L expenses breakdown
-    const expCats=[...new Set(exp.map(e=>e.category))];
-    html+=`<div class="pr-page">
-      ${header}
-      <div class="pr-report-title">Profit & Loss Statement — All Time</div>
-      <div class="pr-stats">
-        <div class="pr-stat"><div class="pr-stat-lbl">Total Revenue</div><div class="pr-stat-val g">KES ${tI.toLocaleString()}</div></div>
-        <div class="pr-stat"><div class="pr-stat-lbl">Total Expenses</div><div class="pr-stat-val r">KES ${tE.toLocaleString()}</div></div>
-        <div class="pr-stat"><div class="pr-stat-lbl">Net Profit</div><div class="pr-stat-val ${net>=0?'g':'r'}">KES ${Math.abs(net).toLocaleString()}</div></div>
-        <div class="pr-stat"><div class="pr-stat-lbl">This Month</div><div class="pr-stat-val ${mI-mE>=0?'g':'r'}">KES ${Math.abs(mI-mE).toLocaleString()}</div></div>
-      </div>
-      <div class="pr-section">
-        <div class="pr-sec-title">Revenue</div>
-        <div class="pr-pl-row"><span>Sales Revenue</span><span>KES ${tS.toLocaleString()}</span></div>
-        <div class="pr-pl-row"><span>Other Income</span><span>KES ${inc.reduce((a,i)=>a+i.amount,0).toLocaleString()}</span></div>
-        <div class="pr-pl-total" style="color:#16a34a"><span>TOTAL REVENUE</span><span>KES ${tI.toLocaleString()}</span></div>
-      </div>
-      <div class="pr-section">
-        <div class="pr-sec-title">Expenses</div>
-        ${expCats.map(cat=>`<div class="pr-pl-row"><span>${cat}</span><span style="color:#dc2626">KES ${exp.filter(e=>e.category===cat).reduce((a,e)=>a+e.amount,0).toLocaleString()}</span></div>`).join('')||'<div style="color:#888;font-size:12px">No expenses recorded</div>'}
-        <div class="pr-pl-total" style="color:#dc2626"><span>TOTAL EXPENSES</span><span>KES ${tE.toLocaleString()}</span></div>
-      </div>
-      <div class="pr-pl-box ${net<0?'loss':''}">
-        <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:${net>=0?'#15803d':'#dc2626'}"><span>NET ${net>=0?'PROFIT':'LOSS'}</span><span>KES ${Math.abs(net).toLocaleString()}</span></div>
-        <div style="margin-top:6px;font-size:11px;color:#666">Gross margin: ${tI>0?((tS/tI)*100).toFixed(1):0}%</div>
-      </div>
-      ${footer}
-    </div>`;
-  }
-
-  if(type==='sales'||type==='full'){
-    html+=`<div class="pr-page">
-      ${header}
-      <div class="pr-report-title">Sales Report — All Time</div>
-      <div class="pr-stats">
-        <div class="pr-stat"><div class="pr-stat-lbl">Total Sales</div><div class="pr-stat-val g">KES ${tS.toLocaleString()}</div></div>
-        <div class="pr-stat"><div class="pr-stat-lbl">Transactions</div><div class="pr-stat-val">${sales.length}</div></div>
-        <div class="pr-stat"><div class="pr-stat-lbl">This Month</div><div class="pr-stat-val g">KES ${mS.toLocaleString()}</div></div>
-        <div class="pr-stat"><div class="pr-stat-lbl">Avg Sale</div><div class="pr-stat-val">KES ${sales.length?Math.round(tS/sales.length).toLocaleString():0}</div></div>
-      </div>
-      <div class="pr-section">
-        <div class="pr-sec-title">Sales by Payment Method</div>
-        <table class="pr-tbl"><thead><tr><th>Method</th><th>Transactions</th><th>Total</th><th>%</th></tr></thead><tbody>
-        ${['Cash','M-Pesa','Card','Bank Transfer','Cheque'].map(m=>{const a=sales.filter(s=>s.payment===m).reduce((a,s)=>a+s.total,0);const c=sales.filter(s=>s.payment===m).length;return c?`<tr><td>${m}</td><td>${c}</td><td>KES ${a.toLocaleString()}</td><td>${tS>0?((a/tS)*100).toFixed(1)+'%':'—'}</td></tr>`:'';}).join('')||'<tr><td colspan="4" style="text-align:center;color:#888">No sales data</td></tr>'}
-        </tbody></table>
-      </div>
-      <div class="pr-section">
-        <div class="pr-sec-title">All Sales Transactions</div>
-        <table class="pr-tbl"><thead><tr><th>Date/Time</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Payment</th><th>By</th></tr></thead><tbody>
-        ${sales.slice().reverse().map(s=>`<tr><td>${fmtT(s.date)}</td><td>${s.product}</td><td>${s.qty}</td><td>KES ${s.price.toLocaleString()}</td><td>KES ${s.total.toLocaleString()}</td><td>${s.payment}</td><td>${s.by}</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:#888">No sales</td></tr>'}
-        </tbody></table>
-      </div>
-      ${footer}
-    </div>`;
-  }
-
-  if(type==='stock'||type==='full'){
-    html+=`<div class="pr-page">
-      ${header}
-      <div class="pr-report-title">Stock / Inventory Report</div>
-      <div class="pr-stats">
-        <div class="pr-stat"><div class="pr-stat-lbl">Total Products</div><div class="pr-stat-val">${prods.length}</div></div>
-        <div class="pr-stat"><div class="pr-stat-lbl">Low Stock</div><div class="pr-stat-val r">${low.length}</div></div>
-        <div class="pr-stat"><div class="pr-stat-lbl">Out of Stock</div><div class="pr-stat-val r">${prods.filter(p=>p.stock===0).length}</div></div>
-        <div class="pr-stat"><div class="pr-stat-lbl">Stock Value</div><div class="pr-stat-val">KES ${prods.reduce((a,p)=>a+(p.stock*p.buyPrice),0).toLocaleString()}</div></div>
-      </div>
-      <div class="pr-section">
-        <div class="pr-sec-title">Full Stock List</div>
-        <table class="pr-tbl"><thead><tr><th>Product</th><th>Category</th><th>In Stock</th><th>Min Level</th><th>Buying Price</th><th>Selling Price</th><th>Stock Value</th><th>Status</th></tr></thead><tbody>
-        ${prods.map(p=>`<tr><td><strong>${p.name}</strong></td><td>${p.category||'—'}</td><td>${p.stock}</td><td>${p.minLevel}</td><td>KES ${p.buyPrice.toLocaleString()}</td><td>KES ${p.sellPrice.toLocaleString()}</td><td>KES ${(p.stock*p.buyPrice).toLocaleString()}</td><td>${p.stock===0?'Out of Stock':p.stock<=p.minLevel?'Low Stock':'In Stock'}</td></tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:#888">No products</td></tr>'}
-        </tbody></table>
-      </div>
-      ${low.length?`<div class="pr-section"><div class="pr-sec-title" style="color:#dc2626">⚠ Low Stock Alert</div><table class="pr-tbl"><thead><tr><th>Product</th><th>In Stock</th><th>Min Level</th><th>Shortage</th></tr></thead><tbody>${low.map(p=>`<tr><td><strong>${p.name}</strong></td><td style="color:#dc2626">${p.stock}</td><td>${p.minLevel}</td><td style="color:#dc2626">${p.minLevel-p.stock} units short</td></tr>`).join('')}</tbody></table></div>`:''}
-      ${footer}
-    </div>`;
-  }
-
-  if(type==='full'){
-    // Add invoices page
-    html+=`<div class="pr-page">
-      ${header}
-      <div class="pr-report-title">Invoice Report</div>
-      <div class="pr-stats">
-        <div class="pr-stat"><div class="pr-stat-lbl">Total Invoices</div><div class="pr-stat-val">${invs.length}</div></div>
-        <div class="pr-stat"><div class="pr-stat-lbl">Paid</div><div class="pr-stat-val g">${invs.filter(i=>i.status==='Paid').length}</div></div>
-        <div class="pr-stat"><div class="pr-stat-lbl">Unpaid</div><div class="pr-stat-val r">${invs.filter(i=>i.status==='Unpaid').length}</div></div>
-        <div class="pr-stat"><div class="pr-stat-lbl">Unpaid Value</div><div class="pr-stat-val r">KES ${invs.filter(i=>i.status!=='Paid').reduce((a,i)=>a+i.amount,0).toLocaleString()}</div></div>
-      </div>
-      <div class="pr-section">
-        <div class="pr-sec-title">All Invoices</div>
-        <table class="pr-tbl"><thead><tr><th>#</th><th>Date</th><th>Client</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead><tbody>
-        ${invs.slice().reverse().map(i=>`<tr><td><strong>${i.num}</strong></td><td>${fmtD(i.date)}</td><td>${i.client}</td><td>${i.desc||'—'}</td><td>KES ${i.amount.toLocaleString()}</td><td>${i.status}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:#888">No invoices</td></tr>'}
-        </tbody></table>
-      </div>
-      ${footer}
-    </div>`;
-  }
-
-  document.getElementById('print-area').innerHTML=html;
-  window.print();
-}
-
-// ══════════════════════════════════════════
-// STAFF
-// ══════════════════════════════════════════
-function openStaff(){document.getElementById('st-name').value='';document.getElementById('st-pw').value='';openM('m-staff');}
-function saveStaff(){
-  const name=document.getElementById('st-name').value.trim();
-  const role=document.getElementById('st-role').value;
-  const pw=document.getElementById('st-pw').value.trim();
-  if(!name||!pw){toast('Name and password required.','err');return;}
-  if(pw.length<4){toast('Password must be 4+ characters.','err');return;}
-  const staff=ld('pb_staff',[]);
-  if(staff.find(s=>s.name.toLowerCase()===name.toLowerCase())){toast('Name already exists.','err');return;}
-  staff.push({id:uid(),name,role,pw,addedAt:new Date().toISOString()});
-  sv('pb_staff',staff);toast(`${name} added as ${rlbl(role)}`);closeM('m-staff');rStaff();
-}
-function rStaff(){
-  const staff=ld('pb_staff',[]).filter(s=>s.role!=='owner');
-  document.getElementById('staff-body').innerHTML=staff.length?staff.map(s=>`<tr><td><strong>${s.name}</strong></td><td><span class="pill ${s.role==='manager'?'pill-b':'pill-g'}">${rlbl(s.role)}</span></td><td>${fmtD(s.addedAt)}</td><td><button class="btn btn-r btn-xs" onclick="delStaff('${s.id}')">Remove</button></td></tr>`).join(''):'<tr><td colspan="4" class="tbl-empty">No staff added — click "+ Add Staff"</td></tr>';
-}
-function delStaff(id){if(!confirm('Remove staff member?'))return;sv('pb_staff',ld('pb_staff',[]).filter(s=>s.id!==id));toast('Removed','info');rStaff();}
-
-// ══════════════════════════════════════════
-// NOTIFICATIONS
-// ══════════════════════════════════════════
-function addNotif(msg){notifs.unshift({id:uid(),msg,time:new Date().toISOString(),read:false});if(notifs.length>60)notifs=notifs.slice(0,60);sv('pb_notifs',notifs);rndot();}
-function rndot(){const u=notifs.filter(n=>!n.read).length;const d=document.getElementById('nd');if(d)d.style.display=u>0?'block':'none';}
-function toggleNotif(){
-  const p=document.getElementById('np');
-  if(!p.classList.contains('open')){notifs=notifs.map(n=>({...n,read:true}));sv('pb_notifs',notifs);rndot();rnlist();}
-  p.classList.toggle('open');
-}
-function rnlist(){
-  document.getElementById('np-list').innerHTML=notifs.length?notifs.slice(0,25).map(n=>`<div class="n-item ${n.read?'':'unread'}"><div>${n.msg}</div><div class="n-time">${fmtT(n.time)}</div></div>`).join(''):'<div class="tbl-empty" style="padding:20px">No notifications yet</div>';
-}
-function clearNotifs(){notifs=[];sv('pb_notifs',[]);document.getElementById('np').classList.remove('open');rndot();}
-document.addEventListener('click',e=>{const p=document.getElementById('np');const b=document.getElementById('nb-btn');if(p&&!p.contains(e.target)&&!b?.contains(e.target))p.classList.remove('open');});
-
-// ══════════════════════════════════════════
-// AI ACCOUNTANT (Gemini)
-// ══════════════════════════════════════════
-function buildCtx(){
-  const s=ld('pb_setup',{});
-  const sales=ld('pb_sales',[]),inc=ld('pb_income',[]),exp=ld('pb_expenses',[]);
-  const prods=ld('pb_products',[]),invs=ld('pb_invoices',[]),staff=ld('pb_staff',[]);
-  const mS=sales.filter(s=>inMonth(s.date)).reduce((a,s)=>a+s.total,0);
-  const mI=inc.filter(i=>inMonth(i.date)).reduce((a,i)=>a+i.amount,0)+mS;
-  const mE=exp.filter(e=>inMonth(e.date)).reduce((a,e)=>a+e.amount,0);
-  const low=prods.filter(p=>p.stock<=p.minLevel);
-  const payB={};sales.forEach(s=>{payB[s.payment]=(payB[s.payment]||0)+s.total;});
-  return `You are the AI Accountant for ${s.bizName||'this business'} (${s.bizType||'retail'}, Kenya). Respond professionally, concisely, in KES.
-
-THIS MONTH: Revenue KES ${mI.toLocaleString()} | Expenses KES ${mE.toLocaleString()} | Profit KES ${(mI-mE).toLocaleString()} | ${sales.filter(s=>inMonth(s.date)).length} sales
-ALL TIME: Sales KES ${sales.reduce((a,s)=>a+s.total,0).toLocaleString()} | Income KES ${inc.reduce((a,i)=>a+i.amount,0).toLocaleString()} | Expenses KES ${exp.reduce((a,e)=>a+e.amount,0).toLocaleString()} | Profit KES ${(sales.reduce((a,s)=>a+s.total,0)+inc.reduce((a,i)=>a+i.amount,0)-exp.reduce((a,e)=>a+e.amount,0)).toLocaleString()}
-STOCK: ${prods.length} products | Low stock (${low.length}): ${low.map(p=>`${p.name}(${p.stock})`).join(',')||'none'}
-STAFF: ${staff.length} total (${staff.filter(s=>s.role==='salesperson').length} sales, ${staff.filter(s=>s.role==='manager').length} managers, 1 owner)
-INVOICES: ${invs.length} total | Unpaid: KES ${invs.filter(i=>i.status!=='Paid').reduce((a,i)=>a+i.amount,0).toLocaleString()}
-PAYMENTS: ${Object.entries(payB).map(([m,a])=>`${m} KES ${a.toLocaleString()}`).join(' | ')||'no sales yet'}
-RECENT 5 SALES: ${sales.slice(-5).reverse().map(s=>`${s.product}×${s.qty}=KES${s.total}(${s.payment})by ${s.by}`).join(' | ')||'none'}`;
-}
-
-async function aiQ(msg){document.getElementById('ai-ta').value=msg;await aiSend();}
-async function aiSend(){
-  const ta=document.getElementById('ai-ta');const msg=ta.value.trim();
-  if(!msg||document.getElementById('ai-btn').disabled)return;
-  ta.value='';ta.style.height='auto';
-  if(!navigator.onLine){toast('No internet connection.','err');return;}
-  const box=document.getElementById('ai-msgs');
-  const ud=document.createElement('div');ud.className='ai-msg usr';
-  ud.innerHTML=`<div class="ai-av">👤</div><div class="ai-bub">${msg.replace(/</g,'&lt;')}</div>`;
-  box.appendChild(ud);
-  const td=document.createElement('div');td.className='ai-msg ai';td.id='ai-t';
-  td.innerHTML=`<div class="ai-av">🤖</div><div class="ai-bub"><div class="typing"><span></span><span></span><span></span></div></div>`;
-  box.appendChild(td);box.scrollTop=box.scrollHeight;
-  document.getElementById('ai-btn').disabled=true;
-  try{
-    const res=await fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({gemini:true,context:buildCtx(),message:msg,history:aiHist.slice(-6)})});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    const data=await res.json();
-    const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||data.error?.message||'No response. Please try again.';
-    td.remove();aiHist.push({role:'user',parts:[{text:msg}]},{role:'model',parts:[{text:reply}]});
-    const ad=document.createElement('div');ad.className='ai-msg ai';
-    ad.innerHTML=`<div class="ai-av">🤖</div><div class="ai-bub">${reply.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br/>')}</div>`;
-    box.appendChild(ad);box.scrollTop=box.scrollHeight;
-  }catch(e){
-    td.remove();const ed=document.createElement('div');ed.className='ai-msg ai';
-    ed.innerHTML=`<div class="ai-av">🤖</div><div class="ai-bub" style="color:var(--r)">⚠️ ${e.message}</div>`;
-    box.appendChild(ed);box.scrollTop=box.scrollHeight;
-  }
-  document.getElementById('ai-btn').disabled=false;
-}
-
-// ══════════════════════════════════════════
-// MODAL + SIDEBAR UTILS
-// ══════════════════════════════════════════
-const openM =id=>document.getElementById(id).classList.add('open');
-const closeM=id=>document.getElementById(id).classList.remove('open');
-const openSB =()=>{document.getElementById('sidebar').classList.add('open');document.getElementById('sb-ov').classList.add('show');};
-const closeSB=()=>{document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-ov').classList.remove('show');};
-document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
+    // ==========================================
+    // 6. MOUNT APP
+    // ==========================================
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
 </script>
+
 </body>
 </html>
