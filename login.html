@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProBooks — Sign In</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-box">
+    <div style="text-align:center;font-size:36px;margin-bottom:12px;">📚</div>
+    <h1 style="text-align:center;">ProBooks</h1>
+    <p style="text-align:center;">Sign in to your account</p>
+
+    <div id="alert-box"></div>
+
+    <div class="form-group">
+      <label class="form-label">Business</label>
+      <select id="biz-select" class="form-control">
+        <option value="">Loading businesses...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Your Name</label>
+      <input type="text" id="login-name" class="form-control" placeholder="Enter your full name" autocomplete="name">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" id="login-pwd" class="form-control" placeholder="Enter your password">
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:12px;" id="login-btn" onclick="doLogin()">Sign In</button>
+
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;">
+      <p class="text-muted" style="font-size:12px;">Are you the app administrator?</p>
+      <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="showAdminVerify()">Admin Options</button>
+    </div>
+
+    <!-- Admin verify panel (hidden) -->
+    <div id="admin-panel" class="hidden" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <p class="text-muted" style="font-size:12px;margin-bottom:12px;">Enter admin password to access admin options.</p>
+      <div class="form-group">
+        <input type="password" id="admin-pwd-verify" class="form-control" placeholder="Admin password">
+      </div>
+      <div class="flex gap-10">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('admin-panel').classList.add('hidden')">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="verifyAdmin()">Verify</button>
+      </div>
+      <div id="admin-actions" class="hidden" style="margin-top:12px;">
+        <a href="admin.html" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;display:flex;margin-bottom:8px;">⚙️ Manage Businesses & Users</a>
+        <a href="setup.html" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;display:flex;" id="add-business-btn">➕ Add New Business</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="js/firebase.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  // If not setup, go to setup
+  if (!isAdminSetup()) window.location.href = "setup.html";
+
+  // Clear any old session
+  clearSession();
+
+  // Load businesses
+  async function loadBusinesses() {
+    const businesses = await getBusinesses();
+    const sel = document.getElementById("biz-select");
+    if (businesses.length === 0) {
+      sel.innerHTML = '<option value="">No businesses found</option>';
+      return;
+    }
+    sel.innerHTML = businesses.map(b =>
+      `<option value="${b.id}">${b.businessName}</option>`
+    ).join("");
+  }
+  loadBusinesses();
+
+  function showAlert(msg, type = "danger") {
+    document.getElementById("alert-box").innerHTML =
+      `<div class="alert alert-${type}">${msg}</div>`;
+  }
+
+  async function doLogin() {
+    const bizId = document.getElementById("biz-select").value;
+    const name = document.getElementById("login-name").value.trim();
+    const pwd = document.getElementById("login-pwd").value;
+
+    if (!bizId) return showAlert("Please select a business.");
+    if (!name) return showAlert("Enter your name.");
+    if (!pwd) return showAlert("Enter your password.");
+
+    const btn = document.getElementById("login-btn");
+    btn.innerHTML = '<span class="spinner"></span>';
+    btn.disabled = true;
+
+    const result = await loginUser(bizId, name, pwd);
+    if (!result.success) {
+      showAlert(result.error);
+      btn.innerHTML = "Sign In";
+      btn.disabled = false;
+      return;
+    }
+
+    // Redirect by role
+    const role = result.user.role;
+    if (role === "owner") window.location.href = "pages/owner.html";
+    else if (role === "manager") window.location.href = "pages/manager.html";
+    else if (role === "sales") window.location.href = "pages/sales.html";
+    else window.location.href = "login.html";
+  }
+
+  // Enter key
+  document.addEventListener("keydown", e => {
+    if (e.key === "Enter") doLogin();
+  });
+
+  function showAdminVerify() {
+    document.getElementById("admin-panel").classList.remove("hidden");
+  }
+
+  function verifyAdmin() {
+    const pwd = document.getElementById("admin-pwd-verify").value;
+    if (verifyAdminPassword(pwd)) {
+      document.getElementById("admin-actions").classList.remove("hidden");
+    } else {
+      showAlert("Incorrect admin password.");
+    }
+  }
+</script>
+</body>
+</html>
