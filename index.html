@@ -1,0 +1,1161 @@
+ython3 << 'PYEOF'
+code = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>Pro Books — Business Accounting</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#080c14;--bg2:#0c1220;--bg3:#101828;
+  --card:#141e32;--card2:#1a2540;--card3:#202d4a;
+  --border:#1e2d45;--border2:#243354;
+  --g:#22c55e;--g2:#16a34a;--gg:rgba(34,197,94,.1);--gb:rgba(34,197,94,.22);
+  --r:#ef4444;--r2:#dc2626;--rg:rgba(239,68,68,.1);--rb:rgba(239,68,68,.22);
+  --y:#f59e0b;--yg:rgba(245,158,11,.1);--yb:rgba(245,158,11,.22);
+  --b:#3b82f6;--bg4:rgba(59,130,246,.1);--bb:rgba(59,130,246,.22);
+  --tx:#e2e8f5;--tx2:#8899bb;--tx3:#3d4f70;
+  --f:"Inter",sans-serif;--fh:"Syne",sans-serif;--fm:"JetBrains Mono",monospace;
+  --sw:252px;--rsm:8px;--rmd:12px;--rlg:16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:var(--f);font-size:14px;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--tx);overflow:hidden}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+input,select,textarea,button{font-family:var(--f)}
+.screen{display:none;height:100dvh;overflow:hidden}.screen.active{display:flex}
+#screen-admin,#screen-login,#screen-setup,#screen-connect{
+  align-items:center;justify-content:center;flex-direction:column;
+  background:radial-gradient(ellipse 60% 50% at 15% 50%,rgba(34,197,94,.07),transparent 70%),
+    radial-gradient(ellipse 40% 40% at 85% 20%,rgba(59,130,246,.05),transparent 60%),var(--bg);
+}
+.auth-card{width:min(440px,calc(100vw - 28px));background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:40px 36px;box-shadow:0 32px 80px rgba(0,0,0,.6)}
+.auth-logo{font-family:var(--fh);font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
+.auth-logo em{color:var(--g);font-style:normal}
+.auth-tag{font-size:12px;color:var(--tx2);margin-bottom:28px;letter-spacing:.3px}
+.fl{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tx2);margin-bottom:6px;display:block}
+.fi{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:11px 14px;color:var(--tx);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;margin-bottom:14px}
+.fi:focus{border-color:var(--gb);box-shadow:0 0 0 3px rgba(34,197,94,.08)}
+.fi::placeholder{color:var(--tx3)}.fi-sel{cursor:pointer}.fi-sel option{background:var(--bg3)}
+.auth-btn{width:100%;background:var(--g2);color:#fff;border:none;border-radius:var(--rsm);padding:13px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;letter-spacing:.3px;margin-top:6px}
+.auth-btn:hover{background:var(--g)}
+.auth-err{color:var(--r);font-size:12px;margin-top:8px;min-height:16px}
+.auth-link{text-align:center;margin-top:16px;font-size:12px;color:var(--tx2)}
+.auth-link span{color:var(--g);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.code-box{background:var(--bg3);border:1px solid var(--gb);border-radius:var(--rsm);padding:14px 18px;text-align:center;margin:12px 0}
+.code-val{font-family:var(--fm);font-size:28px;font-weight:700;color:var(--g);letter-spacing:8px}
+.code-hint{font-size:11px;color:var(--tx2);margin-top:6px}
+#screen-app{flex-direction:row}
+.sidebar{width:var(--sw);min-width:var(--sw);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:200;flex-shrink:0}
+.sb-top{padding:22px 18px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{font-family:var(--fh);font-size:20px;font-weight:800;letter-spacing:-.3px}
+.sb-logo em{color:var(--g);font-style:normal}
+.sb-ver{font-size:10px;color:var(--tx3);margin-top:2px;letter-spacing:.5px}
+.sb-user{margin:10px 10px 0;background:var(--card);border:1px solid var(--border);border-radius:var(--rsm);padding:11px 13px}
+.sb-uname{font-size:13px;font-weight:600}.sb-urole{font-size:11px;color:var(--tx2);margin-top:2px}.sb-ubiz{font-size:11px;color:var(--g);margin-top:2px;font-weight:500}
+.nav-lbl{padding:16px 14px 5px;font-size:9.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--tx3)}
+.nav-it{display:flex;align-items:center;gap:9px;padding:9px 14px;margin:1px 8px;border-radius:var(--rsm);cursor:pointer;font-size:13px;color:var(--tx2);transition:all .14s;border:1px solid transparent;user-select:none}
+.nav-it:hover{background:var(--card2);color:var(--tx)}.nav-it.on{background:rgba(34,197,94,.1);color:var(--g);border-color:var(--gb)}
+.nav-it .ic{font-size:14px;width:17px;text-align:center;flex-shrink:0}
+.sb-bot{margin-top:auto;border-top:1px solid var(--border);padding:8px}
+.sb-out{display:flex;align-items:center;gap:9px;padding:9px 13px;border-radius:var(--rsm);cursor:pointer;color:var(--r);font-size:13px;transition:background .14s}
+.sb-out:hover{background:var(--rg)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 22px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.hmbg{display:none;background:none;border:none;color:var(--tx2);font-size:22px;cursor:pointer;padding:2px;flex-shrink:0}
+.tb-title{font-family:var(--fh);font-size:17px;font-weight:700;flex:1;letter-spacing:-.2px}
+.tb-right{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:.3px}
+.pill-g{background:var(--gg);color:var(--g);border:1px solid var(--gb)}
+.pill-b{background:var(--bg4);color:var(--b);border:1px solid var(--bb)}
+.pill-y{background:var(--yg);color:var(--y);border:1px solid var(--yb)}
+.pill-r{background:var(--rg);color:var(--r);border:1px solid var(--rb)}
+.pdot{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 5px currentColor}
+.pg{display:none;flex:1;overflow-y:auto;padding:22px}.pg.on{display:block}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:13px;margin-bottom:22px}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--rmd);padding:18px 20px;position:relative;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.sc::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--g));opacity:.6}
+.sc:hover{border-color:var(--border2);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.sl{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tx2);margin-bottom:10px}
+.sv{font-family:var(--fm);font-size:21px;font-weight:500;line-height:1.2}
+.sv.g{color:var(--g)}.sv.r{color:var(--r)}.sv.y{color:var(--y)}
+.sd{font-size:11px;color:var(--tx2);margin-top:5px}
+.cc{background:var(--card);border:1px solid var(--border);border-radius:var(--rmd);margin-bottom:16px;overflow:hidden}
+.ch{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.01)}
+.cht{font-family:var(--fh);font-size:14px;font-weight:700;letter-spacing:-.1px}
+.cb{padding:18px 20px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:9px 13px;font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tx2);border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl td{padding:11px 13px;border-bottom:1px solid var(--border);color:var(--tx);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:rgba(255,255,255,.02)}
+.te{text-align:center;padding:36px 20px;color:var(--tx2);font-size:13px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--rsm);border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .14s;letter-spacing:.2px;white-space:nowrap}
+.bg{background:var(--g2);color:#fff}.bg:hover{background:var(--g)}.bg:disabled{opacity:.5;cursor:not-allowed}
+.bgh{background:var(--card2);color:var(--tx);border:1px solid var(--border)}.bgh:hover{border-color:var(--border2);background:var(--card3)}
+.br{background:var(--r2);color:#fff}.br:hover{background:var(--r)}
+.bb{background:rgba(59,130,246,.15);color:var(--b);border:1px solid var(--bb)}.bb:hover{background:rgba(59,130,246,.25)}
+.bsm{padding:5px 11px;font-size:12px}.bxs{padding:3px 8px;font-size:11px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px}
+.fr.s1{grid-template-columns:1fr}
+.fg{display:flex;flex-direction:column;gap:5px}
+.flb{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx2)}
+.fin,.fse,.fta{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 13px;color:var(--tx);font-size:13px;outline:none;transition:border-color .14s,box-shadow .14s;width:100%}
+.fin:focus,.fse:focus,.fta:focus{border-color:var(--gb);box-shadow:0 0 0 3px rgba(34,197,94,.07)}
+.fin::placeholder{color:var(--tx3)}.fse{cursor:pointer}.fse option{background:var(--bg3)}.fta{resize:vertical;min-height:80px}
+.mbg{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px}
+.mbg.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);width:min(540px,100%);max-height:92dvh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.7)}
+.mh{padding:20px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mt{font-family:var(--fh);font-size:15px;font-weight:700}
+.mx{background:none;border:none;color:var(--tx2);font-size:22px;cursor:pointer;padding:0 4px;border-radius:4px;transition:color .14s;line-height:1}
+.mx:hover{color:var(--tx)}
+.mb{padding:22px}.mf{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+#toasts{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:var(--rmd);padding:13px 16px;font-size:13px;min-width:240px;max-width:340px;box-shadow:0 12px 32px rgba(0,0,0,.5);animation:tin .3s ease;pointer-events:all}
+.toast.ok{border-left:3px solid var(--g)}.toast.err{border-left:3px solid var(--r)}.toast.info{border-left:3px solid var(--b)}.toast.warn{border-left:3px solid var(--y)}
+@keyframes tin{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
+.nb{position:relative;cursor:pointer;padding:5px;font-size:19px;border-radius:var(--rsm);transition:background .14s}.nb:hover{background:var(--card2)}
+.nd{width:7px;height:7px;border-radius:50%;background:var(--r);position:absolute;top:2px;right:2px;display:none;box-shadow:0 0 6px var(--r)}
+.np{display:none;position:absolute;top:calc(100% + 8px);right:0;width:310px;background:var(--card);border:1px solid var(--border);border-radius:var(--rmd);box-shadow:0 16px 40px rgba(0,0,0,.5);z-index:300;max-height:380px;overflow-y:auto}
+.np.open{display:block}
+.nph{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700}
+.ni{padding:12px 16px;border-bottom:1px solid var(--border);font-size:12.5px;line-height:1.5}
+.ni:last-child{border-bottom:none}.ni.ur{background:rgba(34,197,94,.04)}
+.nt{font-size:11px;color:var(--tx2);margin-top:3px}
+.bok{background:var(--gg);color:var(--g);border:1px solid var(--gb);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600;display:inline-flex}
+.blow{background:var(--yg);color:var(--y);border:1px solid var(--yb);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600;display:inline-flex}
+.bout{background:var(--rg);color:var(--r);border:1px solid var(--rb);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600;display:inline-flex}
+.ptag{background:var(--bg4);color:var(--b);border:1px solid var(--bb);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:500;display:inline-flex}
+.rt-dot{width:8px;height:8px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g);animation:rtpulse 2s infinite;display:inline-block}
+@keyframes rtpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.ai-wrap{display:flex;flex-direction:column;height:calc(100dvh - 53px)}
+.ai-hdr{padding:13px 18px;border-bottom:1px solid var(--border);background:var(--card2);display:flex;align-items:center;gap:11px;flex-shrink:0}
+.ai-msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:13px}
+.ai-msg{display:flex;gap:9px;max-width:88%}.ai-msg.usr{align-self:flex-end;flex-direction:row-reverse}
+.ai-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
+.ai-msg.ai .ai-av{background:var(--gg);border:1px solid var(--gb);color:var(--g)}
+.ai-msg.usr .ai-av{background:var(--card2);border:1px solid var(--border)}
+.ai-bub{padding:10px 14px;border-radius:11px;font-size:13px;line-height:1.65}
+.ai-msg.ai .ai-bub{background:var(--card2);border:1px solid var(--border);border-top-left-radius:3px}
+.ai-msg.usr .ai-bub{background:var(--g2);color:#fff;border-top-right-radius:3px}
+.ai-bub strong{color:var(--g);font-weight:600}
+.ai-chips{display:flex;flex-wrap:wrap;gap:6px;padding:9px 14px 0;flex-shrink:0}
+.ai-chip{background:var(--card2);border:1px solid var(--border);border-radius:100px;padding:5px 11px;font-size:11.5px;cursor:pointer;color:var(--tx2);transition:all .13s}
+.ai-chip:hover{border-color:var(--gb);color:var(--g);background:var(--gg)}
+.ai-inr{padding:11px 13px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;background:var(--card2);flex-shrink:0}
+.ai-ta{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 13px;color:var(--tx);font-size:13px;resize:none;outline:none;max-height:100px;transition:border-color .14s}
+.ai-ta:focus{border-color:var(--gb)}.ai-ta::placeholder{color:var(--tx3)}
+.ai-send{width:38px;height:38px;border-radius:var(--rsm);background:var(--g2);color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .14s;flex-shrink:0}
+.ai-send:hover{background:var(--g)}.ai-send:disabled{opacity:.35;cursor:not-allowed}
+.typing{display:flex;gap:4px;padding:5px 2px;align-items:center}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--g);opacity:.4;animation:tb .85s infinite}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes tb{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-6px);opacity:1}}
+#sb-ov{display:none;position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.65);backdrop-filter:blur(3px)}
+.loader{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.loader-ring{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--g);border-radius:50%;animation:spin 1s linear infinite}
+.loader p{font-size:13px;color:var(--tx2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+#print-area{display:none}
+@media print{
+  body>*{display:none!important}
+  #print-area{display:block!important;font-family:Arial,sans-serif;color:#111;background:#fff;font-size:12px}
+  .prp{page-break-after:always;padding:32px 36px}.prp:last-child{page-break-after:auto}
+  .prh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;padding-bottom:14px;border-bottom:2px solid #16a34a}
+  .prh-biz{font-size:22px;font-weight:800}.prh-biz span{color:#16a34a}
+  .prh-meta{text-align:right;font-size:11px;color:#666;line-height:1.6}
+  .prtitle{font-size:15px;font-weight:800;margin-bottom:18px;text-transform:uppercase;letter-spacing:1px}
+  .prsg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+  .prsc{background:#f8f9fa;border:1px solid #e5e7eb;border-radius:8px;padding:12px}
+  .prsl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:5px}
+  .prsv{font-size:17px;font-weight:700;color:#111}.prsv.g{color:#16a34a}.prsv.r{color:#dc2626}
+  .prs{margin-bottom:20px}
+  .prst{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#374151;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #e5e7eb}
+  .prtbl{width:100%;border-collapse:collapse;font-size:11px}
+  .prtbl th{background:#f3f4f6;padding:7px 9px;text-align:left;font-weight:700;font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:#6b7280;border:1px solid #e5e7eb}
+  .prtbl td{padding:7px 9px;border:1px solid #e5e7eb;color:#374151}
+  .prtbl tr:nth-child(even) td{background:#fafafa}
+  .prr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px}
+  .prtot{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;font-weight:700}
+  .prbox{background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:13px;margin-top:10px}
+  .prbox.loss{background:#fef2f2;border-color:#dc2626}
+  .prft{margin-top:20px;padding-top:10px;border-top:1px solid #e5e7eb;font-size:10px;color:#9ca3af;display:flex;justify-content:space-between}
+}
+@media(max-width:720px){
+  .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);box-shadow:6px 0 32px rgba(0,0,0,.6)}
+  .sidebar.open{transform:translateX(0)}.#sb-ov.show{display:block}
+  .hmbg{display:block}.main{width:100%}
+  .fr{grid-template-columns:1fr}.sg{grid-template-columns:1fr 1fr}
+  .pg{padding:14px}.topbar{padding:10px 14px}.auth-card{padding:28px 20px}
+}
+@media(max-width:440px){
+  .sg{grid-template-columns:1fr}
+  .tbl th:nth-child(n+5),.tbl td:nth-child(n+5){display:none}
+  .auth-card{padding:22px 16px}
+}
+</style>
+</head>
+<body>
+<div id="print-area"></div>
+<div id="toasts"></div>
+
+<!-- LOADER -->
+<div class="loader" id="loader">
+  <div class="loader-ring"></div>
+  <p id="loader-msg">Connecting to Pro Books...</p>
+</div>
+
+<!-- ADMIN SCREEN -->
+<div id="screen-admin" class="screen">
+  <div class="auth-card">
+    <div class="auth-logo">Pro <em>Books</em></div>
+    <div class="auth-tag">First-time setup · Admin authentication required</div>
+    <label class="fl">Admin Password</label>
+    <input class="fi" type="password" id="admin-pw" placeholder="Enter admin password to unlock" onkeydown="if(event.key===\'Enter\')adminUnlock()"/>
+    <div id="admin-err" class="auth-err"></div>
+    <button class="auth-btn" onclick="adminUnlock()">Unlock Setup &#8594;</button>
+  </div>
+</div>
+
+<!-- SETUP SCREEN -->
+<div id="screen-setup" class="screen">
+  <div class="auth-card" style="max-width:460px">
+    <div class="auth-logo">Pro <em>Books</em></div>
+    <div class="auth-tag">Create your business account</div>
+    <label class="fl">Business Name</label>
+    <input class="fi" id="s-biz" placeholder="e.g. One Plus Chemist"/>
+    <label class="fl">Your Name (Owner)</label>
+    <input class="fi" id="s-own" placeholder="Your full name"/>
+    <label class="fl">Create Owner Password</label>
+    <input class="fi" type="password" id="s-pw" placeholder="Minimum 6 characters"/>
+    <label class="fl">Business Type</label>
+    <select class="fi fi-sel" id="s-type">
+      <option value="retail">Retail Shop</option><option value="pharmacy">Pharmacy / Chemist</option>
+      <option value="restaurant">Restaurant / Food</option><option value="wholesale">Wholesale</option>
+      <option value="services">Services</option><option value="other">Other</option>
+    </select>
+    <div id="setup-err" class="auth-err"></div>
+    <button class="auth-btn" id="setup-btn" onclick="doSetup()">Create Business &#8594;</button>
+  </div>
+</div>
+
+<!-- CONNECT SCREEN (for staff on new devices) -->
+<div id="screen-connect" class="screen">
+  <div class="auth-card">
+    <div class="auth-logo">Pro <em>Books</em></div>
+    <div class="auth-tag">Connect this device to your business</div>
+    <div style="background:var(--gg);border:1px solid var(--gb);border-radius:var(--rsm);padding:12px 14px;margin-bottom:20px;font-size:12.5px;line-height:1.6;color:var(--tx2)">
+      &#128242; Ask your business owner for the <strong style="color:var(--g)">6-character Connect Code</strong> shown in their app under Staff &rarr; Connect Code.
+    </div>
+    <label class="fl">Enter Connect Code</label>
+    <input class="fi" id="cc-input" placeholder="e.g. AB12CD" style="text-transform:uppercase;letter-spacing:4px;font-family:var(--fm);font-size:18px;text-align:center" maxlength="6" oninput="this.value=this.value.toUpperCase()"/>
+    <div id="cc-err" class="auth-err"></div>
+    <button class="auth-btn" id="cc-btn" onclick="doConnect()">Connect Device &#8594;</button>
+    <div class="auth-link">Already set up? <span onclick="show(\'login\')">Sign in instead</span></div>
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="screen-login" class="screen">
+  <div class="auth-card">
+    <div class="auth-logo">Pro <em>Books</em></div>
+    <div class="auth-tag" id="login-sub">Sign in to your account</div>
+    <label class="fl">Your Name</label>
+    <input class="fi" id="l-name" placeholder="Enter your full name"/>
+    <label class="fl">Password</label>
+    <input class="fi" type="password" id="l-pw" placeholder="Enter your password" onkeydown="if(event.key===\'Enter\')doLogin()"/>
+    <div id="login-err" class="auth-err"></div>
+    <button class="auth-btn" onclick="doLogin()">Sign In &#8594;</button>
+    <div class="auth-link">
+      <span onclick="openReset()">Forgot password? Reset with admin key</span>
+      &nbsp;&#183;&nbsp;
+      <span onclick="show(\'connect\')">New device? Connect here</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="screen-app" class="screen">
+  <div id="sb-ov" onclick="closeSB()"></div>
+  <nav class="sidebar" id="sidebar">
+    <div class="sb-top">
+      <div class="sb-logo">Pro <em>Books</em></div>
+      <div class="sb-ver" id="sb-biz">v2.0</div>
+    </div>
+    <div class="sb-user">
+      <div class="sb-uname" id="sb-uname">&#8212;</div>
+      <div class="sb-urole" id="sb-urole">&#8212;</div>
+      <div class="sb-ubiz" id="sb-ubiz">&#8212;</div>
+    </div>
+    <div id="sb-nav"></div>
+    <div class="sb-bot">
+      <div class="sb-out" onclick="logout()"><span>&#8612;</span><span>Sign Out</span></div>
+    </div>
+  </nav>
+  <div class="main">
+    <div class="topbar">
+      <button class="hmbg" onclick="openSB()">&#9776;</button>
+      <div class="tb-title" id="tb-title">Dashboard</div>
+      <div class="tb-right">
+        <span id="rt-status" title="Real-time sync active"><span class="rt-dot"></span></span>
+        <div id="notif-wrap" style="position:relative;display:none">
+          <div class="nb" onclick="togNotif()" id="nb-btn">&#128276;<span class="nd" id="nd"></span></div>
+          <div class="np" id="np">
+            <div class="nph">Notifications <span style="color:var(--g);cursor:pointer;font-size:11px;font-weight:400" onclick="clrNotifs()">Clear all</span></div>
+            <div id="np-list"><div class="te" style="padding:20px">No notifications yet</div></div>
+          </div>
+        </div>
+        <span class="pill pill-g" id="tb-role">Owner</span>
+      </div>
+    </div>
+
+    <div id="pg-dash" class="pg">
+      <div class="sg" id="dash-stats"></div>
+      <div class="cc"><div class="ch"><div class="cht">Recent Sales</div><button class="btn bgh bsm" onclick="goTo(\'sales\')">View All &#8594;</button></div>
+        <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Time</th><th>Product</th><th>Qty</th><th>Total</th><th>Payment</th><th>By</th></tr></thead><tbody id="dash-sales"><tr><td colspan="6" class="te">No sales yet</td></tr></tbody></table></div>
+      </div>
+      <div class="cc"><div class="ch"><div class="cht">&#9888;&#65039; Low Stock Alerts</div></div>
+        <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Product</th><th>In Stock</th><th>Min Level</th><th>Status</th></tr></thead><tbody id="dash-low"><tr><td colspan="4" class="te">All stock levels OK &#10003;</td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="pg-sales" class="pg">
+      <div class="cc"><div class="ch"><div class="cht">Record New Sale</div></div><div class="cb">
+        <div class="fr"><div class="fg"><div class="flb">Product</div><select class="fse" id="s-prod" onchange="fillPrice()"><option value="">Select product...</option></select></div>
+          <div class="fg"><div class="flb">Quantity</div><input class="fin" type="number" id="s-qty" min="1" value="1" oninput="calcTot()"/></div></div>
+        <div class="fr"><div class="fg"><div class="flb">Price Per Unit (KES)</div><input class="fin" type="number" id="s-price" min="0" step="0.01" oninput="calcTot()"/></div>
+          <div class="fg"><div class="flb">Total Amount (KES)</div><input class="fin" type="number" id="s-total" readonly style="opacity:.6;background:var(--bg)"/></div></div>
+        <div class="fr"><div class="fg"><div class="flb">Payment Method</div><select class="fse" id="s-pay"><option>Cash</option><option>M-Pesa</option><option>Card</option><option>Bank Transfer</option><option>Cheque</option></select></div>
+          <div class="fg"><div class="flb">Customer Name (optional)</div><input class="fin" id="s-cust" placeholder="Walk-in customer"/></div></div>
+        <div class="fr s1"><div class="fg"><div class="flb">Notes (optional)</div><input class="fin" id="s-notes" placeholder="Any notes..."/></div></div>
+        <button class="btn bg" id="sale-btn" onclick="recordSale()">&#10003; Record Sale</button>
+      </div></div>
+      <div class="cc"><div class="ch"><div class="cht">Sales History</div>
+        <input class="fin" style="width:150px;padding:6px 10px;font-size:12px" type="date" id="sales-date" onchange="rSales()"/>
+      </div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date/Time</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Payment</th><th>Customer</th><th>By</th></tr></thead><tbody id="sales-body"><tr><td colspan="8" class="te">No sales recorded</td></tr></tbody></table></div></div>
+    </div>
+
+    <div id="pg-stock" class="pg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Stock / Inventory</div>
+        <div style="display:flex;gap:8px"><button class="btn bgh bsm" onclick="openRestock()">+ Restock</button><button class="btn bg bsm" id="add-prod-btn" onclick="openProd()" style="display:none">+ Add Product</button></div>
+      </div>
+      <div class="cc"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Product</th><th>Category</th><th>In Stock</th><th>Min Level</th><th id="buy-th">Buying Price</th><th>Selling Price</th><th>Status</th><th id="stk-act-th" style="display:none">Actions</th></tr></thead><tbody id="stock-body"><tr><td colspan="8" class="te">No products yet</td></tr></tbody></table></div></div>
+    </div>
+
+    <div id="pg-income" class="pg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Income</div><button class="btn bg bsm" onclick="openIncome()">+ Add Income</button>
+      </div>
+      <div class="sg" id="inc-stats"></div>
+      <div class="cc"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Payment</th><th>Actions</th></tr></thead><tbody id="inc-body"><tr><td colspan="6" class="te">No income recorded</td></tr></tbody></table></div></div>
+    </div>
+
+    <div id="pg-exp" class="pg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Expenses</div><button class="btn bg bsm" onclick="openExp()">+ Add Expense</button>
+      </div>
+      <div class="sg" id="exp-stats"></div>
+      <div class="cc"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Payment</th><th>Actions</th></tr></thead><tbody id="exp-body"><tr><td colspan="6" class="te">No expenses recorded</td></tr></tbody></table></div></div>
+    </div>
+
+    <div id="pg-inv" class="pg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Invoices</div><button class="btn bg bsm" onclick="openInv()">+ New Invoice</button>
+      </div>
+      <div class="cc"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>#</th><th>Date</th><th>Client</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="inv-body"><tr><td colspan="6" class="te">No invoices yet</td></tr></tbody></table></div></div>
+    </div>
+
+    <div id="pg-rep" class="pg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Reports</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn bb bsm" onclick="pRep(\'pl\')">&#8595; P&amp;L Report</button>
+          <button class="btn bb bsm" onclick="pRep(\'sales\')">&#8595; Sales Report</button>
+          <button class="btn bb bsm" onclick="pRep(\'stock\')">&#8595; Stock Report</button>
+          <button class="btn bg bsm" onclick="pRep(\'full\')">&#8595; Full Report</button>
+        </div>
+      </div>
+      <div class="sg" id="rep-stats"></div>
+      <div class="cc"><div class="ch"><div class="cht">Profit &amp; Loss</div>
+        <select class="fse" id="pl-period" style="padding:6px 10px;font-size:12px;width:auto" onchange="renderPL()">
+          <option value="month">This Month</option><option value="quarter">This Quarter</option><option value="year">This Year</option><option value="all">All Time</option>
+        </select>
+      </div><div class="cb" id="pl-body"></div></div>
+      <div class="cc"><div class="ch"><div class="cht">Sales by Payment Method</div></div><div class="cb" id="pay-bkdn"></div></div>
+      <div class="cc"><div class="ch"><div class="cht">Full Sales Report</div></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Unit</th><th>Total</th><th>Payment</th><th>By</th></tr></thead><tbody id="rep-sales"><tr><td colspan="7" class="te">No data</td></tr></tbody></table></div></div>
+      <div class="cc"><div class="ch"><div class="cht">Stock Report</div></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Product</th><th>Category</th><th>In Stock</th><th>Min</th><th>Buy Price</th><th>Sell Price</th><th>Status</th></tr></thead><tbody id="rep-stock"><tr><td colspan="7" class="te">No data</td></tr></tbody></table></div></div>
+      <div class="cc"><div class="ch"><div class="cht">Invoice Report</div></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>#</th><th>Client</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody id="rep-inv"><tr><td colspan="5" class="te">No data</td></tr></tbody></table></div></div>
+    </div>
+
+    <div id="pg-staff" class="pg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Staff Management</div><button class="btn bg bsm" onclick="openStaff()">+ Add Staff</button>
+      </div>
+      <div class="cc"><div class="ch"><div class="cht">Connect Code</div></div>
+        <div class="cb">
+          <p style="font-size:13px;color:var(--tx2);margin-bottom:12px">Share this code with your staff so they can connect their device to your business.</p>
+          <div class="code-box"><div class="code-val" id="connect-code">&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</div><div class="code-hint">Staff enter this code on their device under "New device? Connect here"</div></div>
+        </div>
+      </div>
+      <div class="cc"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Added</th><th>Actions</th></tr></thead><tbody id="staff-body"><tr><td colspan="4" class="te">No staff added yet</td></tr></tbody></table></div></div>
+    </div>
+
+    <div id="pg-ai" class="pg" style="padding:0">
+      <div class="ai-wrap">
+        <div class="ai-hdr"><span style="font-size:20px">&#129302;</span>
+          <div><div style="font-family:var(--fh);font-size:14px;font-weight:700">AI Accountant</div><div style="font-size:11px;color:var(--tx2)">Powered by Gemini &#183; Reads your live business data</div></div>
+          <span class="pill pill-g" style="margin-left:auto"><span class="pdot"></span> Free</span>
+        </div>
+        <div class="ai-chips">
+          <button class="ai-chip" onclick="aiQ(\'Give me a full financial summary\')">Financial summary</button>
+          <button class="ai-chip" onclick="aiQ(\'What is my profit this month?\')">This month profit</button>
+          <button class="ai-chip" onclick="aiQ(\'Which products are selling the most?\')">Best sellers</button>
+          <button class="ai-chip" onclick="aiQ(\'Are there any fraud risks or anomalies?\')">Fraud check</button>
+          <button class="ai-chip" onclick="aiQ(\'Calculate my VAT liability at 16%\')">VAT calculation</button>
+          <button class="ai-chip" onclick="aiQ(\'What stock needs urgent restocking?\')">Stock alerts</button>
+          <button class="ai-chip" onclick="aiQ(\'Show me cash flow analysis\')">Cash flow</button>
+          <button class="ai-chip" onclick="aiQ(\'Who are my best performing staff?\')">Staff performance</button>
+        </div>
+        <div class="ai-msgs" id="ai-msgs">
+          <div class="ai-msg ai"><div class="ai-av">&#129302;</div><div class="ai-bub"><strong>Hello! I\'m your AI Accountant.</strong><br/>I have full access to your live business data synced across all devices.<br/><br/>Try: <em>"Give me a financial summary"</em></div></div>
+        </div>
+        <div class="ai-inr">
+          <textarea class="ai-ta" id="ai-ta" rows="1" placeholder="Ask your AI Accountant anything..."
+            onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();aiSend()}"
+            oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,100)+\'px\'"></textarea>
+          <button class="ai-send" id="ai-btn" onclick="aiSend()">&#9654;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="mbg" id="m-prod"><div class="modal">
+  <div class="mh"><div class="mt" id="prod-title">Add Product</div><button class="mx" onclick="closeM(\'m-prod\')">&#10005;</button></div>
+  <div class="mb">
+    <input type="hidden" id="prod-id"/>
+    <div class="fr"><div class="fg"><div class="flb">Product Name</div><input class="fin" id="p-name" placeholder="e.g. Paracetamol 500mg"/></div><div class="fg"><div class="flb">Category</div><input class="fin" id="p-cat" placeholder="e.g. Medication"/></div></div>
+    <div class="fr"><div class="fg"><div class="flb">Initial Stock</div><input class="fin" type="number" id="p-stock" min="0" value="0"/></div><div class="fg"><div class="flb">Min Stock Level</div><input class="fin" type="number" id="p-min" min="0" value="10"/></div></div>
+    <div class="fr"><div class="fg"><div class="flb">Buying Price (KES)</div><input class="fin" type="number" id="p-buy" min="0" step="0.01" value="0"/></div><div class="fg"><div class="flb">Selling Price (KES)</div><input class="fin" type="number" id="p-sell" min="0" step="0.01" value="0"/></div></div>
+  </div>
+  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-prod\')">Cancel</button><button class="btn bg" onclick="saveProd()">Save Product</button></div>
+</div></div>
+
+<div class="mbg" id="m-restock"><div class="modal">
+  <div class="mh"><div class="mt">Restock Product</div><button class="mx" onclick="closeM(\'m-restock\')">&#10005;</button></div>
+  <div class="mb">
+    <div class="fr s1"><div class="fg"><div class="flb">Product</div><select class="fse" id="r-prod"><option value="">Select product...</option></select></div></div>
+    <div class="fr"><div class="fg"><div class="flb">Quantity to Add</div><input class="fin" type="number" id="r-qty" min="1" value="1"/></div><div class="fg"><div class="flb">Cost Per Unit (KES)</div><input class="fin" type="number" id="r-cost" min="0" step="0.01" value="0"/></div></div>
+    <div class="fr s1"><div class="fg"><div class="flb">Supplier (optional)</div><input class="fin" id="r-sup" placeholder="Supplier name"/></div></div>
+  </div>
+  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-restock\')">Cancel</button><button class="btn bg" onclick="saveRestock()">Confirm Restock</button></div>
+</div></div>
+
+<div class="mbg" id="m-inc"><div class="modal">
+  <div class="mh"><div class="mt">Add Income</div><button class="mx" onclick="closeM(\'m-inc\')">&#10005;</button></div>
+  <div class="mb">
+    <div class="fr s1"><div class="fg"><div class="flb">Description</div><input class="fin" id="i-desc" placeholder="e.g. Consultation fee"/></div></div>
+    <div class="fr"><div class="fg"><div class="flb">Amount (KES)</div><input class="fin" type="number" id="i-amt" min="0" step="0.01"/></div><div class="fg"><div class="flb">Category</div><select class="fse" id="i-cat"><option>Sales Revenue</option><option>Service Fee</option><option>Consultation</option><option>Rental Income</option><option>Other Income</option></select></div></div>
+    <div class="fr"><div class="fg"><div class="flb">Payment Method</div><select class="fse" id="i-pay"><option>Cash</option><option>M-Pesa</option><option>Card</option><option>Bank Transfer</option><option>Cheque</option></select></div><div class="fg"><div class="flb">Date</div><input class="fin" type="date" id="i-date"/></div></div>
+  </div>
+  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-inc\')">Cancel</button><button class="btn bg" onclick="saveIncome()">Save Income</button></div>
+</div></div>
+
+<div class="mbg" id="m-exp"><div class="modal">
+  <div class="mh"><div class="mt">Add Expense</div><button class="mx" onclick="closeM(\'m-exp\')">&#10005;</button></div>
+  <div class="mb">
+    <div class="fr s1"><div class="fg"><div class="flb">Description</div><input class="fin" id="e-desc" placeholder="e.g. Rent payment"/></div></div>
+    <div class="fr"><div class="fg"><div class="flb">Amount (KES)</div><input class="fin" type="number" id="e-amt" min="0" step="0.01"/></div><div class="fg"><div class="flb">Category</div><select class="fse" id="e-cat"><option>Rent</option><option>Utilities</option><option>Salaries</option><option>Stock Purchase</option><option>Transport</option><option>Marketing</option><option>Equipment</option><option>Other</option></select></div></div>
+    <div class="fr"><div class="fg"><div class="flb">Payment Method</div><select class="fse" id="e-pay"><option>Cash</option><option>M-Pesa</option><option>Card</option><option>Bank Transfer</option><option>Cheque</option></select></div><div class="fg"><div class="flb">Date</div><input class="fin" type="date" id="e-date"/></div></div>
+  </div>
+  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-exp\')">Cancel</button><button class="btn bg" onclick="saveExp()">Save Expense</button></div>
+</div></div>
+
+<div class="mbg" id="m-inv"><div class="modal">
+  <div class="mh"><div class="mt">New Invoice</div><button class="mx" onclick="closeM(\'m-inv\')">&#10005;</button></div>
+  <div class="mb">
+    <div class="fr"><div class="fg"><div class="flb">Client Name</div><input class="fin" id="v-cl" placeholder="Client or company name"/></div><div class="fg"><div class="flb">Date</div><input class="fin" type="date" id="v-date"/></div></div>
+    <div class="fr"><div class="fg"><div class="flb">Amount (KES)</div><input class="fin" type="number" id="v-amt" min="0" step="0.01"/></div><div class="fg"><div class="flb">Status</div><select class="fse" id="v-st"><option>Unpaid</option><option>Paid</option><option>Partial</option><option>Overdue</option></select></div></div>
+    <div class="fr s1"><div class="fg"><div class="flb">Description</div><textarea class="fta" id="v-desc" placeholder="Invoice details..."></textarea></div></div>
+  </div>
+  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-inv\')">Cancel</button><button class="btn bg" onclick="saveInv()">Save Invoice</button></div>
+</div></div>
+
+<div class="mbg" id="m-staff"><div class="modal">
+  <div class="mh"><div class="mt">Add Staff Member</div><button class="mx" onclick="closeM(\'m-staff\')">&#10005;</button></div>
+  <div class="mb">
+    <div class="fr"><div class="fg"><div class="flb">Full Name</div><input class="fin" id="st-nm" placeholder="Staff member\'s full name"/></div><div class="fg"><div class="flb">Role</div><select class="fse" id="st-role"><option value="salesperson">Sales Person</option><option value="manager">Manager</option></select></div></div>
+    <div class="fr s1"><div class="fg"><div class="flb">Password</div><input class="fin" type="password" id="st-pw" placeholder="Create a password (min 4 characters)"/></div></div>
+  </div>
+  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-staff\')">Cancel</button><button class="btn bg" onclick="saveStaff()">Add Staff</button></div>
+</div></div>
+
+<div class="mbg" id="m-reset"><div class="modal" style="max-width:400px">
+  <div class="mh"><div class="mt">Reset Password</div><button class="mx" onclick="closeM(\'m-reset\')">&#10005;</button></div>
+  <div class="mb">
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:12px;line-height:1.6">
+      &#128272; Enter the admin key to unlock, then choose who to reset.
+    </div>
+    <div class="fg" style="margin-bottom:13px"><div class="flb">Admin Key</div><input class="fin" type="password" id="reset-admin-key" placeholder="Enter admin password"/></div>
+    <div class="fg" style="margin-bottom:13px;display:none" id="reset-step2"><div class="flb">Select Staff Member</div><select class="fse" id="reset-who"></select></div>
+    <div class="fg" style="display:none;margin-bottom:4px" id="reset-step3"><div class="flb">New Password</div><input class="fin" type="password" id="reset-newpw" placeholder="New password (min 4 characters)"/></div>
+    <div id="reset-err" style="color:var(--r);font-size:12px;margin-top:6px;min-height:16px"></div>
+  </div>
+  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-reset\')">Cancel</button><button class="btn bg" id="reset-btn" onclick="doReset()">Verify Admin Key</button></div>
+</div></div>
+
+<script>
+// ================================================================
+//  PRO BOOKS v3 — Supabase Cloud Sync + Real-time
+// ================================================================
+
+// ── SUPABASE CONFIG ─────────────────────────────────────────────
+// STEP 1: Replace these with your Supabase project URL and anon key
+const SB_URL = \'YOUR_SUPABASE_URL\';
+const SB_KEY = \'YOUR_SUPABASE_ANON_KEY\';
+
+const PROXY    = \'https://aiprobooks.netlify.app/.netlify/functions/ai\';
+const ADMIN_PW = \'PB@Admin2025#LKC\';
+
+// ── STATE ────────────────────────────────────────────────────────
+let sb, CU = null, BIZ_ID = localStorage.getItem(\'pb_biz_id\'), aiHist = [];
+let C = { staff:[], products:[], sales:[], income:[], expenses:[], invoices:[], notifications:[] };
+
+// ── UTILS ────────────────────────────────────────────────────────
+const KES  = n => \'KES \' + Number(n||0).toLocaleString(\'en-KE\',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtD = d => d ? new Date(d).toLocaleDateString(\'en-KE\',{day:\'2-digit\',month:\'short\',year:\'numeric\'}) : \'\\u2014\';
+const fmtT = d => d ? new Date(d).toLocaleString(\'en-KE\',{day:\'2-digit\',month:\'short\',hour:\'2-digit\',minute:\'2-digit\'}) : \'\\u2014\';
+const uid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+const today= () => new Date().toISOString().split(\'T\')[0];
+const inM  = (d,n=new Date()) => { const dt=new Date(d); return dt.getMonth()===n.getMonth()&&dt.getFullYear()===n.getFullYear(); };
+const rlbl = r => ({owner:\'Owner\',manager:\'Manager\',salesperson:\'Sales Person\'}[r]||r);
+
+function toast(msg,type=\'ok\'){
+  const w=document.getElementById(\'toasts\');const d=document.createElement(\'div\');
+  d.className=`toast ${type}`;d.textContent=msg;w.appendChild(d);
+  setTimeout(()=>{d.style.opacity=\'0\';d.style.transition=\'opacity .3s\';setTimeout(()=>d.remove(),300)},3200);
+}
+const show = id => { document.querySelectorAll(\'.screen\').forEach(s=>s.classList.remove(\'active\')); document.getElementById(\'screen-\'+id)?.classList.add(\'active\'); };
+const hideLoader = () => { document.getElementById(\'loader\').style.display=\'none\'; };
+const showLoader = msg => { const l=document.getElementById(\'loader\'); l.style.display=\'flex\'; document.getElementById(\'loader-msg\').textContent=msg||\'Loading...\'; };
+
+// ── SUPABASE INIT ────────────────────────────────────────────────
+async function initSB(){
+  if(SB_URL===\'YOUR_SUPABASE_URL\'||SB_KEY===\'YOUR_SUPABASE_ANON_KEY\'){
+    hideLoader();
+    // No Supabase yet — run in local mode
+    runLocalMode();
+    return;
+  }
+  try{
+    const { createClient } = supabase;
+    sb = createClient(SB_URL, SB_KEY);
+    hideLoader();
+    boot();
+  } catch(e){
+    hideLoader();
+    toast(\'Supabase connection failed. Running in local mode.\',\'warn\');
+    runLocalMode();
+  }
+}
+
+// Local mode fallback (uses localStorage like v2)
+const lld=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}};
+const lsv=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+
+function runLocalMode(){
+  // Map C to localStorage
+  C.staff       = lld(\'pb_staff\',[]);
+  C.products    = lld(\'pb_products\',[]);
+  C.sales       = lld(\'pb_sales\',[]);
+  C.income      = lld(\'pb_income\',[]);
+  C.expenses    = lld(\'pb_expenses\',[]);
+  C.invoices    = lld(\'pb_invoices\',[]);
+  C.notifications = lld(\'pb_notifs\',[]);
+  sb = null;
+  boot();
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────
+function boot(){
+  const setup = lld(\'pb_setup\',null);
+  if(sb && BIZ_ID){
+    // Supabase + known business
+    loadAll().then(()=>{
+      const s = lld(\'pb_setup\',null);
+      if(s){ show(\'login\'); document.getElementById(\'login-sub\').textContent=\'Sign in to \'+s.bizName; }
+      else show(\'login\');
+    });
+  } else if(!sb){
+    // Local mode
+    if(!setup){ show(\'admin\'); }
+    else{ show(\'login\'); document.getElementById(\'login-sub\').textContent=\'Sign in to \'+setup.bizName; }
+  } else {
+    // Supabase but no BIZ_ID
+    show(\'admin\');
+  }
+}
+
+// ── SUPABASE DATA HELPERS ────────────────────────────────────────
+async function loadAll(){
+  if(!sb||!BIZ_ID) return;
+  try{
+    const tables = [\'staff\',\'products\',\'sales\',\'income\',\'expenses\',\'invoices\',\'notifications\'];
+    await Promise.all(tables.map(async t => {
+      const { data } = await sb.from(t).select(\'*\').eq(\'business_id\',BIZ_ID).order(\'created_at\',{ascending:false});
+      if(data) C[t] = data;
+    }));
+  }catch(e){ console.error(\'loadAll error\',e); }
+}
+
+async function dbInsert(table, row){
+  if(sb){
+    const { data,error } = await sb.from(table).insert({business_id:BIZ_ID,...row}).select().single();
+    if(error) throw error;
+    return data;
+  } else {
+    const record = {id:uid(),...row,created_at:new Date().toISOString()};
+    C[table].unshift(record);
+    lsv(\'pb_\'+table, C[table]);
+    return record;
+  }
+}
+
+async function dbUpdate(table, id, updates){
+  if(sb){
+    const { error } = await sb.from(table).update(updates).eq(\'id\',id);
+    if(error) throw error;
+  }
+  const idx = C[table].findIndex(r=>r.id===id);
+  if(idx>=0) C[table][idx] = {...C[table][idx],...updates};
+  if(!sb) lsv(\'pb_\'+table, C[table]);
+}
+
+async function dbDelete(table, id){
+  if(sb){
+    const { error } = await sb.from(table).delete().eq(\'id\',id);
+    if(error) throw error;
+  }
+  C[table] = C[table].filter(r=>r.id!==id);
+  if(!sb) lsv(\'pb_\'+table, C[table]);
+}
+
+// ── REAL-TIME SUBSCRIPTIONS ──────────────────────────────────────
+function subscribeRT(){
+  if(!sb||!BIZ_ID) return;
+  const refresh = async (table, cb) => {
+    const { data } = await sb.from(table).select(\'*\').eq(\'business_id\',BIZ_ID).order(\'created_at\',{ascending:false});
+    if(data){ C[table]=data; if(cb)cb(); }
+  };
+  sb.channel(\'pb-\'+BIZ_ID)
+    .on(\'postgres_changes\',{event:\'*\',schema:\'public\',table:\'sales\',filter:`business_id=eq.${BIZ_ID}`}, async payload => {
+      await refresh(\'sales\');
+      await refresh(\'products\');
+      if(payload.eventType===\'INSERT\'){
+        const s=payload.new;
+        // Show notification on owner device for sales by others
+        if(CU?.role===\'owner\' && s.by_name!==CU.name){
+          toast(`&#128200; ${s.by_name} sold ${s.product} \\u00d7${s.qty} \\u2014 ${KES(s.total)}`,'info');
+        }
+      }
+      if(document.getElementById(\'pg-dash\').classList.contains(\'on\')) rDash();
+      if(document.getElementById(\'pg-sales\').classList.contains(\'on\')) rSales();
+      if(document.getElementById(\'pg-stock\').classList.contains(\'on\')) rStock();
+    })
+    .on(\'postgres_changes\',{event:\'*\',schema:\'public\',table:\'products\',filter:`business_id=eq.${BIZ_ID}`}, async () => {
+      await refresh(\'products\');
+      if(document.getElementById(\'pg-stock\').classList.contains(\'on\')) rStock();
+    })
+    .on(\'postgres_changes\',{event:\'*\',schema:\'public\',table:\'notifications\',filter:`business_id=eq.${BIZ_ID}`}, async () => {
+      await refresh(\'notifications\'); rndot();
+    })
+    .subscribe(status => {
+      const dot = document.getElementById(\'rt-status\');
+      if(dot) dot.innerHTML = status===\'SUBSCRIBED\' ? \'<span class="rt-dot"></span>\' : \'<span class="rt-dot" style="background:var(--y);box-shadow:0 0 8px var(--y)"></span>\';
+    });
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────
+function adminUnlock(){
+  if(document.getElementById(\'admin-pw\').value===ADMIN_PW){
+    if(lld(\'pb_setup\',null)||BIZ_ID){ show(\'login\'); return; }
+    show(\'setup\');
+  } else document.getElementById(\'admin-err\').textContent=\'Incorrect admin password.\';
+}
+
+// ── SETUP ─────────────────────────────────────────────────────────
+async function doSetup(){
+  const biz=document.getElementById(\'s-biz\').value.trim();
+  const own=document.getElementById(\'s-own\').value.trim();
+  const pw=document.getElementById(\'s-pw\').value.trim();
+  const typ=document.getElementById(\'s-type\').value;
+  if(!biz||!own||!pw){document.getElementById(\'setup-err\').textContent=\'All fields required.\';return}
+  if(pw.length<6){document.getElementById(\'setup-err\').textContent=\'Password needs 6+ characters.\';return}
+  const btn=document.getElementById(\'setup-btn\');btn.disabled=true;btn.textContent=\'Creating...\';
+  try{
+    const code = Math.random().toString(36).substring(2,8).toUpperCase();
+    if(sb){
+      const { data:bdata,error:berr } = await sb.from(\'businesses\').insert({biz_name:biz,biz_type:typ,connect_code:code}).select().single();
+      if(berr) throw berr;
+      BIZ_ID = bdata.id;
+      localStorage.setItem(\'pb_biz_id\',BIZ_ID);
+      const { error:serr } = await sb.from(\'staff\').insert({business_id:BIZ_ID,name:own,role:\'owner\',pw,connect_code:code});
+      if(serr) throw serr;
+      await loadAll();
+    } else {
+      const id = uid();
+      BIZ_ID = id;
+      localStorage.setItem(\'pb_biz_id\',id);
+      C.staff = [{id:uid(),name:own,role:\'owner\',pw,added_at:new Date().toISOString()}];
+      lsv(\'pb_staff\',C.staff);
+    }
+    lsv(\'pb_setup\',{bizName:biz,bizType:typ,connectCode:code,createdAt:new Date().toISOString()});
+    toast(\'Business created! Welcome, \'+own);
+    show(\'login\');document.getElementById(\'login-sub\').textContent=\'Sign in to \'+biz;
+  }catch(e){ document.getElementById(\'setup-err\').textContent=\'Error: \'+e.message; }
+  btn.disabled=false;btn.textContent=\'Create Business \\u2192\';
+}
+
+// ── CONNECT DEVICE ────────────────────────────────────────────────
+async function doConnect(){
+  const code=document.getElementById(\'cc-input\').value.trim().toUpperCase();
+  if(code.length!==6){document.getElementById(\'cc-err\').textContent=\'Enter the full 6-character code.\';return}
+  const btn=document.getElementById(\'cc-btn\');btn.disabled=true;btn.textContent=\'Connecting...\';
+  try{
+    if(sb){
+      const { data,error } = await sb.from(\'businesses\').select(\'*\').eq(\'connect_code\',code).single();
+      if(error||!data){document.getElementById(\'cc-err\').textContent=\'Code not found. Check with your owner.\';btn.disabled=false;btn.textContent=\'Connect Device \\u2192\';return}
+      BIZ_ID = data.id;
+      localStorage.setItem(\'pb_biz_id\',BIZ_ID);
+      lsv(\'pb_setup\',{bizName:data.biz_name,bizType:data.biz_type,connectCode:code});
+      await loadAll();
+      toast(\'Connected to \'+data.biz_name);
+      show(\'login\');document.getElementById(\'login-sub\').textContent=\'Sign in to \'+data.biz_name;
+    } else {
+      // Local mode — check code in setup
+      const setup = lld(\'pb_setup\',null);
+      if(setup?.connectCode===code){
+        toast(\'Connected! Please sign in.\');show(\'login\');
+      } else { document.getElementById(\'cc-err\').textContent=\'Code not found.\'; }
+    }
+  }catch(e){ document.getElementById(\'cc-err\').textContent=\'Error: \'+e.message; }
+  btn.disabled=false;btn.textContent=\'Connect Device \\u2192\';
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────
+async function doLogin(){
+  const nm=document.getElementById(\'l-name\').value.trim();
+  const pw=document.getElementById(\'l-pw\').value.trim();
+  if(!nm||!pw){document.getElementById(\'login-err\').textContent=\'Enter your name and password.\';return}
+  // Reload staff if Supabase
+  if(sb&&BIZ_ID) await loadAll();
+  const u=C.staff.find(s=>(s.name||s.name||\'\'  ).toLowerCase()===nm.toLowerCase()&&s.pw===pw);
+  if(!u){document.getElementById(\'login-err\').textContent=\'Name or password incorrect.\';return}
+  CU=u;initApp();
+}
+function logout(){CU=null;aiHist=[];[\'l-name\',\'l-pw\'].forEach(id=>document.getElementById(id).value=\'\');document.getElementById(\'login-err\').textContent=\'\';show(\'login\');}
+
+// ── INIT APP ──────────────────────────────────────────────────────
+function initApp(){
+  const s=lld(\'pb_setup\',{});
+  document.getElementById(\'sb-biz\').textContent=s.bizName||\'ProBooks\';
+  document.getElementById(\'sb-uname\').textContent=CU.name;
+  document.getElementById(\'sb-urole\').textContent=rlbl(CU.role);
+  document.getElementById(\'sb-ubiz\').textContent=s.bizName||\'\'
+  document.getElementById(\'tb-role\').textContent=rlbl(CU.role);
+  buildNav();show(\'app\');
+  if(CU.role===\'owner\'){ document.getElementById(\'notif-wrap\').style.display=\'block\'; rndot(); }
+  subscribeRT();
+  goTo(\'dash\');
+}
+
+// ── NAV ───────────────────────────────────────────────────────────
+function buildNav(){
+  const r=CU.role,nav=document.getElementById(\'sb-nav\');nav.innerHTML=\'\';
+  const its=[
+    {id:\'dash\',ic:\'\\u229e\',lb:\'Dashboard\',roles:[\'owner\',\'manager\',\'salesperson\']},
+    {id:\'sales\',ic:\'\\ud83d\\uded2\',lb:\'Sales\',roles:[\'owner\',\'manager\',\'salesperson\']},
+    {id:\'stock\',ic:\'\\ud83d\\udce6\',lb:\'Stock / Inventory\',roles:[\'owner\',\'manager\',\'salesperson\']},
+    {sec:\'Finance\',roles:[\'owner\']},
+    {id:\'income\',ic:\'\\u2191\',lb:\'Income\',roles:[\'owner\']},
+    {id:\'exp\',ic:\'\\u2193\',lb:\'Expenses\',roles:[\'owner\']},
+    {id:\'inv\',ic:\'\\ud83d\\udcc4\',lb:\'Invoices\',roles:[\'owner\',\'manager\']},
+    {sec:\'Reports\',roles:[\'owner\',\'manager\']},
+    {id:\'rep\',ic:\'\\ud83d\\udcca\',lb:\'Reports\',roles:[\'owner\',\'manager\']},
+    {sec:\'Management\',roles:[\'owner\']},
+    {id:\'staff\',ic:\'\\ud83d\\udc65\',lb:\'Staff\',roles:[\'owner\']},
+    {id:\'ai\',ic:\'\\ud83e\\udd16\',lb:\'AI Accountant\',roles:[\'owner\']},
+  ];
+  its.forEach(it=>{
+    if(!it.roles||!it.roles.includes(r))return;
+    if(it.sec){const d=document.createElement(\'div\');d.className=\'nav-lbl\';d.textContent=it.sec;nav.appendChild(d)}
+    else{const d=document.createElement(\'div\');d.className=\'nav-it\';d.id=\'ni-\'+it.id;d.innerHTML=`<span class="ic">${it.ic}</span>${it.lb}`;d.onclick=()=>{goTo(it.id);closeSB()};nav.appendChild(d)}
+  });
+  if(r===\'owner\'){
+    document.getElementById(\'add-prod-btn\').style.display=\'inline-flex\';
+    document.getElementById(\'stk-act-th\').style.display=\'\';
+    document.getElementById(\'buy-th\').style.display=\'\';
+  } else document.getElementById(\'buy-th\').style.display=\'none\';
+}
+
+const TITLES={dash:\'Dashboard\',sales:\'Sales\',stock:\'Stock / Inventory\',income:\'Income\',exp:\'Expenses\',inv:\'Invoices\',rep:\'Reports\',staff:\'Staff Management\',ai:\'AI Accountant\'};
+function goTo(pg){
+  document.querySelectorAll(\'.pg\').forEach(p=>{p.classList.remove(\'on\');p.style.display=\'none\'});
+  document.querySelectorAll(\'.nav-it\').forEach(n=>n.classList.remove(\'on\'));
+  const p=document.getElementById(\'pg-\'+pg);if(p){p.classList.add(\'on\');p.style.display=\'block\'}
+  const n=document.getElementById(\'ni-\'+pg);if(n)n.classList.add(\'on\');
+  document.getElementById(\'tb-title\').textContent=TITLES[pg]||pg;
+  ({dash:rDash,sales:()=>{rSales();popProds()},stock:rStock,income:rIncome,exp:rExp,inv:rInv,rep:rRep,staff:rStaff})[pg]?.();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────
+function rDash(){
+  const sales=C.sales,inc=C.income,exp=C.expenses,prods=C.products;
+  const mS=sales.filter(s=>inM(s.date||s.created_at)).reduce((a,s)=>a+(s.total||0),0);
+  const mI=inc.filter(i=>inM(i.date||i.created_at)).reduce((a,i)=>a+(i.amount||0),0)+mS;
+  const mE=exp.filter(e=>inM(e.date||e.created_at)).reduce((a,e)=>a+(e.amount||0),0);
+  const profit=mI-mE;const low=prods.filter(p=>p.stock<=(p.min_level||p.minLevel||0));const r=CU.role;let html=\'\';
+  if(r===\'owner\'){html=`<div class="sc" style="--accent:var(--g)"><div class="sl">This Month Income</div><div class="sv g">${KES(mI)}</div><div class="sd">Total: ${KES(mI)}</div></div><div class="sc" style="--accent:var(--r)"><div class="sl">This Month Expenses</div><div class="sv r">${KES(mE)}</div><div class="sd">Total: ${KES(mE)}</div></div><div class="sc" style="--accent:${profit>=0?\'var(--g)\':\'var(--r)\'}"><div class="sl">Net Profit / Loss</div><div class="sv ${profit>=0?\'g\':\'r\'}">${KES(profit)}</div><div class="sd">${profit>=0?\'Profit\':\'Loss\'} this month</div></div><div class="sc"><div class="sl">Stock Items</div><div class="sv">${prods.length}</div><div class="sd">${low.length} low stock alerts</div></div>`}
+  else if(r===\'manager\'){const tS=sales.filter(s=>(s.date||s.created_at||\'\'  ).startsWith(today())).reduce((a,s)=>a+(s.total||0),0);html=`<div class="sc" style="--accent:var(--g)"><div class="sl">Today\'s Sales</div><div class="sv g">${KES(tS)}</div></div><div class="sc" style="--accent:var(--g)"><div class="sl">This Month Sales</div><div class="sv g">${KES(mS)}</div></div><div class="sc" style="--accent:var(--y)"><div class="sl">Low Stock Alerts</div><div class="sv y">${low.length}</div></div><div class="sc"><div class="sl">Total Products</div><div class="sv">${prods.length}</div></div>`}
+  else{const mine=sales.filter(s=>(s.by_name||s.by||\'\'  )===CU.name&&inM(s.date||s.created_at));const td=sales.filter(s=>(s.by_name||s.by||\'\'  )===CU.name&&(s.date||s.created_at||\'\'  ).startsWith(today()));html=`<div class="sc" style="--accent:var(--g)"><div class="sl">My Sales Today</div><div class="sv g">${td.length} sales</div><div class="sd">${KES(td.reduce((a,s)=>a+(s.total||0),0))}</div></div><div class="sc"><div class="sl">My Sales This Month</div><div class="sv">${mine.length}</div><div class="sd">${KES(mine.reduce((a,s)=>a+(s.total||0),0))}</div></div><div class="sc" style="--accent:var(--y)"><div class="sl">Low Stock</div><div class="sv y">${low.length} items</div></div><div class="sc"><div class="sl">Total Products</div><div class="sv">${prods.length}</div></div>`}
+  document.getElementById(\'dash-stats\').innerHTML=html;
+  const rec=sales.slice(0,6);
+  document.getElementById(\'dash-sales\').innerHTML=rec.length?rec.map(s=>`<tr><td>${fmtT(s.date||s.created_at)}</td><td>${s.product}</td><td>${s.qty}</td><td>${KES(s.total)}</td><td><span class="ptag">${s.payment}</span></td><td>${s.by_name||s.by}</td></tr>`).join(\'\')+\'\'  :\'<tr><td colspan="6" class="te">No sales yet</td></tr>\';
+  document.getElementById(\'dash-low\').innerHTML=low.length?low.map(p=>`<tr><td><strong>${p.name}</strong></td><td>${p.stock}</td><td>${p.min_level||p.minLevel}</td><td><span class="${p.stock===0?\'bout\':\'blow\'}">${p.stock===0?\'Out of Stock\':\'Low Stock\'}</span></td></tr>`).join(\'\')+\'\'  :\'<tr><td colspan="4" class="te">All stock levels OK \\u2713</td></tr>\';
+}
+
+// ── SALES ─────────────────────────────────────────────────────────
+function popProds(){
+  const sel=document.getElementById(\'s-prod\');sel.innerHTML=\'<option value="">Select product...</option>\';
+  C.products.forEach(p=>{const o=document.createElement(\'option\');o.value=p.id;o.textContent=`${p.name} (Stock: ${p.stock})`;o.dataset.price=p.sell_price||p.sellPrice||0;sel.appendChild(o)});
+}
+function fillPrice(){const opt=document.getElementById(\'s-prod\').selectedOptions[0];if(opt?.dataset.price){document.getElementById(\'s-price\').value=opt.dataset.price;calcTot()}}
+function calcTot(){const q=parseFloat(document.getElementById(\'s-qty\').value)||0;const p=parseFloat(document.getElementById(\'s-price\').value)||0;document.getElementById(\'s-total\').value=(q*p).toFixed(2)}
+
+async function recordSale(){
+  const pid=document.getElementById(\'s-prod\').value;const qty=parseInt(document.getElementById(\'s-qty\').value)||0;const price=parseFloat(document.getElementById(\'s-price\').value)||0;
+  const pay=document.getElementById(\'s-pay\').value;const cust=document.getElementById(\'s-cust\').value.trim();const notes=document.getElementById(\'s-notes\').value.trim();
+  if(!pid||qty<1||price<0){toast(\'Select product, quantity and price.\',\'err\');return}
+  const prod=C.products.find(p=>p.id===pid);
+  if(!prod){toast(\'Product not found.\',\'err\');return}
+  if(prod.stock<qty){toast(`Insufficient stock. Available: ${prod.stock}`,\'err\');return}
+  const btn=document.getElementById(\'sale-btn\');btn.disabled=true;btn.textContent=\'Saving...\';
+  try{
+    await dbUpdate(\'products\',pid,{stock:prod.stock-qty});
+    await dbInsert(\'sales\',{product:prod.name,product_id:pid,qty,price,total:qty*price,payment:pay,customer:cust,notes,by_name:CU.name,date:new Date().toISOString()});
+    await dbInsert(\'notifications\',{message:`\\ud83d\\udcb0 ${CU.name} sold ${prod.name} \\u00d7${qty} \\u2014 ${KES(qty*price)} via ${pay}`,read:false});
+    [\'s-prod\',\'s-cust\',\'s-notes\'].forEach(id=>document.getElementById(id).value=\'\');
+    document.getElementById(\'s-qty\').value=\'1\';[\'s-price\',\'s-total\'].forEach(id=>document.getElementById(id).value=\'\');
+    toast(`Sale recorded: ${KES(qty*price)}`);
+    rSales();popProds();rndot();
+  }catch(e){toast(\'Error saving sale: \'+e.message,\'err\')}
+  btn.disabled=false;btn.textContent=\'\\u2713 Record Sale\';
+}
+
+function rSales(){
+  let sales=[...C.sales];const fd=document.getElementById(\'sales-date\')?.value;
+  if(fd)sales=sales.filter(s=>(s.date||s.created_at||\'\'  ).startsWith(fd));
+  if(CU.role===\'salesperson\')sales=sales.filter(s=>(s.by_name||s.by)===CU.name);
+  document.getElementById(\'sales-body\').innerHTML=sales.length?sales.map(s=>`<tr><td>${fmtT(s.date||s.created_at)}</td><td>${s.product}</td><td>${s.qty}</td><td>${KES(s.price)}</td><td>${KES(s.total)}</td><td><span class="ptag">${s.payment}</span></td><td>${s.customer||\'\\u2014\'}</td><td>${s.by_name||s.by}</td></tr>`).join(\'\')+\'\'  :\'<tr><td colspan="8" class="te">No sales recorded</td></tr>\';
+}
+
+// ── STOCK ─────────────────────────────────────────────────────────
+function rStock(){
+  const prods=C.products;const own=CU.role===\'owner\';
+  document.getElementById(\'stock-body\').innerHTML=prods.length?prods.map(p=>{
+    const mn=p.min_level||p.minLevel||0;const sc=p.stock===0?\'bout\':p.stock<=mn?\'blow\':\'bok\';const sl=p.stock===0?\'Out of Stock\':p.stock<=mn?\'Low Stock\':\'In Stock\';
+    return`<tr><td><strong>${p.name}</strong></td><td>${p.category||\'\\u2014\'}</td><td><strong>${p.stock}</strong></td><td>${mn}</td><td>${own?KES(p.buy_price||p.buyPrice||0):\'\\u2014\'}</td><td>${KES(p.sell_price||p.sellPrice||0)}</td><td><span class="${sc}">${sl}</span></td>${own?`<td><button class="btn bgh bxs" onclick="openProd(\'${p.id}\')">Edit</button> <button class="btn br bxs" onclick="delProd(\'${p.id}\')">Del</button></td>`:`<td></td>`}</tr>`;
+  }).join(\'\')+\'\'  :`<tr><td colspan="8" class="te">No products yet${CU.role===\'owner\'?\' \\u2014 click "+ Add Product"":\'\'}</td></tr>`;
+}
+
+function openProd(id){
+  document.getElementById(\'prod-id\').value=id||\'\';document.getElementById(\'prod-title\').textContent=id?\'Edit Product\':\'Add Product\';
+  if(id){const p=C.products.find(p=>p.id===id);if(p){document.getElementById(\'p-name\').value=p.name;document.getElementById(\'p-cat\').value=p.category||\'\'  ;document.getElementById(\'p-stock\').value=p.stock;document.getElementById(\'p-min\').value=p.min_level||p.minLevel||10;document.getElementById(\'p-buy\').value=p.buy_price||p.buyPrice||0;document.getElementById(\'p-sell\').value=p.sell_price||p.sellPrice||0;}}
+  else{[\'p-name\',\'p-cat\'].forEach(i=>document.getElementById(i).value=\'\');document.getElementById(\'p-stock\').value=0;document.getElementById(\'p-min\').value=10;document.getElementById(\'p-buy\').value=0;document.getElementById(\'p-sell\').value=0;}
+  openM(\'m-prod\');
+}
+async function saveProd(){
+  const id=document.getElementById(\'prod-id\').value;const name=document.getElementById(\'p-name\').value.trim();
+  if(!name){toast(\'Product name required.\',\'err\');return}
+  const p={name,category:document.getElementById(\'p-cat\').value.trim(),stock:parseInt(document.getElementById(\'p-stock\').value)||0,min_level:parseInt(document.getElementById(\'p-min\').value)||0,buy_price:parseFloat(document.getElementById(\'p-buy\').value)||0,sell_price:parseFloat(document.getElementById(\'p-sell\').value)||0};
+  try{
+    if(id) await dbUpdate(\'products\',id,p);
+    else await dbInsert(\'products\',p);
+    toast(id?\'Product updated\':\'Product added\');closeM(\'m-prod\');rStock();
+  }catch(e){toast(\'Error: \'+e.message,\'err\')}
+}
+async function delProd(id){if(!confirm(\'Delete this product?\'))return;try{await dbDelete(\'products\',id);toast(\'Deleted\',\'info\');rStock()}catch(e){toast(\'Error\',\'err\')}}
+
+function openRestock(){
+  const sel=document.getElementById(\'r-prod\');sel.innerHTML=\'<option value="">Select product...</option>\';
+  C.products.forEach(p=>{const o=document.createElement(\'option\');o.value=p.id;o.textContent=`${p.name} (Stock: ${p.stock})`;sel.appendChild(o)});
+  document.getElementById(\'r-qty\').value=1;document.getElementById(\'r-cost\').value=0;document.getElementById(\'r-sup\').value=\'\';openM(\'m-restock\');
+}
+async function saveRestock(){
+  const pid=document.getElementById(\'r-prod\').value;const qty=parseInt(document.getElementById(\'r-qty\').value)||0;
+  if(!pid||qty<1){toast(\'Select product and quantity.\',\'err\');return}
+  const prod=C.products.find(p=>p.id===pid);if(!prod)return;
+  try{
+    await dbUpdate(\'products\',pid,{stock:prod.stock+qty});
+    await dbInsert(\'notifications\',{message:`\\ud83d\\udce6 ${CU.name} restocked ${prod.name} +${qty} units`,read:false});
+    toast(`Restocked ${prod.name} +${qty}`);closeM(\'m-restock\');rStock();rndot();
+  }catch(e){toast(\'Error: \'+e.message,\'err\')}
+}
+
+// ── INCOME ────────────────────────────────────────────────────────
+function openIncome(){document.getElementById(\'i-desc\').value=\'\';document.getElementById(\'i-amt\').value=\'\';document.getElementById(\'i-date\').value=today();openM(\'m-inc\')}
+async function saveIncome(){
+  const desc=document.getElementById(\'i-desc\').value.trim();const amt=parseFloat(document.getElementById(\'i-amt\').value)||0;
+  if(!desc||amt<=0){toast(\'Description and amount required.\',\'err\');return}
+  try{
+    await dbInsert(\'income\',{description:desc,amount:amt,category:document.getElementById(\'i-cat\').value,payment:document.getElementById(\'i-pay\').value,date:document.getElementById(\'i-date\').value,by_name:CU.name});
+    toast(\'Income recorded\');closeM(\'m-inc\');rIncome();
+  }catch(e){toast(\'Error: \'+e.message,\'err\')}
+}
+function rIncome(){
+  const inc=C.income;const tot=inc.reduce((a,i)=>a+(i.amount||0),0);const mth=inc.filter(i=>inM(i.date||i.created_at)).reduce((a,i)=>a+(i.amount||0),0);
+  document.getElementById(\'inc-stats\').innerHTML=`<div class="sc" style="--accent:var(--g)"><div class="sl">Total Income</div><div class="sv g">${KES(tot)}</div></div><div class="sc"><div class="sl">This Month</div><div class="sv g">${KES(mth)}</div></div><div class="sc"><div class="sl">Records</div><div class="sv">${inc.length}</div></div>`;
+  document.getElementById(\'inc-body\').innerHTML=inc.length?inc.map(i=>`<tr><td>${fmtD(i.date||i.created_at)}</td><td>${i.description||i.desc}</td><td>${i.category}</td><td style="color:var(--g)">${KES(i.amount)}</td><td><span class="ptag">${i.payment}</span></td><td><button class="btn br bxs" onclick="delInc(\'${i.id}\')">Del</button></td></tr>`).join(\'\')+\'\'  :\'<tr><td colspan="6" class="te">No income recorded</td></tr>\';
+}
+async function delInc(id){if(!confirm(\'Delete?\'))return;try{await dbDelete(\'income\',id);toast(\'Deleted\',\'info\');rIncome()}catch(e){toast(\'Error\',\'err\')}}
+
+// ── EXPENSES ──────────────────────────────────────────────────────
+function openExp(){document.getElementById(\'e-desc\').value=\'\';document.getElementById(\'e-amt\').value=\'\';document.getElementById(\'e-date\').value=today();openM(\'m-exp\')}
+async function saveExp(){
+  const desc=document.getElementById(\'e-desc\').value.trim();const amt=parseFloat(document.getElementById(\'e-amt\').value)||0;
+  if(!desc||amt<=0){toast(\'Description and amount required.\',\'err\');return}
+  try{
+    await dbInsert(\'expenses\',{description:desc,amount:amt,category:document.getElementById(\'e-cat\').value,payment:document.getElementById(\'e-pay\').value,date:document.getElementById(\'e-date\').value,by_name:CU.name});
+    toast(\'Expense recorded\');closeM(\'m-exp\');rExp();
+  }catch(e){toast(\'Error: \'+e.message,\'err\')}
+}
+function rExp(){
+  const exp=C.expenses;const tot=exp.reduce((a,e)=>a+(e.amount||0),0);const mth=exp.filter(e=>inM(e.date||e.created_at)).reduce((a,e)=>a+(e.amount||0),0);
+  document.getElementById(\'exp-stats\').innerHTML=`<div class="sc" style="--accent:var(--r)"><div class="sl">Total Expenses</div><div class="sv r">${KES(tot)}</div></div><div class="sc"><div class="sl">This Month</div><div class="sv r">${KES(mth)}</div></div><div class="sc"><div class="sl">Records</div><div class="sv">${exp.length}</div></div>`;
+  document.getElementById(\'exp-body\').innerHTML=exp.length?exp.map(e=>`<tr><td>${fmtD(e.date||e.created_at)}</td><td>${e.description||e.desc}</td><td>${e.category}</td><td style="color:var(--r)">${KES(e.amount)}</td><td><span class="ptag">${e.payment}</span></td><td><button class="btn br bxs" onclick="delExp(\'${e.id}\')">Del</button></td></tr>`).join(\'\')+\'\'  :\'<tr><td colspan="6" class="te">No expenses recorded</td></tr>\';
+}
+async function delExp(id){if(!confirm(\'Delete?\'))return;try{await dbDelete(\'expenses\',id);toast(\'Deleted\',\'info\');rExp()}catch(e){toast(\'Error\',\'err\')}}
+
+// ── INVOICES ──────────────────────────────────────────────────────
+function openInv(){document.getElementById(\'v-cl\').value=\'\';document.getElementById(\'v-amt\').value=\'\';document.getElementById(\'v-desc\').value=\'\';document.getElementById(\'v-date\').value=today();openM(\'m-inv\')}
+async function saveInv(){
+  const cl=document.getElementById(\'v-cl\').value.trim();const amt=parseFloat(document.getElementById(\'v-amt\').value)||0;
+  if(!cl||amt<=0){toast(\'Client and amount required.\',\'err\');return}
+  try{
+    const num=\'INV-\'+String(C.invoices.length+1).padStart(4,\'0\');
+    await dbInsert(\'invoices\',{num,client:cl,amount:amt,status:document.getElementById(\'v-st\').value,description:document.getElementById(\'v-desc\').value.trim(),date:document.getElementById(\'v-date\').value,by_name:CU.name});
+    toast(\'Invoice created\');closeM(\'m-inv\');rInv();
+  }catch(e){toast(\'Error: \'+e.message,\'err\')}
+}
+function rInv(){
+  const invs=C.invoices;const own=CU.role===\'owner\';
+  const sc={Paid:\'pill-g\',Unpaid:\'pill-r\',Partial:\'pill-y\',Overdue:\'pill-r\'};
+  document.getElementById(\'inv-body\').innerHTML=invs.length?invs.map(i=>`<tr><td><strong>${i.num}</strong></td><td>${fmtD(i.date||i.created_at)}</td><td>${i.client}</td><td>${KES(i.amount)}</td><td><span class="pill ${sc[i.status]||\'pill-b\'}">${i.status}</span></td><td>${own?`<button class="btn br bxs" onclick="delInv(\'${i.id}\')">Del</button>`:\'\\u2014\'}</td></tr>`).join(\'\')+\'\'  :\'<tr><td colspan="6" class="te">No invoices yet</td></tr>\';
+}
+async function delInv(id){if(!confirm(\'Delete?\'))return;try{await dbDelete(\'invoices\',id);toast(\'Deleted\',\'info\');rInv()}catch(e){toast(\'Error\',\'err\')}}
+
+// ── REPORTS ───────────────────────────────────────────────────────
+function rRep(){
+  const sales=C.sales,inc=C.income,exp=C.expenses,invs=C.invoices,prods=C.products;
+  const tS=sales.reduce((a,s)=>a+(s.total||0),0);const tI=inc.reduce((a,i)=>a+(i.amount||0),0)+tS;const tE=exp.reduce((a,e)=>a+(e.amount||0),0);
+  document.getElementById(\'rep-stats\').innerHTML=`<div class="sc" style="--accent:var(--g)"><div class="sl">Total Revenue</div><div class="sv g">${KES(tI)}</div></div><div class="sc" style="--accent:var(--r)"><div class="sl">Total Expenses</div><div class="sv r">${KES(tE)}</div></div><div class="sc" style="--accent:${tI-tE>=0?\'var(--g)\':\'var(--r)\'}"><div class="sl">Net Profit</div><div class="sv ${tI-tE>=0?\'g\':\'r\'}">${KES(tI-tE)}</div></div><div class="sc"><div class="sl">Total Sales</div><div class="sv">${sales.length} transactions</div></div>`;
+  renderPL();
+  const pays=[\'Cash\',\'M-Pesa\',\'Card\',\'Bank Transfer\',\'Cheque\'];
+  const bd=pays.map(m=>({m,amt:sales.filter(s=>s.payment===m).reduce((a,s)=>a+(s.total||0),0),cnt:sales.filter(s=>s.payment===m).length})).filter(x=>x.cnt>0);
+  document.getElementById(\'pay-bkdn\').innerHTML=bd.length?`<table class="tbl"><thead><tr><th>Method</th><th>Transactions</th><th>Total</th><th>%</th></tr></thead><tbody>${bd.map(x=>`<tr><td><span class="ptag">${x.m}</span></td><td>${x.cnt}</td><td>${KES(x.amt)}</td><td>${tS>0?((x.amt/tS)*100).toFixed(1)+\'%\':\'\\u2014\'}</td></tr>`).join(\'\')+\'\'  }</tbody></table>`:\'<p style="color:var(--tx2);font-size:13px">No sales data yet.</p>\';
+  document.getElementById(\'rep-sales\').innerHTML=sales.length?sales.map(s=>`<tr><td>${fmtT(s.date||s.created_at)}</td><td>${s.product}</td><td>${s.qty}</td><td>${KES(s.price)}</td><td>${KES(s.total)}</td><td><span class="ptag">${s.payment}</span></td><td>${s.by_name||s.by}</td></tr>`).join(\'\')+\'\'  :\'<tr><td colspan="7" class="te">No sales</td></tr>\';
+  document.getElementById(\'rep-stock\').innerHTML=prods.length?prods.map(p=>{const mn=p.min_level||p.minLevel||0;const sc=p.stock===0?\'bout\':p.stock<=mn?\'blow\':\'bok\';const sl=p.stock===0?\'Out of Stock\':p.stock<=mn?\'Low Stock\':\'In Stock\';return`<tr><td><strong>${p.name}</strong></td><td>${p.category||\'\\u2014\'}</td><td>${p.stock}</td><td>${mn}</td><td>${KES(p.buy_price||0)}</td><td>${KES(p.sell_price||0)}</td><td><span class="${sc}">${sl}</span></td></tr>`}).join(\'\')+\'\'  :\'<tr><td colspan="7" class="te">No products</td></tr>\';
+  document.getElementById(\'rep-inv\').innerHTML=invs.length?invs.map(i=>`<tr><td>${i.num}</td><td>${i.client}</td><td>${KES(i.amount)}</td><td><span class="pill ${i.status===\'Paid\'?\'pill-g\':\'pill-r\'}">${i.status}</span></td><td>${fmtD(i.date||i.created_at)}</td></tr>`).join(\'\')+\'\'  :\'<tr><td colspan="5" class="te">No invoices</td></tr>\';
+}
+function renderPL(){
+  const period=document.getElementById(\'pl-period\')?.value||\'month\';const now=new Date();
+  const inP=d=>{const dt=new Date(d);if(period===\'month\')return inM(d);if(period===\'quarter\')return Math.floor(dt.getMonth()/3)===Math.floor(now.getMonth()/3)&&dt.getFullYear()===now.getFullYear();if(period===\'year\')return dt.getFullYear()===now.getFullYear();return true};
+  const sales=C.sales.filter(s=>inP(s.date||s.created_at));const inc=C.income.filter(i=>inP(i.date||i.created_at));const exp=C.expenses.filter(e=>inP(e.date||e.created_at));
+  const sR=sales.reduce((a,s)=>a+(s.total||0),0);const oI=inc.reduce((a,i)=>a+(i.amount||0),0);const tR=sR+oI;const tE=exp.reduce((a,e)=>a+(e.amount||0),0);const net=tR-tE;
+  document.getElementById(\'pl-body\').innerHTML=`
+    <div style="margin-bottom:18px"><div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--g);margin-bottom:10px">REVENUE</div>
+    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--tx2)">Sales Revenue</span><span>${KES(sR)}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--tx2)">Other Income</span><span>${KES(oI)}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:9px 0;font-size:14px;font-weight:700;color:var(--g)"><span>TOTAL REVENUE</span><span>${KES(tR)}</span></div></div>
+    <div style="margin-bottom:18px"><div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--r);margin-bottom:10px">EXPENSES</div>
+    ${exp.length?[...new Set(exp.map(e=>e.category))].map(cat=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--tx2)">${cat}</span><span style="color:var(--r)">${KES(exp.filter(e=>e.category===cat).reduce((a,e)=>a+(e.amount||0),0))}</span></div>`).join(\'\')+\'\'  :`<div style="color:var(--tx2);font-size:13px;padding:6px 0">No expenses recorded</div>`}
+    <div style="display:flex;justify-content:space-between;padding:9px 0;font-size:14px;font-weight:700;color:var(--r)"><span>TOTAL EXPENSES</span><span>${KES(tE)}</span></div></div>
+    <div style="background:${net>=0?\'var(--gg)\':\'var(--rg)\'};border:1px solid ${net>=0?\'var(--gb)\':\'var(--rb)\'};border-radius:var(--rmd);padding:16px">
+    <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:700;color:${net>=0?\'var(--g)\':\'var(--r)\'}"><span>NET ${net>=0?\'PROFIT\':\'LOSS\'}</span><span>${KES(Math.abs(net))}</span></div>
+    <div style="font-size:12px;color:var(--tx2);margin-top:5px">Gross margin: ${tR>0?((sR/tR)*100).toFixed(1):0}% \\u00b7 ${{month:\'This Month\',quarter:\'This Quarter\',year:\'This Year\',all:\'All Time\'}[period]}</div></div>`;
+}
+
+function pRep(type){
+  const setup=lld(\'pb_setup\',{});const now=new Date();
+  const sales=C.sales,inc=C.income,exp=C.expenses,prods=C.products,invs=C.invoices;
+  const tS=sales.reduce((a,s)=>a+(s.total||0),0);const tI=inc.reduce((a,i)=>a+(i.amount||0),0)+tS;const tE=exp.reduce((a,e)=>a+(e.amount||0),0);const net=tI-tE;
+  const mS=sales.filter(s=>inM(s.date||s.created_at)).reduce((a,s)=>a+(s.total||0),0);const mI=inc.filter(i=>inM(i.date||i.created_at)).reduce((a,i)=>a+(i.amount||0),0)+mS;const mE=exp.filter(e=>inM(e.date||e.created_at)).reduce((a,e)=>a+(e.amount||0),0);
+  const low=prods.filter(p=>p.stock<=(p.min_level||0));
+  const ds=now.toLocaleDateString(\'en-KE\',{day:\'2-digit\',month:\'long\',year:\'numeric\'});const ts=now.toLocaleTimeString(\'en-KE\',{hour:\'2-digit\',minute:\'2-digit\'});
+  const hdr=`<div class="prh"><div><div class="prh-biz">Pro <span>Books</span></div><div style="font-size:12px;color:#666;margin-top:3px">${setup.bizName||\'Business\'} \\u00b7 ${setup.bizType||\'\'}</div></div><div class="prh-meta">Generated: ${ds} at ${ts}<br/>By: ${CU.name}<br/>Pro Books v3.0</div></div>`;
+  const ftr=`<div class="prft"><span>Pro Books v3.0 \\u2014 ${setup.bizName||\'Business\'}</span><span>Generated ${ds}</span></div>`;
+  let html=\'\';
+  if(type===\'pl\'||type===\'full\'){
+    const eCats=[...new Set(exp.map(e=>e.category))];
+    html+=`<div class="prp">${hdr}<div class="prtitle">Profit & Loss Statement</div>
+    <div class="prsg"><div class="prsc"><div class="prsl">Total Revenue</div><div class="prsv g">KES ${tI.toLocaleString()}</div></div><div class="prsc"><div class="prsl">Total Expenses</div><div class="prsv r">KES ${tE.toLocaleString()}</div></div><div class="prsc"><div class="prsl">Net ${net>=0?\'Profit\':\'Loss\'}</div><div class="prsv ${net>=0?\'g\':\'r\'}">KES ${Math.abs(net).toLocaleString()}</div></div><div class="prsc"><div class="prsl">This Month</div><div class="prsv ${mI-mE>=0?\'g\':\'r\'}">KES ${Math.abs(mI-mE).toLocaleString()}</div></div></div>
+    <div class="prs"><div class="prst">Revenue</div><div class="prr"><span>Sales Revenue</span><span>KES ${tS.toLocaleString()}</span></div><div class="prr"><span>Other Income</span><span>KES ${inc.reduce((a,i)=>a+(i.amount||0),0).toLocaleString()}</span></div><div class="prtot" style="color:#16a34a"><span>TOTAL REVENUE</span><span>KES ${tI.toLocaleString()}</span></div></div>
+    <div class="prs"><div class="prst">Expenses</div>${eCats.map(cat=>`<div class="prr"><span>${cat}</span><span style="color:#dc2626">KES ${exp.filter(e=>e.category===cat).reduce((a,e)=>a+(e.amount||0),0).toLocaleString()}</span></div>`).join(\'\')||\'<div style="color:#888;font-size:12px;padding:6px 0">No expenses</div>\'}<div class="prtot" style="color:#dc2626"><span>TOTAL EXPENSES</span><span>KES ${tE.toLocaleString()}</span></div></div>
+    <div class="prbox ${net<0?\'loss\':\'\'}" ><div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:${net>=0?\'#15803d\':\'#dc2626\'}"><span>NET ${net>=0?\'PROFIT\':\'LOSS\'}</span><span>KES ${Math.abs(net).toLocaleString()}</span></div><div style="margin-top:5px;font-size:11px;color:#666">Gross margin: ${tI>0?((tS/tI)*100).toFixed(1):0}%</div></div>
+    ${ftr}</div>`;
+  }
+  if(type===\'sales\'||type===\'full\'){
+    html+=`<div class="prp">${hdr}<div class="prtitle">Sales Report</div>
+    <div class="prsg"><div class="prsc"><div class="prsl">Total Sales</div><div class="prsv g">KES ${tS.toLocaleString()}</div></div><div class="prsc"><div class="prsl">Transactions</div><div class="prsv">${sales.length}</div></div><div class="prsc"><div class="prsl">This Month</div><div class="prsv g">KES ${mS.toLocaleString()}</div></div><div class="prsc"><div class="prsl">Avg Sale</div><div class="prsv">KES ${sales.length?Math.round(tS/sales.length).toLocaleString():0}</div></div></div>
+    <div class="prs"><div class="prst">Payment Methods</div><table class="prtbl"><thead><tr><th>Method</th><th>Count</th><th>Total</th><th>%</th></tr></thead><tbody>${[\'Cash\',\'M-Pesa\',\'Card\',\'Bank Transfer\',\'Cheque\'].map(m=>{const a=sales.filter(s=>s.payment===m).reduce((a,s)=>a+(s.total||0),0);const c=sales.filter(s=>s.payment===m).length;return c?`<tr><td>${m}</td><td>${c}</td><td>KES ${a.toLocaleString()}</td><td>${tS>0?((a/tS)*100).toFixed(1)+\'%\':\'\\u2014\'}</td></tr>`:\'\'}).join(\'\')||\'<tr><td colspan="4" style="text-align:center;color:#888">No data</td></tr>\'}</tbody></table></div>
+    <div class="prs"><div class="prst">All Transactions</div><table class="prtbl"><thead><tr><th>Date/Time</th><th>Product</th><th>Qty</th><th>Unit</th><th>Total</th><th>Payment</th><th>By</th></tr></thead><tbody>${sales.map(s=>`<tr><td>${fmtT(s.date||s.created_at)}</td><td>${s.product}</td><td>${s.qty}</td><td>KES ${(s.price||0).toLocaleString()}</td><td>KES ${(s.total||0).toLocaleString()}</td><td>${s.payment}</td><td>${s.by_name||s.by}</td></tr>`).join(\'\')||\'<tr><td colspan="7" style="text-align:center;color:#888">No sales</td></tr>\'}</tbody></table></div>
+    ${ftr}</div>`;
+  }
+  if(type===\'stock\'||type===\'full\'){
+    html+=`<div class="prp">${hdr}<div class="prtitle">Stock Report</div>
+    <div class="prsg"><div class="prsc"><div class="prsl">Total Products</div><div class="prsv">${prods.length}</div></div><div class="prsc"><div class="prsl">Low Stock</div><div class="prsv r">${low.length}</div></div><div class="prsc"><div class="prsl">Out of Stock</div><div class="prsv r">${prods.filter(p=>p.stock===0).length}</div></div><div class="prsc"><div class="prsl">Stock Value</div><div class="prsv">KES ${prods.reduce((a,p)=>a+(p.stock*(p.buy_price||0)),0).toLocaleString()}</div></div></div>
+    <div class="prs"><div class="prst">Full Stock List</div><table class="prtbl"><thead><tr><th>Product</th><th>Category</th><th>In Stock</th><th>Min</th><th>Buy Price</th><th>Sell Price</th><th>Value</th><th>Status</th></tr></thead><tbody>${prods.map(p=>`<tr><td><strong>${p.name}</strong></td><td>${p.category||\'\\u2014\'}</td><td>${p.stock}</td><td>${p.min_level||0}</td><td>KES ${(p.buy_price||0).toLocaleString()}</td><td>KES ${(p.sell_price||0).toLocaleString()}</td><td>KES ${(p.stock*(p.buy_price||0)).toLocaleString()}</td><td>${p.stock===0?\'Out of Stock\':p.stock<=(p.min_level||0)?\'Low Stock\':\'In Stock\'}</td></tr>`).join(\'\')||\'<tr><td colspan="8" style="text-align:center;color:#888">No products</td></tr>\'}</tbody></table></div>
+    ${low.length?`<div class="prs"><div class="prst" style="color:#dc2626">Low Stock Alert</div><table class="prtbl"><thead><tr><th>Product</th><th>In Stock</th><th>Min Level</th><th>Shortage</th></tr></thead><tbody>${low.map(p=>`<tr><td><strong>${p.name}</strong></td><td style="color:#dc2626">${p.stock}</td><td>${p.min_level||0}</td><td style="color:#dc2626">${(p.min_level||0)-p.stock} units short</td></tr>`).join(\'\')+\'\'  }</tbody></table></div>`:\'\'}
+    ${ftr}</div>`;
+  }
+  if(type===\'full\'){
+    html+=`<div class="prp">${hdr}<div class="prtitle">Invoice Report</div>
+    <div class="prsg"><div class="prsc"><div class="prsl">Total</div><div class="prsv">${invs.length}</div></div><div class="prsc"><div class="prsl">Paid</div><div class="prsv g">${invs.filter(i=>i.status===\'Paid\').length}</div></div><div class="prsc"><div class="prsl">Unpaid</div><div class="prsv r">${invs.filter(i=>i.status===\'Unpaid\').length}</div></div><div class="prsc"><div class="prsl">Unpaid Value</div><div class="prsv r">KES ${invs.filter(i=>i.status!==\'Paid\').reduce((a,i)=>a+(i.amount||0),0).toLocaleString()}</div></div></div>
+    <div class="prs"><div class="prst">All Invoices</div><table class="prtbl"><thead><tr><th>#</th><th>Date</th><th>Client</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead><tbody>${invs.map(i=>`<tr><td><strong>${i.num}</strong></td><td>${fmtD(i.date||i.created_at)}</td><td>${i.client}</td><td>${i.description||i.desc||\'\\u2014\'}</td><td>KES ${(i.amount||0).toLocaleString()}</td><td>${i.status}</td></tr>`).join(\'\')||\'<tr><td colspan="6" style="text-align:center;color:#888">No invoices</td></tr>\'}</tbody></table></div>
+    ${ftr}</div>`;
+  }
+  document.getElementById(\'print-area\').innerHTML=html;window.print();
+}
+
+// ── STAFF ─────────────────────────────────────────────────────────
+function openStaff(){document.getElementById(\'st-nm\').value=\'\';document.getElementById(\'st-pw\').value=\'\';openM(\'m-staff\')}
+async function saveStaff(){
+  const name=document.getElementById(\'st-nm\').value.trim();const role=document.getElementById(\'st-role\').value;const pw=document.getElementById(\'st-pw\').value.trim();
+  if(!name||!pw){toast(\'Name and password required.\',\'err\');return}
+  if(pw.length<4){toast(\'Password needs 4+ characters.\',\'err\');return}
+  if(C.staff.find(s=>(s.name||\'\'  ).toLowerCase()===name.toLowerCase())){toast(\'Name already exists.\',\'err\');return}
+  try{
+    await dbInsert(\'staff\',{name,role,pw,added_at:new Date().toISOString()});
+    toast(`${name} added as ${rlbl(role)}`);closeM(\'m-staff\');rStaff();
+  }catch(e){toast(\'Error: \'+e.message,\'err\')}
+}
+async function rStaff(){
+  if(sb&&BIZ_ID){const{data}=await sb.from(\'staff\').select(\'*\').eq(\'business_id\',BIZ_ID);if(data)C.staff=data;}
+  const setup=lld(\'pb_setup\',{});
+  const code=setup.connectCode||\'??????\';
+  document.getElementById(\'connect-code\').textContent=code;
+  const staff=C.staff.filter(s=>s.role!==\'owner\');
+  document.getElementById(\'staff-body\').innerHTML=staff.length?staff.map(s=>`<tr><td><strong>${s.name}</strong></td><td><span class="pill ${s.role===\'manager\'?\'pill-b\':\'pill-g\'}">${rlbl(s.role)}</span></td><td>${fmtD(s.added_at||s.created_at)}</td><td><button class="btn br bxs" onclick="delStaff(\'${s.id}\')">Remove</button></td></tr>`).join(\'\')+\'\'  :\'<tr><td colspan="4" class="te">No staff added \\u2014 click "+ Add Staff"</td></tr>\';
+}
+async function delStaff(id){if(!confirm(\'Remove staff member?\'))return;try{await dbDelete(\'staff\',id);toast(\'Removed\',\'info\');rStaff()}catch(e){toast(\'Error\',\'err\')}}
+
+// ── NOTIFICATIONS ─────────────────────────────────────────────────
+function rndot(){const u=(C.notifications||[]).filter(n=>!n.read).length;const d=document.getElementById(\'nd\');if(d)d.style.display=u>0?\'block\':\'none\'}
+function togNotif(){
+  const p=document.getElementById(\'np\');
+  if(!p.classList.contains(\'open\')){
+    // Mark all read
+    if(sb&&BIZ_ID) sb.from(\'notifications\').update({read:true}).eq(\'business_id\',BIZ_ID).eq(\'read\',false).then(()=>{C.notifications=C.notifications.map(n=>({...n,read:true}));rndot()});
+    else{C.notifications=C.notifications.map(n=>({...n,read:true}));lsv(\'pb_notifs\',C.notifications);rndot()}
+    rnlist();
+  }
+  p.classList.toggle(\'open\');
+}
+function rnlist(){document.getElementById(\'np-list\').innerHTML=(C.notifications||[]).length?(C.notifications).slice(0,25).map(n=>`<div class="ni ${n.read?\'\'  :\'ur\'}"><div>${n.message||n.msg}</div><div class="nt">${fmtT(n.created_at||n.time)}</div></div>`).join(\'\')+\'\'  :\'<div class="te" style="padding:20px">No notifications yet</div>\'}
+async function clrNotifs(){
+  if(sb&&BIZ_ID) await sb.from(\'notifications\').delete().eq(\'business_id\',BIZ_ID);
+  C.notifications=[];lsv(\'pb_notifs\',[]);document.getElementById(\'np\').classList.remove(\'open\');rndot();
+}
+
+// ── AI ────────────────────────────────────────────────────────────
+function buildCtx(){
+  const s=lld(\'pb_setup\',{});const sales=C.sales,inc=C.income,exp=C.expenses,prods=C.products,invs=C.invoices,staff=C.staff;
+  const mS=sales.filter(s=>inM(s.date||s.created_at)).reduce((a,s)=>a+(s.total||0),0);
+  const mI=inc.filter(i=>inM(i.date||i.created_at)).reduce((a,i)=>a+(i.amount||0),0)+mS;
+  const mE=exp.filter(e=>inM(e.date||e.created_at)).reduce((a,e)=>a+(e.amount||0),0);
+  const low=prods.filter(p=>p.stock<=(p.min_level||0));
+  const payB={};sales.forEach(s=>{payB[s.payment]=(payB[s.payment]||0)+(s.total||0)});
+  return `You are the AI Accountant for ${s.bizName||\'this business\'} (${s.bizType||\'retail\'}, Kenya). Be professional, concise, use KES.
+THIS MONTH: Revenue ${KES(mI)} | Expenses ${KES(mE)} | Profit ${KES(mI-mE)} | ${sales.filter(s=>inM(s.date||s.created_at)).length} sales
+ALL TIME: Sales ${KES(sales.reduce((a,s)=>a+(s.total||0),0))} | Expenses ${KES(exp.reduce((a,e)=>a+(e.amount||0),0))} | Profit ${KES(sales.reduce((a,s)=>a+(s.total||0),0)+inc.reduce((a,i)=>a+(i.amount||0),0)-exp.reduce((a,e)=>a+(e.amount||0),0))}
+STOCK: ${prods.length} products | Low (${low.length}): ${low.map(p=>`${p.name}(${p.stock})`).join(\',\')||\'none\'}
+STAFF: ${staff.length} total (${staff.filter(s=>s.role===\'salesperson\').length} sales, ${staff.filter(s=>s.role===\'manager\').length} managers)
+INVOICES: Unpaid ${KES(invs.filter(i=>i.status!==\'Paid\').reduce((a,i)=>a+(i.amount||0),0))}
+PAYMENTS: ${Object.entries(payB).map(([m,a])=>`${m} ${KES(a)}`).join(\' | \')||\'none\'}
+RECENT SALES: ${sales.slice(0,5).map(s=>`${s.product}\\u00d7${s.qty}=${KES(s.total||0)}(${s.payment})by ${s.by_name||s.by}`).join(\' | \')||\'none\'}`;
+}
+async function aiQ(msg){document.getElementById(\'ai-ta\').value=msg;await aiSend()}
+async function aiSend(){
+  const ta=document.getElementById(\'ai-ta\');const msg=ta.value.trim();
+  if(!msg||document.getElementById(\'ai-btn\').disabled)return;
+  ta.value=\'\';ta.style.height=\'auto\';
+  if(!navigator.onLine){toast(\'No internet connection.\',\'err\');return}
+  const box=document.getElementById(\'ai-msgs\');
+  const ud=document.createElement(\'div\');ud.className=\'ai-msg usr\';ud.innerHTML=`<div class="ai-av">&#128100;</div><div class="ai-bub">${msg.replace(/</g,\'&lt;\')}</div>`;box.appendChild(ud);
+  const td=document.createElement(\'div\');td.className=\'ai-msg ai\';td.id=\'ai-t\';td.innerHTML=`<div class="ai-av">&#129302;</div><div class="ai-bub"><div class="typing"><span></span><span></span><span></span></div></div>`;box.appendChild(td);box.scrollTop=box.scrollHeight;
+  document.getElementById(\'ai-btn\').disabled=true;
+  try{
+    const res=await fetch(PROXY,{method:\'POST\',headers:{\'Content-Type\':\'application/json\'},body:JSON.stringify({gemini:true,context:buildCtx(),message:msg,history:aiHist.slice(-6)})});
+    if(!res.ok)throw new Error(\'HTTP \'+res.status);
+    const data=await res.json();
+    const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||data.error?.message||\'No response. Please try again.\';
+    td.remove();aiHist.push({role:\'user\',parts:[{text:msg}]},{role:\'model\',parts:[{text:reply}]});
+    const ad=document.createElement(\'div\');ad.className=\'ai-msg ai\';ad.innerHTML=`<div class="ai-av">&#129302;</div><div class="ai-bub">${reply.replace(/\\*\\*(.*?)\\*\\*/g,\'<strong>$1</strong>\').replace(/\\n/g,\'<br/>\')}</div>`;box.appendChild(ad);box.scrollTop=box.scrollHeight;
+  }catch(e){td.remove();const ed=document.createElement(\'div\');ed.className=\'ai-msg ai\';ed.innerHTML=`<div class="ai-av">&#129302;</div><div class="ai-bub" style="color:var(--r)">&#9888;&#65039; ${e.message}</div>`;box.appendChild(ed);box.scrollTop=box.scrollHeight}
+  document.getElementById(\'ai-btn\').disabled=false;
+}
+
+// ── RESET PASSWORD ────────────────────────────────────────────────
+let resetUnlocked=false;
+function openReset(){
+  resetUnlocked=false;
+  document.getElementById(\'reset-admin-key\').value=\'\';document.getElementById(\'reset-newpw\').value=\'\';document.getElementById(\'reset-err\').textContent=\'\';
+  document.getElementById(\'reset-step2\').style.display=\'none\';document.getElementById(\'reset-step3\').style.display=\'none\';
+  document.getElementById(\'reset-btn\').textContent=\'Verify Admin Key\';openM(\'m-reset\');
+}
+async function doReset(){
+  const key=document.getElementById(\'reset-admin-key\').value.trim();const errEl=document.getElementById(\'reset-err\');
+  if(!resetUnlocked){
+    if(key!==ADMIN_PW){errEl.textContent=\'Incorrect admin key.\';return}
+    resetUnlocked=true;
+    if(sb&&BIZ_ID){const{data}=await sb.from(\'staff\').select(\'*\').eq(\'business_id\',BIZ_ID);if(data)C.staff=data;}
+    const sel=document.getElementById(\'reset-who\');sel.innerHTML=\'\';
+    C.staff.forEach(s=>{const o=document.createElement(\'option\');o.value=s.id;o.textContent=`${s.name} (${rlbl(s.role)})`;sel.appendChild(o)});
+    document.getElementById(\'reset-step2\').style.display=\'block\';document.getElementById(\'reset-step3\').style.display=\'block\';
+    document.getElementById(\'reset-btn\').textContent=\'Reset Password\';errEl.textContent=\'\';return;
+  }
+  const staffId=document.getElementById(\'reset-who\').value;const newpw=document.getElementById(\'reset-newpw\').value.trim();
+  if(!newpw||newpw.length<4){errEl.textContent=\'New password must be 4+ characters.\';return}
+  try{
+    await dbUpdate(\'staff\',staffId,{pw:newpw});
+    toast(\'Password reset successfully\');closeM(\'m-reset\');resetUnlocked=false;
+  }catch(e){errEl.textContent=\'Error: \'+e.message}
+}
+
+// ── MODAL + SIDEBAR ───────────────────────────────────────────────
+const openM=id=>document.getElementById(id).classList.add(\'open\');
+const closeM=id=>document.getElementById(id).classList.remove(\'open\');
+const openSB=()=>{document.getElementById(\'sidebar\').classList.add(\'open\');document.getElementById(\'sb-ov\').classList.add(\'show\')};
+const closeSB=()=>{document.getElementById(\'sidebar\').classList.remove(\'open\');document.getElementById(\'sb-ov\').classList.remove(\'show\')};
+document.querySelectorAll(\'.mbg\').forEach(bg=>bg.addEventListener(\'click\',e=>{if(e.target===bg)bg.classList.remove(\'open\')}));
+document.addEventListener(\'click\',e=>{const p=document.getElementById(\'np\');const b=document.getElementById(\'nb-btn\');if(p&&!p.contains(e.target)&&!b?.contains(e.target))p.classList.remove(\'open\')});
+
+// ── START ─────────────────────────────────────────────────────────
+window.onload = () => initSB();
+</script>
+</body>
+</html>'''
+
+with open('/mnt/user-data/outputs/index.html', 'w') as f:
+    f.write(code)
+
+print(f"Written: {len(code)} bytes, {code.count(chr(10))} lines")
+PYEOF
+Output
+
+Command argument is 101_380 bytes, exceeding the 100_000-byte per-argument limit. For large content, pipe via stdin or use a file-write API instead of embedding the content inline in the command. Argument preview: 'python3 << \'PYEOF\'\ncode = \'\'\'<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8"/>\n<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>\n<title>Pro Books —'
