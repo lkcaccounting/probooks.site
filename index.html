@@ -1,291 +1,752 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Books - LKC Accounting</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; background-color: #f9fafb; }
-        .hidden { display: none !important; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ProBooks" />
+  <meta name="theme-color" content="#0a0f1e" />
+  <title>ProBooks — Professional Accounting</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/login.css" />
 </head>
 <body>
 
-<div id="root"></div>
+<!-- ══════════════════════════════════════════════
+     SCREEN 1: ADMIN FIRST-TIME SETUP
+     Only shown once, when no admin password is set
+══════════════════════════════════════════════ -->
+<div id="screen-admin-setup" class="screen hidden">
+  <div class="auth-card">
+    <div class="logo-block">
+      <div class="logo-icon">📒</div>
+      <h1 class="logo-name">ProBooks</h1>
+      <p class="logo-sub">System Administrator Setup</p>
+    </div>
+    <div class="notice-box">
+      <span class="notice-icon">🔐</span>
+      <p>This is a one-time setup. You are registering as the <strong>System Administrator</strong>. This password protects the entire system and cannot be recovered.</p>
+    </div>
+    <label class="field-label">Your Name (Admin)</label>
+    <input id="admin-name-setup" type="text" class="field-input" placeholder="e.g. Lawrence" />
+    <label class="field-label">Create Admin Password</label>
+    <input id="admin-pass-setup" type="password" class="field-input" placeholder="Strong password" />
+    <label class="field-label">Confirm Password</label>
+    <input id="admin-pass-confirm" type="password" class="field-input" placeholder="Repeat password" />
+    <div id="admin-setup-error" class="error-msg hidden"></div>
+    <button class="btn-primary" onclick="adminSetup()">Activate System</button>
+  </div>
+</div>
 
-<script type="text/babel">
-    // ==========================================
-    // 1. CONFIGURATION (PASTE YOUR KEYS HERE)
-    // ==========================================
-    const SUPABASE_URL = "YOUR_SUPABASE_URL"; 
-    const SUPABASE_KEY = "YOUR_SUPABASE_KEY";
-    const ADMIN_MASTER_PASSWORD = "LKCAdmin2024!"; // Your Global Admin Password
-    const GEMINI_API_KEY = "YOUR_FREE_GEMINI_KEY"; // Optional: Get free at aistudio.google.com
+<!-- ══════════════════════════════════════════════
+     SCREEN 2: LOGIN — All users sign in here
+══════════════════════════════════════════════ -->
+<div id="screen-login" class="screen hidden">
+  <div class="auth-card">
+    <div class="logo-block">
+      <div class="logo-icon">📒</div>
+      <h1 class="logo-name">ProBooks</h1>
+      <p class="logo-sub">Professional Accounting Software</p>
+    </div>
+    <label class="field-label">Full Name</label>
+    <input id="login-name" type="text" class="field-input" placeholder="Your registered name" />
+    <label class="field-label">Password</label>
+    <input id="login-pass" type="password" class="field-input" placeholder="Your password" />
+    <div id="login-error" class="error-msg hidden"></div>
+    <button class="btn-primary" onclick="login()">Sign In</button>
+    <p class="login-footer">Contact the system administrator if you cannot access your account.</p>
+  </div>
+</div>
 
-    const { createClient } = supabase;
-    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+<!-- ══════════════════════════════════════════════
+     SCREEN 3: ADMIN DASHBOARD
+     Manage businesses, owners, all users
+══════════════════════════════════════════════ -->
+<div id="screen-admin" class="screen hidden">
+  <div class="app-shell">
+    <aside class="sidebar" id="admin-sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon">📒</span>
+        <span class="brand-name">ProBooks</span>
+        <span class="brand-role role-admin">Admin</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item active" data-tab="admin-businesses" onclick="adminTab('admin-businesses',this)">
+          <span class="nav-icon">🏢</span> Businesses
+        </a>
+        <a class="nav-item" data-tab="admin-users" onclick="adminTab('admin-users',this)">
+          <span class="nav-icon">👥</span> All Users
+        </a>
+        <a class="nav-item" data-tab="admin-settings" onclick="adminTab('admin-settings',this)">
+          <span class="nav-icon">⚙️</span> Admin Settings
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-logout" onclick="logout()">🚪 Sign Out</button>
+      </div>
+    </aside>
 
-    // ==========================================
-    // 2. MAIN APP ROUTER
-    // ==========================================
-    function App() {
-        const [view, setView] = React.useState('login'); // login, admin, owner, manager, pos
-        const [user, setUser] = React.useState(null);
-        const [loading, setLoading] = React.useState(true);
+    <main class="main-content">
+      <!-- Businesses Tab -->
+      <div id="tab-admin-businesses" class="tab-panel active">
+        <div class="page-header">
+          <h2>Registered Businesses</h2>
+          <button class="btn-primary small" onclick="openModal('modal-add-business')">+ Add Business</button>
+        </div>
+        <div id="businesses-list" class="card-grid"></div>
+      </div>
 
-        React.useEffect(() => {
-            // Check if user is already logged in on page refresh
-            db.auth.getSession().then(({ data: { session } }) => {
-                if (session) {
-                    setUser(session.user);
-                    routeUser(session.user);
-                }
-                setLoading(false);
-            });
-        }, []);
+      <!-- Users Tab -->
+      <div id="tab-admin-users" class="tab-panel hidden">
+        <div class="page-header">
+          <h2>All System Users</h2>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="admin-users-table">
+            <thead><tr><th>Name</th><th>Role</th><th>Business</th><th>Actions</th></tr></thead>
+            <tbody id="admin-users-body"></tbody>
+          </table>
+        </div>
+      </div>
 
-        const routeUser = async (currentUser) => {
-            const { data: profile } = await db.from('profiles').select('role').eq('id', currentUser.id).single();
-            if (profile) {
-                if (profile.role === 'owner') setView('owner');
-                else if (profile.role === 'manager') setView('manager');
-                else if (profile.role === 'salesperson') setView('pos');
-            }
-        };
+      <!-- Admin Settings Tab -->
+      <div id="tab-admin-settings" class="tab-panel hidden">
+        <div class="page-header"><h2>Admin Settings</h2></div>
+        <div class="settings-card">
+          <h3>Change Admin Password</h3>
+          <label class="field-label">Current Password</label>
+          <input id="admin-curr-pass" type="password" class="field-input" />
+          <label class="field-label">New Password</label>
+          <input id="admin-new-pass" type="password" class="field-input" />
+          <label class="field-label">Confirm New Password</label>
+          <input id="admin-new-pass2" type="password" class="field-input" />
+          <div id="admin-pass-msg" class="msg-box hidden"></div>
+          <button class="btn-primary" onclick="changeAdminPassword()">Update Password</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
 
-        const logout = async () => {
-            await db.auth.signOut();
-            setUser(null);
-            setView('login');
-        };
+<!-- ══════════════════════════════════════════════
+     SCREEN 4: OWNER DASHBOARD
+══════════════════════════════════════════════ -->
+<div id="screen-owner" class="screen hidden">
+  <div class="app-shell">
+    <aside class="sidebar" id="owner-sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon">📒</span>
+        <div>
+          <span class="brand-name">ProBooks</span>
+          <div id="owner-biz-name" class="brand-biz"></div>
+        </div>
+        <span class="brand-role role-owner">Owner</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item active" data-tab="owner-dashboard" onclick="ownerTab('owner-dashboard',this)">
+          <span class="nav-icon">📊</span> Dashboard
+        </a>
+        <a class="nav-item" data-tab="owner-income" onclick="ownerTab('owner-income',this)">
+          <span class="nav-icon">💰</span> Income
+        </a>
+        <a class="nav-item" data-tab="owner-expenses" onclick="ownerTab('owner-expenses',this)">
+          <span class="nav-icon">💸</span> Expenses
+        </a>
+        <a class="nav-item" data-tab="owner-sales" onclick="ownerTab('owner-sales',this)">
+          <span class="nav-icon">🧾</span> Sales Records
+        </a>
+        <a class="nav-item" data-tab="owner-stock" onclick="ownerTab('owner-stock',this)">
+          <span class="nav-icon">📦</span> Stock
+        </a>
+        <a class="nav-item" data-tab="owner-invoices" onclick="ownerTab('owner-invoices',this)">
+          <span class="nav-icon">📄</span> Invoices
+        </a>
+        <a class="nav-item" data-tab="owner-reports" onclick="ownerTab('owner-reports',this)">
+          <span class="nav-icon">📈</span> Reports
+        </a>
+        <a class="nav-item" data-tab="owner-team" onclick="ownerTab('owner-team',this)">
+          <span class="nav-icon">👥</span> My Team
+        </a>
+        <a class="nav-item" data-tab="owner-notifications" onclick="ownerTab('owner-notifications',this)">
+          <span class="nav-icon">🔔</span> Notifications <span id="notif-badge" class="badge hidden">0</span>
+        </a>
+        <a class="nav-item" data-tab="owner-ai" onclick="ownerTab('owner-ai',this)">
+          <span class="nav-icon">🤖</span> AI Accountant
+        </a>
+        <a class="nav-item" data-tab="owner-settings" onclick="ownerTab('owner-settings',this)">
+          <span class="nav-icon">⚙️</span> Settings
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-logout" onclick="logout()">🚪 Sign Out</button>
+      </div>
+    </aside>
 
-        if (loading) return <div className="p-10 text-center text-xl">Loading Pro Books...</div>;
+    <main class="main-content" id="owner-main">
+      <!-- Dashboard -->
+      <div id="tab-owner-dashboard" class="tab-panel active">
+        <div class="page-header"><h2>Dashboard</h2><span id="owner-greeting" class="greeting"></span></div>
+        <div class="stats-grid" id="owner-stats"></div>
+        <div class="two-col">
+          <div class="card">
+            <h3 class="card-title">Recent Activity</h3>
+            <div id="owner-recent-activity" class="activity-feed"></div>
+          </div>
+          <div class="card">
+            <h3 class="card-title">🔴 Low Stock Alerts</h3>
+            <div id="owner-low-stock" class="alert-feed"></div>
+          </div>
+        </div>
+      </div>
 
-        return (
-            <div className="min-h-screen">
-                {view === 'login' && <Login setView={setView} setUser={setUser} routeUser={routeUser} />}
-                {view === 'admin' && <AdminSetup setView={setView} />}
-                {view === 'owner' && <OwnerDashboard user={user} logout={logout} />}
-                {view === 'manager' && <ManagerDashboard user={user} logout={logout} />}
-                {view === 'pos' && <SalesPOS user={user} logout={logout} />}
-            </div>
-        );
-    }
+      <!-- Income -->
+      <div id="tab-owner-income" class="tab-panel hidden">
+        <div class="page-header">
+          <h2>Income Records</h2>
+          <button class="btn-primary small" onclick="openModal('modal-add-income')">+ Add Income</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Amount</th><th>Category</th><th>Payment</th><th>Description</th><th>Actions</th></tr></thead>
+            <tbody id="income-table-body"></tbody>
+          </table>
+        </div>
+      </div>
 
-    // ==========================================
-    // 3. LOGIN SCREEN
-    // ==========================================
-    function Login({ setView, setUser, routeUser }) {
-        const [name, setName] = React.useState('');
-        const [password, setPassword] = React.useState('');
-        const [error, setError] = React.useState('');
+      <!-- Expenses -->
+      <div id="tab-owner-expenses" class="tab-panel hidden">
+        <div class="page-header">
+          <h2>Expense Records</h2>
+          <button class="btn-primary small" onclick="openModal('modal-add-expense')">+ Add Expense</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Amount</th><th>Category</th><th>Payment</th><th>Description</th><th>Actions</th></tr></thead>
+            <tbody id="expense-table-body"></tbody>
+          </table>
+        </div>
+      </div>
 
-        const handleLogin = async (e) => {
-            e.preventDefault();
-            setError('');
-            // We format the name into a system email behind the scenes
-            const email = name.toLowerCase().replace(/\s+/g, '') + '@probooks.app';
-            
-            const { data, error } = await db.auth.signInWithPassword({ email, password });
-            if (error) {
-                setError('Invalid Name or Password.');
-            } else {
-                setUser(data.user);
-                routeUser(data.user);
-            }
-        };
+      <!-- Sales Records (from all staff) -->
+      <div id="tab-owner-sales" class="tab-panel hidden">
+        <div class="page-header"><h2>Sales Records (All Staff)</h2></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Payment</th><th>Recorded By</th><th>Actions</th></tr></thead>
+            <tbody id="owner-sales-table-body"></tbody>
+          </table>
+        </div>
+      </div>
 
-        return (
-            <div className="flex items-center justify-center min-h-screen p-4">
-                <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border border-gray-200">
-                    <h2 className="text-2xl font-bold text-center mb-6 text-blue-700">Pro Books Login</h2>
-                    <form onSubmit={handleLogin} className="space-y-4">
-                        <input type="text" placeholder="Your Name" className="w-full p-3 border rounded-lg" value={name} onChange={e => setName(e.target.value)} required />
-                        <input type="password" placeholder="Password" className="w-full p-3 border rounded-lg" value={password} onChange={e => setPassword(e.target.value)} required />
-                        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                        <button type="submit" className="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700">Sign In</button>
-                    </form>
-                    <p className="text-center text-sm text-gray-500 mt-6">
-                        Global Admin? <button onClick={() => setView('admin')} className="text-blue-600 underline">Setup New Business</button>
-                    </p>
-                </div>
-            </div>
-        );
-    }
+      <!-- Stock -->
+      <div id="tab-owner-stock" class="tab-panel hidden">
+        <div class="page-header">
+          <h2>Stock / Inventory</h2>
+          <button class="btn-primary small" onclick="openModal('modal-add-stock')">+ Add Item</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Item</th><th>SKU</th><th>Category</th><th>Qty</th><th>Cost</th><th>Sell Price</th><th>Reorder Lvl</th><th>Actions</th></tr></thead>
+            <tbody id="stock-table-body"></tbody>
+          </table>
+        </div>
+      </div>
 
-    // ==========================================
-    // 4. ADMIN SETUP (YOUR MASTER GATE)
-    // ==========================================
-    function AdminSetup({ setView }) {
-        const [masterPass, setMasterPass] = React.useState('');
-        const [step, setStep] = React.useState(1);
-        const [bizName, setBizName] = React.useState('');
-        const [ownerName, setOwnerName] = React.useState('');
-        const [ownerPass, setOwnerPass] = React.useState('');
-        const [msg, setMsg] = React.useState('');
+      <!-- Invoices -->
+      <div id="tab-owner-invoices" class="tab-panel hidden">
+        <div class="page-header">
+          <h2>Invoices</h2>
+          <button class="btn-primary small" onclick="openModal('modal-add-invoice')">+ New Invoice</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Invoice #</th><th>Client</th><th>Date</th><th>Due</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="invoice-table-body"></tbody>
+          </table>
+        </div>
+      </div>
 
-        const verifyAdmin = () => {
-            if (masterPass === ADMIN_MASTER_PASSWORD) setStep(2);
-            else setMsg('Invalid Master Password.');
-        };
+      <!-- Reports -->
+      <div id="tab-owner-reports" class="tab-panel hidden">
+        <div class="page-header"><h2>Financial Reports</h2></div>
+        <div class="reports-grid">
+          <button class="report-card" onclick="generateReport('profit-loss')">
+            <span class="report-icon">📊</span>
+            <strong>Profit & Loss</strong>
+            <span>This month's summary</span>
+          </button>
+          <button class="report-card" onclick="generateReport('sales-summary')">
+            <span class="report-icon">🧾</span>
+            <strong>Sales Summary</strong>
+            <span>By staff & product</span>
+          </button>
+          <button class="report-card" onclick="generateReport('stock-report')">
+            <span class="report-icon">📦</span>
+            <strong>Stock Report</strong>
+            <span>Current inventory</span>
+          </button>
+          <button class="report-card" onclick="generateReport('vat-paye')">
+            <span class="report-icon">🏦</span>
+            <strong>VAT / PAYE</strong>
+            <span>Tax summary</span>
+          </button>
+        </div>
+        <div id="report-output" class="report-output hidden"></div>
+      </div>
 
-        const createBusiness = async (e) => {
-            e.preventDefault();
-            setMsg('Creating...');
-            // 1. Create Business
-            const { data: biz, error: bizErr } = await db.from('businesses').insert([{ name: bizName }]).select().single();
-            if (bizErr) return setMsg('Error: ' + bizErr.message);
+      <!-- Team Management -->
+      <div id="tab-owner-team" class="tab-panel hidden">
+        <div class="page-header">
+          <h2>My Team</h2>
+          <button class="btn-primary small" onclick="openModal('modal-add-user')">+ Add Member</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Role</th><th>Actions</th></tr></thead>
+            <tbody id="team-table-body"></tbody>
+          </table>
+        </div>
+      </div>
 
-            // 2. Create Owner
-            const email = ownerName.toLowerCase().replace(/\s+/g, '') + '@probooks.app';
-            const { error: authErr } = await db.auth.signUp({
-                email, password: ownerPass,
-                options: { data: { full_name: ownerName, role: 'owner', business_id: biz.id } }
-            });
-            if (authErr) return setMsg('Error: ' + authErr.message);
+      <!-- Notifications -->
+      <div id="tab-owner-notifications" class="tab-panel hidden">
+        <div class="page-header"><h2>Notifications</h2>
+          <button class="btn-outline small" onclick="clearNotifications()">Clear All</button>
+        </div>
+        <div id="notifications-feed" class="notifications-feed"></div>
+      </div>
 
-            setMsg('Success! Business and Owner created. Go to Login.');
-            setTimeout(() => setView('login'), 2000);
-        };
+      <!-- AI Accountant -->
+      <div id="tab-owner-ai" class="tab-panel hidden">
+        <div class="page-header"><h2>🤖 AI Accountant</h2></div>
+        <div class="ai-container">
+          <div class="ai-intro">
+            <p>Your personal AI accountant reads your business data in real time. Ask anything — categorize transactions, detect anomalies, generate reports, VAT/PAYE help, or general accounting questions.</p>
+          </div>
+          <div id="ai-chat-box" class="ai-chat-box"></div>
+          <div class="ai-input-row">
+            <textarea id="ai-input" class="ai-input" placeholder="Ask your AI Accountant anything... e.g. 'What is my net profit this month?' or 'Are there any unusual transactions?'" rows="2"></textarea>
+            <button class="btn-primary ai-send" onclick="sendAiMessage()">Send</button>
+          </div>
+          <div class="ai-suggestions">
+            <span class="ai-chip" onclick="aiQuickAsk('Summarize my financial position this month')">📊 Monthly Summary</span>
+            <span class="ai-chip" onclick="aiQuickAsk('Are there any suspicious or unusual transactions?')">🔍 Fraud Check</span>
+            <span class="ai-chip" onclick="aiQuickAsk('Calculate my VAT liability based on sales')">🏦 VAT Calculation</span>
+            <span class="ai-chip" onclick="aiQuickAsk('Which products are selling best?')">📦 Top Products</span>
+            <span class="ai-chip" onclick="aiQuickAsk('Generate a profit and loss summary')">💰 P&L Report</span>
+          </div>
+        </div>
+      </div>
 
-        return (
-            <div className="flex items-center justify-center min-h-screen p-4 bg-gray-100">
-                <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-                    <h2 className="text-2xl font-bold mb-6 text-red-600">Global Admin Gate</h2>
-                    {step === 1 ? (
-                        <div className="space-y-4">
-                            <input type="password" placeholder="Master License Key" className="w-full p-3 border rounded-lg" value={masterPass} onChange={e => setMasterPass(e.target.value)} />
-                            <button onClick={verifyAdmin} className="w-full bg-red-600 text-white p-3 rounded-lg">Unlock</button>
-                        </div>
-                    ) : (
-                        <form onSubmit={createBusiness} className="space-y-4">
-                            <input type="text" placeholder="Business Name" className="w-full p-3 border rounded-lg" value={bizName} onChange={e => setBizName(e.target.value)} required />
-                            <input type="text" placeholder="Owner Full Name" className="w-full p-3 border rounded-lg" value={ownerName} onChange={e => setOwnerName(e.target.value)} required />
-                            <input type="password" placeholder="Owner Password" className="w-full p-3 border rounded-lg" value={ownerPass} onChange={e => setOwnerPass(e.target.value)} required />
-                            <button type="submit" className="w-full bg-green-600 text-white p-3 rounded-lg">Deploy Business</button>
-                        </form>
-                    )}
-                    {msg && <p className="mt-4 text-center font-medium text-gray-700">{msg}</p>}
-                    <button onClick={() => setView('login')} className="w-full mt-4 text-sm text-gray-500 underline">Back to Login</button>
-                </div>
-            </div>
-        );
-    }
+      <!-- Settings -->
+      <div id="tab-owner-settings" class="tab-panel hidden">
+        <div class="page-header"><h2>Business Settings</h2></div>
+        <div class="settings-card">
+          <h3>Business Information</h3>
+          <label class="field-label">Business Name</label>
+          <input id="settings-biz-name" type="text" class="field-input" />
+          <label class="field-label">Business Type</label>
+          <select id="settings-biz-type" class="field-input">
+            <option>Retail</option><option>Restaurant</option><option>Services</option>
+            <option>Manufacturing</option><option>Wholesale</option><option>Other</option>
+          </select>
+          <label class="field-label">Currency</label>
+          <select id="settings-currency" class="field-input">
+            <option value="KES">KES - Kenyan Shilling</option>
+            <option value="USD">USD - US Dollar</option>
+            <option value="UGX">UGX - Ugandan Shilling</option>
+            <option value="TZS">TZS - Tanzanian Shilling</option>
+            <option value="ZAR">ZAR - South African Rand</option>
+            <option value="GBP">GBP - British Pound</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="NGN">NGN - Nigerian Naira</option>
+          </select>
+          <label class="field-label">Contact / Email</label>
+          <input id="settings-contact" type="text" class="field-input" />
+          <label class="field-label">Address</label>
+          <input id="settings-address" type="text" class="field-input" />
+          <label class="field-label">Low Stock Alert Threshold</label>
+          <input id="settings-threshold" type="number" class="field-input" value="5" />
+          <div id="settings-msg" class="msg-box hidden"></div>
+          <button class="btn-primary" onclick="saveBusinessSettings()">Save Settings</button>
+        </div>
+        <div class="settings-card">
+          <h3>Change My Password</h3>
+          <label class="field-label">Current Password</label>
+          <input id="owner-curr-pass" type="password" class="field-input" />
+          <label class="field-label">New Password</label>
+          <input id="owner-new-pass" type="password" class="field-input" />
+          <label class="field-label">Confirm New Password</label>
+          <input id="owner-new-pass2" type="password" class="field-input" />
+          <div id="owner-pass-msg" class="msg-box hidden"></div>
+          <button class="btn-primary" onclick="changeOwnPassword('owner')">Update Password</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
 
-    // ==========================================
-    // 5. DASHBOARDS & POS
-    // ==========================================
-    function OwnerDashboard({ user, logout }) {
-        const [aiPrompt, setAiPrompt] = React.useState('');
-        const [aiResponse, setAiResponse] = React.useState('I am your AI Accountant. Ask me about VAT, PAYE, or business anomalies.');
+<!-- ══════════════════════════════════════════════
+     SCREEN 5: MANAGER DASHBOARD
+══════════════════════════════════════════════ -->
+<div id="screen-manager" class="screen hidden">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon">📒</span>
+        <div>
+          <span class="brand-name">ProBooks</span>
+          <div id="mgr-biz-name" class="brand-biz"></div>
+        </div>
+        <span class="brand-role role-manager">Manager</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item active" data-tab="mgr-sales" onclick="mgrTab('mgr-sales',this)">
+          <span class="nav-icon">🧾</span> Sales Reports
+        </a>
+        <a class="nav-item" data-tab="mgr-stock" onclick="mgrTab('mgr-stock',this)">
+          <span class="nav-icon">📦</span> Stock Report
+        </a>
+        <a class="nav-item" data-tab="mgr-invoices" onclick="mgrTab('mgr-invoices',this)">
+          <span class="nav-icon">📄</span> Invoice Reports
+        </a>
+        <a class="nav-item" data-tab="mgr-alerts" onclick="mgrTab('mgr-alerts',this)">
+          <span class="nav-icon">🔔</span> Low Stock Alerts
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-logout" onclick="logout()">🚪 Sign Out</button>
+      </div>
+    </aside>
+    <main class="main-content">
+      <!-- Sales Reports -->
+      <div id="tab-mgr-sales" class="tab-panel active">
+        <div class="page-header"><h2>Sales Reports</h2></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Payment</th><th>Recorded By</th></tr></thead>
+            <tbody id="mgr-sales-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Stock Report -->
+      <div id="tab-mgr-stock" class="tab-panel hidden">
+        <div class="page-header"><h2>Stock Report</h2></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Item</th><th>SKU</th><th>Qty</th><th>Sell Price</th><th>Reorder Lvl</th><th>Status</th></tr></thead>
+            <tbody id="mgr-stock-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Invoice Reports -->
+      <div id="tab-mgr-invoices" class="tab-panel hidden">
+        <div class="page-header"><h2>Invoice Reports</h2></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Invoice #</th><th>Client</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody id="mgr-invoices-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Low Stock Alerts -->
+      <div id="tab-mgr-alerts" class="tab-panel hidden">
+        <div class="page-header"><h2>Low Stock Alerts</h2></div>
+        <div id="mgr-alerts-feed" class="alert-feed"></div>
+      </div>
+    </main>
+  </div>
+</div>
 
-        const askAI = async () => {
-            setAiResponse('Thinking...');
-            // In a real app, this would fetch your sales data and send it to Gemini.
-            // For now, it simulates the connection.
-            setAiResponse(`As the AI Accountant, I've analyzed your ledger. Based on the current data, I've automatically categorized your recent KPLC and transport expenses, and flagged 2 voided sales by a salesperson for your review. Your estimated VAT liability for this month is KES 14,500.`);
-        };
+<!-- ══════════════════════════════════════════════
+     SCREEN 6: SALES PERSON DASHBOARD
+══════════════════════════════════════════════ -->
+<div id="screen-sales" class="screen hidden">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon">📒</span>
+        <div>
+          <span class="brand-name">ProBooks</span>
+          <div id="sales-biz-name" class="brand-biz"></div>
+        </div>
+        <span class="brand-role role-sales">Sales</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item active" data-tab="sp-stock" onclick="spTab('sp-stock',this)">
+          <span class="nav-icon">📦</span> Stock
+        </a>
+        <a class="nav-item" data-tab="sp-mysales" onclick="spTab('sp-mysales',this)">
+          <span class="nav-icon">🧾</span> My Sales
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div id="sp-user-info" class="sp-user-info"></div>
+        <button class="btn-logout" onclick="logout()">🚪 Sign Out</button>
+      </div>
+    </aside>
+    <main class="main-content">
+      <!-- Stock (view + record sale + restock) -->
+      <div id="tab-sp-stock" class="tab-panel active">
+        <div class="page-header">
+          <h2>Stock & Sales</h2>
+          <button class="btn-primary small" onclick="openModal('modal-restock')">+ Restock</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Item</th><th>Category</th><th>In Stock</th><th>Sell Price</th><th>Action</th></tr></thead>
+            <tbody id="sp-stock-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- My Sales History -->
+      <div id="tab-sp-mysales" class="tab-panel hidden">
+        <div class="page-header"><h2>My Sales History</h2></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Payment</th></tr></thead>
+            <tbody id="sp-sales-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
 
-        return (
-            <div className="p-6 max-w-4xl mx-auto">
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold">Owner Dashboard</h1>
-                    <button onClick={logout} className="text-red-500 underline">Logout</button>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div className="bg-white p-6 rounded-lg shadow border">
-                        <h3 className="font-bold mb-2">Financial Overview</h3>
-                        <p className="text-2xl text-green-600">KES 450,000 <span className="text-sm text-gray-500">Revenue</span></p>
-                        <p className="text-sm text-red-500 mt-2">3 Pending Edit Requests from Sales Staff</p>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow border">
-                        <h3 className="font-bold mb-2">Staff Activity</h3>
-                        <p>Salesperson 1: 14 Sales (M-Pesa)</p>
-                        <p>Salesperson 2: 8 Sales (Cash)</p>
-                    </div>
-                </div>
+<!-- ══════════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════════ -->
 
-                <div className="bg-indigo-900 text-white p-6 rounded-lg shadow-lg">
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">🤖 AI Accountant (Exclusive)</h3>
-                    <p className="text-sm text-indigo-200 mb-4">{aiResponse}</p>
-                    <div className="flex gap-2">
-                        <input type="text" placeholder="e.g. Calculate my PAYE liability..." className="flex-1 p-2 rounded text-black" value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} />
-                        <button onClick={askAI} className="bg-indigo-500 px-4 rounded hover:bg-indigo-400">Ask</button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+<!-- Add Business (Admin) -->
+<div id="modal-add-business" class="modal-overlay hidden">
+  <div class="modal">
+    <h3 class="modal-title">Register New Business</h3>
+    <label class="field-label">Business Name</label>
+    <input id="new-biz-name" type="text" class="field-input" placeholder="e.g. Mama Pima Shop" />
+    <label class="field-label">Business Type</label>
+    <select id="new-biz-type" class="field-input">
+      <option>Retail</option><option>Restaurant</option><option>Services</option>
+      <option>Manufacturing</option><option>Wholesale</option><option>Other</option>
+    </select>
+    <label class="field-label">Currency</label>
+    <select id="new-biz-currency" class="field-input">
+      <option value="KES">KES - Kenyan Shilling</option>
+      <option value="USD">USD - US Dollar</option>
+      <option value="UGX">UGX - Ugandan Shilling</option>
+      <option value="TZS">TZS - Tanzanian Shilling</option>
+    </select>
+    <label class="field-label">Owner Name</label>
+    <input id="new-owner-name" type="text" class="field-input" placeholder="Business owner's full name" />
+    <label class="field-label">Owner Password</label>
+    <input id="new-owner-pass" type="password" class="field-input" placeholder="Owner login password" />
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('modal-add-business')">Cancel</button>
+      <button class="btn-primary" onclick="addBusiness()">Create Business</button>
+    </div>
+  </div>
+</div>
 
-    function ManagerDashboard({ user, logout }) {
-        return (
-            <div className="p-6 max-w-4xl mx-auto">
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold">Manager Dashboard</h1>
-                    <button onClick={logout} className="text-red-500 underline">Logout</button>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow border">
-                    <h3 className="font-bold mb-4">Inventory & Sales Reports</h3>
-                    <div className="bg-red-50 p-3 rounded border border-red-200 text-red-700 mb-4">⚠️ Alert: 'Premium Item X' is below low stock threshold (3 left).</div>
-                    <p>Here you can view sales reports, monitor stock levels, and generate invoices. (Financials hidden).</p>
-                </div>
-            </div>
-        );
-    }
+<!-- Add Team Member (Owner) -->
+<div id="modal-add-user" class="modal-overlay hidden">
+  <div class="modal">
+    <h3 class="modal-title">Add Team Member</h3>
+    <label class="field-label">Full Name</label>
+    <input id="new-user-name" type="text" class="field-input" placeholder="e.g. Jane Wanjiku" />
+    <label class="field-label">Role</label>
+    <select id="new-user-role" class="field-input">
+      <option value="manager">Manager</option>
+      <option value="salesperson">Sales Person</option>
+    </select>
+    <label class="field-label">Password</label>
+    <input id="new-user-pass" type="password" class="field-input" placeholder="Their login password" />
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('modal-add-user')">Cancel</button>
+      <button class="btn-primary" onclick="addTeamMember()">Add Member</button>
+    </div>
+  </div>
+</div>
 
-    function SalesPOS({ user, logout }) {
-        const [qty, setQty] = React.useState(1);
-        const [payment, setPayment] = React.useState('M-Pesa');
-        
-        const recordSale = () => {
-            alert('Sale Recorded! \n\nNote: You cannot edit this. If you made a mistake, you must submit an Edit Request to the Owner.');
-        };
+<!-- Add Income -->
+<div id="modal-add-income" class="modal-overlay hidden">
+  <div class="modal">
+    <h3 class="modal-title">Record Income</h3>
+    <label class="field-label">Date</label>
+    <input id="income-date" type="date" class="field-input" />
+    <label class="field-label">Amount</label>
+    <input id="income-amount" type="number" class="field-input" placeholder="0.00" step="0.01" />
+    <label class="field-label">Category</label>
+    <select id="income-cat" class="field-input">
+      <option>Sales</option><option>Services</option><option>Consulting</option>
+      <option>Investment</option><option>Rental Income</option><option>Other Income</option>
+    </select>
+    <label class="field-label">Payment Method</label>
+    <select id="income-payment" class="field-input">
+      <option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option>
+      <option>Card</option><option>Cheque</option>
+    </select>
+    <label class="field-label">Description</label>
+    <input id="income-desc" type="text" class="field-input" placeholder="Optional note" />
+    <label class="field-label">Reference / Receipt No.</label>
+    <input id="income-ref" type="text" class="field-input" placeholder="Optional" />
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('modal-add-income')">Cancel</button>
+      <button class="btn-primary" onclick="addIncome()">Save Income</button>
+    </div>
+  </div>
+</div>
 
-        return (
-            <div className="p-6 max-w-md mx-auto">
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-2xl font-bold">Sales Terminal</h1>
-                    <button onClick={logout} className="text-red-500 underline">Logout</button>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow border space-y-4">
-                    <h3 className="font-bold">Record New Sale</h3>
-                    <div>
-                        <label className="block text-sm mb-1">Item: Standard Widget</label>
-                        <p className="text-lg font-bold">KES 1,500 <span className="text-sm text-gray-500">/ unit</span></p>
-                    </div>
-                    <div>
-                        <label className="block text-sm mb-1">Quantity</label>
-                        <input type="number" min="1" className="w-full p-2 border rounded" value={qty} onChange={e => setQty(e.target.value)} />
-                    </div>
-                    <div>
-                        <label className="block text-sm mb-1">Payment Method</label>
-                        <select className="w-full p-2 border rounded" value={payment} onChange={e => setPayment(e.target.value)}>
-                            <option>M-Pesa</option>
-                            <option>Cash</option>
-                            <option>Card</option>
-                        </select>
-                    </div>
-                    <div className="pt-4 border-t">
-                        <p className="text-xl font-bold mb-4">Total: KES {1500 * qty}</p>
-                        <button onClick={recordSale} className="w-full bg-green-600 text-white p-3 rounded-lg font-bold">Complete Sale</button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+<!-- Add Expense -->
+<div id="modal-add-expense" class="modal-overlay hidden">
+  <div class="modal">
+    <h3 class="modal-title">Record Expense</h3>
+    <label class="field-label">Date</label>
+    <input id="expense-date" type="date" class="field-input" />
+    <label class="field-label">Amount</label>
+    <input id="expense-amount" type="number" class="field-input" placeholder="0.00" step="0.01" />
+    <label class="field-label">Category</label>
+    <select id="expense-cat" class="field-input">
+      <option>Rent</option><option>Utilities</option><option>Salaries</option>
+      <option>Stock Purchase</option><option>Marketing</option><option>Transport</option>
+      <option>Equipment</option><option>Maintenance</option><option>Insurance</option>
+      <option>Taxes</option><option>Other</option>
+    </select>
+    <label class="field-label">Payment Method</label>
+    <select id="expense-payment" class="field-input">
+      <option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option>
+      <option>Card</option><option>Cheque</option>
+    </select>
+    <label class="field-label">Description</label>
+    <input id="expense-desc" type="text" class="field-input" placeholder="Optional note" />
+    <label class="field-label">Vendor / Payee</label>
+    <input id="expense-vendor" type="text" class="field-input" placeholder="Who was paid?" />
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('modal-add-expense')">Cancel</button>
+      <button class="btn-primary" onclick="addExpense()">Save Expense</button>
+    </div>
+  </div>
+</div>
 
-    // ==========================================
-    // 6. MOUNT APP
-    // ==========================================
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-</script>
+<!-- Add Stock Item -->
+<div id="modal-add-stock" class="modal-overlay hidden">
+  <div class="modal">
+    <h3 class="modal-title">Add Stock Item</h3>
+    <label class="field-label">Item Name</label>
+    <input id="stock-name" type="text" class="field-input" placeholder="e.g. Maize Flour 2kg" />
+    <label class="field-label">SKU / Code</label>
+    <input id="stock-sku" type="text" class="field-input" placeholder="Optional" />
+    <label class="field-label">Category</label>
+    <input id="stock-cat" type="text" class="field-input" placeholder="e.g. Food, Electronics..." />
+    <label class="field-label">Unit</label>
+    <select id="stock-unit" class="field-input">
+      <option>pcs</option><option>kg</option><option>g</option><option>L</option>
+      <option>ml</option><option>boxes</option><option>bags</option><option>pairs</option><option>sets</option>
+    </select>
+    <label class="field-label">Quantity in Stock</label>
+    <input id="stock-qty" type="number" class="field-input" placeholder="0" />
+    <label class="field-label">Reorder Level</label>
+    <input id="stock-reorder" type="number" class="field-input" placeholder="Alert when below this" />
+    <label class="field-label">Cost Price</label>
+    <input id="stock-cost" type="number" class="field-input" placeholder="0.00" step="0.01" />
+    <label class="field-label">Selling Price</label>
+    <input id="stock-sell" type="number" class="field-input" placeholder="0.00" step="0.01" />
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('modal-add-stock')">Cancel</button>
+      <button class="btn-primary" onclick="addStockItem()">Save Item</button>
+    </div>
+  </div>
+</div>
 
+<!-- Record Sale (Sales Person) -->
+<div id="modal-record-sale" class="modal-overlay hidden">
+  <div class="modal">
+    <h3 class="modal-title">Record Sale</h3>
+    <div id="sale-item-info" class="sale-item-info"></div>
+    <label class="field-label">Quantity Sold</label>
+    <input id="sale-qty" type="number" class="field-input" placeholder="1" min="1" oninput="updateSaleTotal()" />
+    <label class="field-label">Sale Price Per Unit</label>
+    <input id="sale-unit-price" type="number" class="field-input" placeholder="Override or leave default" step="0.01" oninput="updateSaleTotal()" />
+    <label class="field-label">Payment Method</label>
+    <select id="sale-payment" class="field-input">
+      <option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option>
+      <option>Card</option><option>Cheque</option>
+    </select>
+    <div class="sale-total-display" id="sale-total-display">Total: —</div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('modal-record-sale')">Cancel</button>
+      <button class="btn-primary" onclick="recordSale()">Confirm Sale</button>
+    </div>
+  </div>
+</div>
+
+<!-- Restock Modal (Sales Person) -->
+<div id="modal-restock" class="modal-overlay hidden">
+  <div class="modal">
+    <h3 class="modal-title">Record Restock</h3>
+    <label class="field-label">Select Item</label>
+    <select id="restock-item-select" class="field-input"></select>
+    <label class="field-label">Quantity Added</label>
+    <input id="restock-qty" type="number" class="field-input" placeholder="e.g. 50" min="1" />
+    <label class="field-label">Notes (optional)</label>
+    <input id="restock-notes" type="text" class="field-input" placeholder="Supplier, delivery note..." />
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('modal-restock')">Cancel</button>
+      <button class="btn-primary" onclick="recordRestock()">Save Restock</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Invoice -->
+<div id="modal-add-invoice" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <h3 class="modal-title">Create Invoice</h3>
+    <label class="field-label">Client Name</label>
+    <input id="inv-client" type="text" class="field-input" />
+    <label class="field-label">Client Email (optional)</label>
+    <input id="inv-email" type="email" class="field-input" />
+    <label class="field-label">Invoice Date</label>
+    <input id="inv-date" type="date" class="field-input" />
+    <label class="field-label">Due Date</label>
+    <input id="inv-due" type="date" class="field-input" />
+    <label class="field-label">Line Items</label>
+    <div id="invoice-lines"></div>
+    <button class="btn-outline small" onclick="addInvoiceLine()" style="margin-bottom:12px">+ Add Line</button>
+    <label class="field-label">Tax (%)</label>
+    <input id="inv-tax" type="number" class="field-input" placeholder="0" step="0.1" oninput="calcInvoiceTotal()" />
+    <label class="field-label">Discount (%)</label>
+    <input id="inv-discount" type="number" class="field-input" placeholder="0" step="0.1" oninput="calcInvoiceTotal()" />
+    <label class="field-label">Notes / Payment Terms</label>
+    <input id="inv-notes" type="text" class="field-input" />
+    <div class="invoice-total-row" id="inv-total-display">Invoice Total: 0.00</div>
+    <label class="field-label">Status</label>
+    <select id="inv-status" class="field-input"><option value="Unpaid">Unpaid</option><option value="Paid">Paid</option></select>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('modal-add-invoice')">Cancel</button>
+      <button class="btn-primary" onclick="saveInvoice()">Save Invoice</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div id="modal-delete" class="modal-overlay hidden">
+  <div class="modal">
+    <h3 class="modal-title">⚠️ Delete Record?</h3>
+    <p class="modal-body-text">This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('modal-delete')">Cancel</button>
+      <button class="btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast hidden"></div>
+
+<!-- Scripts -->
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/reports.js"></script>
 </body>
 </html>
