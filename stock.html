@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProBooks — Stock</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="flex" style="gap:12px;align-items:center;">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-title">Stock / Inventory</span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add Item</button>
+      </div>
+    </div>
+    <div class="page-body">
+      <div id="alert-box"></div>
+      <div class="stat-grid mb-24">
+        <div class="stat-card"><div class="label">Total Items</div><div class="value blue" id="total-items">—</div></div>
+        <div class="stat-card"><div class="label">Low Stock</div><div class="value red" id="low-items">—</div></div>
+        <div class="stat-card"><div class="label">Stock Value (Cost)</div><div class="value green" id="stock-value">—</div></div>
+        <div class="stat-card"><div class="label">Potential Revenue</div><div class="value purple" id="potential-rev">—</div></div>
+      </div>
+      <div class="card">
+        <div class="flex-between mb-16">
+          <input type="text" id="search-stock" class="form-control" style="max-width:280px;" placeholder="Search items..." oninput="renderTable()">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Item</th><th>SKU</th><th>Category</th><th>Qty</th><th>Unit</th><th>Cost Price</th><th>Sell Price</th><th>Reorder At</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="stock-tbody">
+              <tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text2);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay hidden" id="item-modal">
+  <div class="modal">
+    <h2 id="modal-title">Add Stock Item</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Item Name</label>
+        <input type="text" id="item-name" class="form-control">
+      </div>
+      <div class="form-group">
+        <label class="form-label">SKU / Code</label>
+        <input type="text" id="item-sku" class="form-control" placeholder="Optional">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <input type="text" id="item-cat" class="form-control" placeholder="e.g. Drinks">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Unit</label>
+        <select id="item-unit" class="form-control">
+          <option>pcs</option><option>kg</option><option>g</option><option>L</option>
+          <option>ml</option><option>boxes</option><option>bags</option><option>pairs</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Quantity in Stock</label>
+        <input type="number" id="item-qty" class="form-control" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reorder Level</label>
+        <input type="number" id="item-reorder" class="form-control" min="0" value="5">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Cost Price</label>
+        <input type="number" id="item-cost" class="form-control" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Selling Price</label>
+        <input type="number" id="item-sell" class="form-control" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <input type="text" id="item-notes" class="form-control" placeholder="Optional description">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="save-item-btn" onclick="saveItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="../js/firebase.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/ui.js"></script>
+<script>
+  const user = requireAuth(["owner"]);
+  if (!user) throw new Error("Unauthorized");
+  document.getElementById("sidebar-container").innerHTML = buildSidebar(user);
+  highlightCurrentPage();
+
+  let items = [], editId = null, currency = "KES";
+
+  function showAlert(msg, type = "danger") {
+    document.getElementById("alert-box").innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+    setTimeout(() => document.getElementById("alert-box").innerHTML = "", 5000);
+  }
+
+  async function loadItems() {
+    const settings = await getBusinessSettings(user.businessId);
+    currency = settings?.currency || "KES";
+    items = await getStockItems(user.businessId);
+
+    const totalValue = items.reduce((s, i) => s + (Number(i.costPrice || 0) * Number(i.quantity || 0)), 0);
+    const potentialRev = items.reduce((s, i) => s + (Number(i.sellingPrice || 0) * Number(i.quantity || 0)), 0);
+    const low = items.filter(i => i.quantity <= (i.reorderLevel || 5));
+
+    document.getElementById("total-items").textContent = items.length;
+    document.getElementById("low-items").textContent = low.length;
+    document.getElementById("stock-value").textContent = formatCurrency(totalValue, currency);
+    document.getElementById("potential-rev").textContent = formatCurrency(potentialRev, currency);
+    renderTable();
+  }
+
+  function renderTable() {
+    const q = document.getElementById("search-stock").value.toLowerCase();
+    const filtered = items.filter(i => i.name.toLowerCase().includes(q) || (i.sku || "").toLowerCase().includes(q));
+    const tbody = document.getElementById("stock-tbody");
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text2);">No items found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = filtered.map(item => {
+      const low = item.quantity <= (item.reorderLevel || 5);
+      return `<tr>
+        <td><strong>${item.name}</strong></td>
+        <td class="mono">${item.sku || "—"}</td>
+        <td>${item.category || "—"}</td>
+        <td class="mono">${item.quantity}</td>
+        <td>${item.unit || "pcs"}</td>
+        <td class="mono">${formatCurrency(item.costPrice, currency)}</td>
+        <td class="mono">${formatCurrency(item.sellingPrice, currency)}</td>
+        <td>${item.reorderLevel || 5}</td>
+        <td><span class="badge ${low ? "badge-red" : "badge-green"}">${low ? "Low" : "OK"}</span></td>
+        <td>
+          <div class="flex gap-10">
+            <button class="btn btn-outline btn-sm" onclick="editItem('${item.id}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="removeItem('${item.id}','${item.name}')">Del</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join("");
+  }
+
+  function openAddModal() {
+    editId = null;
+    document.getElementById("modal-title").textContent = "Add Stock Item";
+    ["item-name","item-sku","item-cat","item-notes"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("item-qty").value = 0;
+    document.getElementById("item-reorder").value = 5;
+    document.getElementById("item-cost").value = "";
+    document.getElementById("item-sell").value = "";
+    document.getElementById("item-modal").classList.remove("hidden");
+  }
+
+  function editItem(id) {
+    editId = id;
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    document.getElementById("modal-title").textContent = "Edit Stock Item";
+    document.getElementById("item-name").value = item.name || "";
+    document.getElementById("item-sku").value = item.sku || "";
+    document.getElementById("item-cat").value = item.category || "";
+    document.getElementById("item-unit").value = item.unit || "pcs";
+    document.getElementById("item-qty").value = item.quantity || 0;
+    document.getElementById("item-reorder").value = item.reorderLevel || 5;
+    document.getElementById("item-cost").value = item.costPrice || "";
+    document.getElementById("item-sell").value = item.sellingPrice || "";
+    document.getElementById("item-notes").value = item.notes || "";
+    document.getElementById("item-modal").classList.remove("hidden");
+  }
+
+  function closeModal() { document.getElementById("item-modal").classList.add("hidden"); }
+
+  async function saveItem() {
+    const name = document.getElementById("item-name").value.trim();
+    if (!name) return showAlert("Item name required.");
+    const data = {
+      name,
+      sku: document.getElementById("item-sku").value.trim(),
+      category: document.getElementById("item-cat").value.trim(),
+      unit: document.getElementById("item-unit").value,
+      quantity: Number(document.getElementById("item-qty").value),
+      reorderLevel: Number(document.getElementById("item-reorder").value),
+      costPrice: Number(document.getElementById("item-cost").value),
+      sellingPrice: Number(document.getElementById("item-sell").value),
+      notes: document.getElementById("item-notes").value.trim()
+    };
+    const btn = document.getElementById("save-item-btn");
+    btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+    try {
+      if (editId) await updateStockItem(user.businessId, editId, data);
+      else await addStockItem(user.businessId, data);
+      closeModal();
+      showAlert("Saved!", "success");
+      showToast("Item saved!");
+      await loadItems();
+    } catch (e) { showAlert("Error: " + e.message); }
+    btn.innerHTML = "Save Item"; btn.disabled = false;
+  }
+
+  async function removeItem(id, name) {
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    try {
+      await deleteStockItem(user.businessId, id);
+      showToast("Item deleted.", "danger");
+      await loadItems();
+    } catch (e) { showAlert("Error: " + e.message); }
+  }
+
+  loadItems();
+</script>
+</body>
+</html>
