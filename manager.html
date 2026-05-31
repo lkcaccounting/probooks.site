@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProBooks — Manager Dashboard</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="flex" style="gap:12px;align-items:center;">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-title">Manager Dashboard</span>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div id="alert-box"></div>
+
+      <div class="flex mb-24" style="gap:8px;border-bottom:1px solid var(--border);padding-bottom:0;">
+        <button class="btn btn-outline" id="tab-overview" onclick="showTab('overview')" style="border-bottom:2px solid var(--accent);border-radius:8px 8px 0 0;">📊 Sales Report</button>
+        <button class="btn btn-outline" id="tab-stock" onclick="showTab('stock')">📦 Stock Report</button>
+        <button class="btn btn-outline" id="tab-lowstock" onclick="showTab('lowstock')">⚠️ Low Stock</button>
+        <button class="btn btn-outline" id="tab-invoices" onclick="showTab('invoices')">🧾 Invoices</button>
+      </div>
+
+      <!-- SALES REPORT -->
+      <div id="tab-content-overview">
+        <div class="stat-grid mb-24">
+          <div class="stat-card"><div class="label">Sales This Month</div><div class="value green" id="m-sales">—</div></div>
+          <div class="stat-card"><div class="label">Number of Sales</div><div class="value blue" id="m-count">—</div></div>
+          <div class="stat-card"><div class="label">Via M-Pesa</div><div class="value purple" id="m-mpesa">—</div></div>
+          <div class="stat-card"><div class="label">Via Cash</div><div class="value" id="m-cash">—</div></div>
+        </div>
+
+        <div class="card">
+          <div class="flex-between mb-16">
+            <strong>All Sales Transactions</strong>
+            <select class="form-control" style="width:auto;" id="sales-period" onchange="loadSales()">
+              <option value="month">This Month</option>
+              <option value="year">This Year</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Price/Unit</th><th>Method</th><th>By</th><th class="text-right">Total</th></tr></thead>
+              <tbody id="sales-body">
+                <tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text2);">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- STOCK REPORT -->
+      <div id="tab-content-stock" class="hidden">
+        <div class="card">
+          <div class="mb-16"><strong>Current Stock Levels</strong></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Item</th><th>SKU</th><th>Category</th><th>In Stock</th><th>Reorder At</th><th>Cost Price</th><th>Sell Price</th><th>Status</th></tr></thead>
+              <tbody id="stock-body">
+                <tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text2);">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOW STOCK ALERTS -->
+      <div id="tab-content-lowstock" class="hidden">
+        <div class="card">
+          <div class="mb-16"><strong>⚠️ Items Needing Restock</strong></div>
+          <div id="lowstock-content"><p class="text-muted">Loading...</p></div>
+        </div>
+      </div>
+
+      <!-- INVOICE REPORT -->
+      <div id="tab-content-invoices" class="hidden">
+        <div class="stat-grid mb-24">
+          <div class="stat-card"><div class="label">Total Invoices</div><div class="value blue" id="inv-total">—</div></div>
+          <div class="stat-card"><div class="label">Paid</div><div class="value green" id="inv-paid">—</div></div>
+          <div class="stat-card"><div class="label">Unpaid</div><div class="value red" id="inv-unpaid">—</div></div>
+          <div class="stat-card"><div class="label">Outstanding</div><div class="value purple" id="inv-outstanding">—</div></div>
+        </div>
+        <div class="card">
+          <div class="mb-16"><strong>Invoice List</strong></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Client</th><th>Due</th><th>Status</th><th class="text-right">Total</th></tr></thead>
+              <tbody id="inv-body">
+                <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text2);">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="../js/firebase.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/ui.js"></script>
+<script>
+  const user = requireAuth(["manager"]);
+  if (!user) throw new Error("Unauthorized");
+
+  document.getElementById("sidebar-container").innerHTML = buildSidebar(user);
+  highlightCurrentPage();
+
+  let currency = "KES";
+
+  function showTab(tab) {
+    ["overview","stock","lowstock","invoices"].forEach(t => {
+      document.getElementById("tab-content-" + t).classList.toggle("hidden", t !== tab);
+      const btn = document.getElementById("tab-" + t);
+      btn.style.borderBottom = t === tab ? "2px solid var(--accent)" : "none";
+    });
+    if (tab === "stock") loadStock();
+    if (tab === "lowstock") loadLowStock();
+    if (tab === "invoices") loadInvoicesReport();
+  }
+
+  async function loadSales() {
+    const period = document.getElementById("sales-period").value;
+    const now = new Date();
+    let startDate;
+    if (period === "month") startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+    else if (period === "year") startDate = new Date(now.getFullYear(), 0, 1).toISOString().split("T")[0];
+
+    const all = await getTransactions(user.businessId);
+    const sales = all.filter(t => t.type === "sale" && (!startDate || t.date >= startDate));
+
+    const total = sales.reduce((s, t) => s + Number(t.amount || 0), 0);
+    const mpesa = sales.filter(t => t.paymentMethod === "M-Pesa").reduce((s, t) => s + Number(t.amount || 0), 0);
+    const cash = sales.filter(t => t.paymentMethod === "Cash").reduce((s, t) => s + Number(t.amount || 0), 0);
+
+    document.getElementById("m-sales").textContent = formatCurrency(total, currency);
+    document.getElementById("m-count").textContent = sales.length;
+    document.getElementById("m-mpesa").textContent = formatCurrency(mpesa, currency);
+    document.getElementById("m-cash").textContent = formatCurrency(cash, currency);
+
+    const tbody = document.getElementById("sales-body");
+    if (sales.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text2);">No sales in this period.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = sales.map(t => `<tr>
+      <td>${formatDate(t.date)}</td>
+      <td>${t.itemName || "—"}</td>
+      <td>${t.quantity || "—"}</td>
+      <td class="mono">${formatCurrency(t.salePrice, currency)}</td>
+      <td><span class="badge badge-blue">${t.paymentMethod || "—"}</span></td>
+      <td>${t.recordedBy || "owner"}</td>
+      <td class="text-right mono"><strong>${formatCurrency(t.amount, currency)}</strong></td>
+    </tr>`).join("");
+  }
+
+  async function loadStock() {
+    const items = await getStockItems(user.businessId);
+    const tbody = document.getElementById("stock-body");
+    if (items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text2);">No stock items.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = items.map(s => {
+      const low = s.quantity <= (s.reorderLevel || 5);
+      return `<tr>
+        <td><strong>${s.name}</strong></td>
+        <td class="mono">${s.sku || "—"}</td>
+        <td>${s.category || "—"}</td>
+        <td>${s.quantity} ${s.unit || "pcs"}</td>
+        <td>${s.reorderLevel || 5}</td>
+        <td class="mono">${formatCurrency(s.costPrice, currency)}</td>
+        <td class="mono">${formatCurrency(s.sellingPrice, currency)}</td>
+        <td><span class="badge ${low ? "badge-red" : "badge-green"}">${low ? "Low" : "OK"}</span></td>
+      </tr>`;
+    }).join("");
+  }
+
+  async function loadLowStock() {
+    const items = await getStockItems(user.businessId);
+    const low = items.filter(s => s.quantity <= (s.reorderLevel || 5));
+    const el = document.getElementById("lowstock-content");
+    if (low.length === 0) {
+      el.innerHTML = '<div class="alert alert-success">✓ All items are well-stocked.</div>';
+      return;
+    }
+    el.innerHTML = low.map(s => `
+      <div class="flex-between" style="padding:12px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.2);border-radius:8px;margin-bottom:8px;">
+        <div>
+          <strong>${s.name}</strong>
+          <div class="text-muted">${s.category || ""}</div>
+        </div>
+        <div class="text-right">
+          <span class="badge badge-red">${s.quantity} left</span>
+          <div class="text-muted" style="font-size:12px;margin-top:4px;">Reorder at ${s.reorderLevel || 5}</div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  async function loadInvoicesReport() {
+    const invoices = await getInvoices(user.businessId);
+    const paid = invoices.filter(i => i.status === "paid");
+    const unpaid = invoices.filter(i => i.status === "unpaid");
+    const outstanding = unpaid.reduce((s, i) => s + Number(i.total || 0), 0);
+
+    document.getElementById("inv-total").textContent = invoices.length;
+    document.getElementById("inv-paid").textContent = paid.length;
+    document.getElementById("inv-unpaid").textContent = unpaid.length;
+    document.getElementById("inv-outstanding").textContent = formatCurrency(outstanding, currency);
+
+    const tbody = document.getElementById("inv-body");
+    if (invoices.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text2);">No invoices.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = invoices.map(i => `<tr>
+      <td>${formatDate(i.invoiceDate)}</td>
+      <td>${i.clientName || "—"}</td>
+      <td>${formatDate(i.dueDate)}</td>
+      <td><span class="badge ${i.status === "paid" ? "badge-green" : "badge-red"}">${i.status}</span></td>
+      <td class="text-right mono"><strong>${formatCurrency(i.total, currency)}</strong></td>
+    </tr>`).join("");
+  }
+
+  async function init() {
+    const settings = await getBusinessSettings(user.businessId);
+    currency = settings?.currency || "KES";
+    await loadSales();
+  }
+
+  init();
+</script>
+</body>
+</html>
