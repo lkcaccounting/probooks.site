@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProBooks — Income</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="flex" style="gap:12px;align-items:center;">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-title">Income Records</span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-success" onclick="openModal()">+ Add Income</button>
+      </div>
+    </div>
+    <div class="page-body">
+      <div id="alert-box"></div>
+      <div class="card">
+        <div class="flex-between mb-16">
+          <div class="flex gap-10">
+            <select id="filter-type" class="form-control" style="width:auto;" onchange="loadIncome()">
+              <option value="">All Types</option>
+              <option value="income">Manual Income</option>
+              <option value="sale">Sales</option>
+            </select>
+            <input type="month" id="filter-month" class="form-control" style="width:auto;" onchange="loadIncome()">
+          </div>
+          <div class="text-right">
+            <div class="text-muted">Total</div>
+            <div class="mono" style="font-size:20px;font-weight:700;color:var(--accent2);" id="income-total">—</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Type</th><th>Category / Item</th><th>Method</th><th>Recorded By</th><th>Notes</th><th class="text-right">Amount</th><th></th></tr></thead>
+            <tbody id="income-tbody">
+              <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text2);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Income Modal -->
+<div class="modal-overlay hidden" id="income-modal">
+  <div class="modal">
+    <h2>Add Income</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" id="inc-date" class="form-control">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount</label>
+        <input type="number" id="inc-amount" class="form-control" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select id="inc-category" class="form-control">
+          <option>Sales</option><option>Services</option><option>Consulting</option>
+          <option>Investment</option><option>Rental Income</option><option>Other Income</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <select id="inc-method" class="form-control">
+          <option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option>
+          <option>Card</option><option>Cheque</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input type="text" id="inc-desc" class="form-control">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-success" id="save-inc-btn" onclick="saveIncome()">Save Income</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="../js/firebase.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/ui.js"></script>
+<script>
+  const user = requireAuth(["owner"]);
+  if (!user) throw new Error("Unauthorized");
+  document.getElementById("sidebar-container").innerHTML = buildSidebar(user);
+  highlightCurrentPage();
+  document.getElementById("inc-date").value = new Date().toISOString().split("T")[0];
+  let currency = "KES";
+
+  function showAlert(msg, type = "danger") {
+    document.getElementById("alert-box").innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+    setTimeout(() => document.getElementById("alert-box").innerHTML = "", 5000);
+  }
+
+  async function loadIncome() {
+    const settings = await getBusinessSettings(user.businessId);
+    currency = settings?.currency || "KES";
+    const typeFilter = document.getElementById("filter-type").value;
+    const monthFilter = document.getElementById("filter-month").value;
+    let all = await getTransactions(user.businessId);
+    all = all.filter(t => t.type === "income" || t.type === "sale");
+    if (typeFilter) all = all.filter(t => t.type === typeFilter);
+    if (monthFilter) all = all.filter(t => (t.date || "").startsWith(monthFilter));
+
+    const total = all.reduce((s, t) => s + Number(t.amount || 0), 0);
+    document.getElementById("income-total").textContent = formatCurrency(total, currency);
+
+    const tbody = document.getElementById("income-tbody");
+    if (all.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text2);">No income records found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = all.map(t => `<tr>
+      <td>${formatDate(t.date)}</td>
+      <td><span class="badge ${t.type === "sale" ? "badge-green" : "badge-blue"}">${t.type}</span></td>
+      <td>${t.category || t.itemName || "—"}</td>
+      <td>${t.paymentMethod || "—"}</td>
+      <td>${t.recordedBy || "owner"}</td>
+      <td>${t.description || "—"}</td>
+      <td class="text-right mono"><strong>${formatCurrency(t.amount, currency)}</strong></td>
+      <td>${t.type !== "sale" ? `<button class="btn btn-danger btn-sm" onclick="delTx('${t.id}')">Del</button>` : ""}</td>
+    </tr>`).join("");
+  }
+
+  function openModal() { document.getElementById("income-modal").classList.remove("hidden"); }
+  function closeModal() { document.getElementById("income-modal").classList.add("hidden"); }
+
+  async function saveIncome() {
+    const amount = Number(document.getElementById("inc-amount").value);
+    if (!amount) return showAlert("Enter an amount.");
+    const btn = document.getElementById("save-inc-btn");
+    btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+    try {
+      await addTransaction(user.businessId, {
+        type: "income",
+        date: document.getElementById("inc-date").value,
+        amount,
+        category: document.getElementById("inc-category").value,
+        paymentMethod: document.getElementById("inc-method").value,
+        description: document.getElementById("inc-desc").value.trim(),
+        recordedBy: user.name
+      });
+      closeModal();
+      showAlert("Income recorded!", "success");
+      await loadIncome();
+    } catch (e) { showAlert("Error: " + e.message); }
+    btn.innerHTML = "Save Income"; btn.disabled = false;
+  }
+
+  async function delTx(id) {
+    if (!confirm("Delete this income record?")) return;
+    await deleteTransaction(user.businessId, id);
+    showToast("Deleted", "danger");
+    await loadIncome();
+  }
+
+  loadIncome();
+</script>
+</body>
+</html>
