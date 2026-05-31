@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProBooks — Sales</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="flex" style="gap:12px;align-items:center;">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-title" id="page-title">Sales Dashboard</span>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div id="alert-box"></div>
+
+      <!-- Tab nav -->
+      <div class="flex mb-24" style="gap:8px;border-bottom:1px solid var(--border);padding-bottom:0;">
+        <button class="btn btn-outline" id="tab-dash" onclick="showTab('dash')" style="border-bottom:2px solid var(--accent);border-radius:8px 8px 0 0;">🏠 Dashboard</button>
+        <button class="btn btn-outline" id="tab-sale" onclick="showTab('sale')">💵 Record Sale</button>
+        <button class="btn btn-outline" id="tab-restock" onclick="showTab('restock')">📥 Restock</button>
+        <button class="btn btn-outline" id="tab-stock" onclick="showTab('stock')">📦 Stock</button>
+      </div>
+
+      <!-- DASHBOARD TAB -->
+      <div id="tab-content-dash">
+        <div class="stat-grid">
+          <div class="stat-card"><div class="label">My Sales Today</div><div class="value green" id="my-sales-today">—</div></div>
+          <div class="stat-card"><div class="label">My Sales This Month</div><div class="value blue" id="my-sales-month">—</div></div>
+          <div class="stat-card"><div class="label">Items in Stock</div><div class="value purple" id="stock-count">—</div></div>
+          <div class="stat-card"><div class="label">Low Stock Items</div><div class="value red" id="low-stock-count">—</div></div>
+        </div>
+
+        <div class="card">
+          <div class="mb-16"><strong>My Recent Sales</strong></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Price/Unit</th><th>Total</th><th>Method</th></tr></thead>
+              <tbody id="my-sales-body">
+                <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text2);">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECORD SALE TAB -->
+      <div id="tab-content-sale" class="hidden">
+        <div class="card" style="max-width:520px;">
+          <h2 style="margin-bottom:20px;font-size:16px;">💵 Record a Sale</h2>
+          <div class="form-group">
+            <label class="form-label">Select Item</label>
+            <select id="sale-item" class="form-control" onchange="fillSalePrice()">
+              <option value="">Loading stock...</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Quantity Sold</label>
+              <input type="number" id="sale-qty" class="form-control" min="1" value="1" onchange="calcSaleTotal()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sale Price per Unit</label>
+              <input type="number" id="sale-price" class="form-control" placeholder="Auto-filled" onchange="calcSaleTotal()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Payment Method</label>
+            <select id="sale-method" class="form-control">
+              <option value="Cash">Cash</option>
+              <option value="M-Pesa">M-Pesa</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Card">Card</option>
+              <option value="Cheque">Cheque</option>
+            </select>
+          </div>
+          <div class="card" style="background:var(--surface2);margin-bottom:16px;">
+            <div class="flex-between">
+              <span class="text-muted">Total Amount</span>
+              <span class="mono" id="sale-total" style="font-size:20px;font-weight:700;color:var(--accent2);">—</span>
+            </div>
+          </div>
+          <button class="btn btn-success" style="width:100%;" id="sale-btn" onclick="submitSale()">✓ Record Sale</button>
+        </div>
+      </div>
+
+      <!-- RESTOCK TAB -->
+      <div id="tab-content-restock" class="hidden">
+        <div class="card" style="max-width:520px;">
+          <h2 style="margin-bottom:20px;font-size:16px;">📥 Record Restock</h2>
+          <div class="form-group">
+            <label class="form-label">Select Item</label>
+            <select id="restock-item" class="form-control">
+              <option value="">Select item...</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Quantity Added</label>
+              <input type="number" id="restock-qty" class="form-control" min="1" value="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cost Paid (Total)</label>
+              <input type="number" id="restock-cost" class="form-control" placeholder="0.00">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Payment Method</label>
+            <select id="restock-method" class="form-control">
+              <option value="Cash">Cash</option>
+              <option value="M-Pesa">M-Pesa</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Card">Card</option>
+              <option value="Cheque">Cheque</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="width:100%;" id="restock-btn" onclick="submitRestock()">✓ Record Restock</button>
+        </div>
+      </div>
+
+      <!-- STOCK VIEW TAB -->
+      <div id="tab-content-stock" class="hidden">
+        <div class="card">
+          <div class="flex-between mb-16">
+            <strong>Current Stock</strong>
+            <span class="text-muted" id="stock-last-updated"></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Item</th><th>Category</th><th>In Stock</th><th>Reorder At</th><th>Sell Price</th><th>Status</th></tr></thead>
+              <tbody id="stock-body">
+                <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text2);">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="../js/firebase.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/ui.js"></script>
+<script>
+  const user = requireAuth(["sales"]);
+  if (!user) throw new Error("Unauthorized");
+
+  document.getElementById("sidebar-container").innerHTML = buildSidebar(user);
+  highlightCurrentPage();
+
+  let stockItems = [];
+  let currency = "KES";
+
+  function showAlert(msg, type = "danger") {
+    document.getElementById("alert-box").innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+    setTimeout(() => document.getElementById("alert-box").innerHTML = "", 5000);
+  }
+
+  function showTab(tab) {
+    ["dash","sale","restock","stock"].forEach(t => {
+      document.getElementById("tab-content-" + t).classList.toggle("hidden", t !== tab);
+      const btn = document.getElementById("tab-" + t);
+      btn.style.borderBottom = t === tab ? "2px solid var(--accent)" : "none";
+    });
+    if (tab === "stock") renderStock();
+  }
+
+  function fillSalePrice() {
+    const itemId = document.getElementById("sale-item").value;
+    const item = stockItems.find(s => s.id === itemId);
+    if (item) {
+      document.getElementById("sale-price").value = item.sellingPrice || "";
+      calcSaleTotal();
+    }
+  }
+
+  function calcSaleTotal() {
+    const qty = Number(document.getElementById("sale-qty").value || 0);
+    const price = Number(document.getElementById("sale-price").value || 0);
+    document.getElementById("sale-total").textContent = formatCurrency(qty * price, currency);
+  }
+
+  async function loadData() {
+    const settings = await getBusinessSettings(user.businessId);
+    currency = settings?.currency || "KES";
+
+    stockItems = await getStockItems(user.businessId);
+
+    const saleOpts = stockItems.map(s =>
+      `<option value="${s.id}">${s.name} (${s.quantity} in stock)</option>`
+    ).join("");
+    document.getElementById("sale-item").innerHTML = '<option value="">Select item...</option>' + saleOpts;
+    document.getElementById("restock-item").innerHTML = '<option value="">Select item...</option>' + saleOpts;
+
+    // Dashboard stats
+    const allTx = await getTransactions(user.businessId);
+    const today = new Date().toISOString().split("T")[0];
+    const thisMonth = today.slice(0, 7);
+
+    const todaySales = allTx.filter(t => t.type === "sale" && t.date === today && t.recordedBy === user.name);
+    const monthSales = allTx.filter(t => t.type === "sale" && (t.date || "").startsWith(thisMonth) && t.recordedBy === user.name);
+
+    document.getElementById("my-sales-today").textContent = formatCurrency(
+      todaySales.reduce((s, t) => s + Number(t.amount || 0), 0), currency
+    );
+    document.getElementById("my-sales-month").textContent = formatCurrency(
+      monthSales.reduce((s, t) => s + Number(t.amount || 0), 0), currency
+    );
+    document.getElementById("stock-count").textContent = stockItems.length;
+    document.getElementById("low-stock-count").textContent =
+      stockItems.filter(s => s.quantity <= (s.reorderLevel || 5)).length;
+
+    // My recent sales table
+    const mySales = allTx.filter(t => t.type === "sale" && t.recordedBy === user.name).slice(0, 15);
+    const tbody = document.getElementById("my-sales-body");
+    if (mySales.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text2);">No sales recorded yet.</td></tr>';
+    } else {
+      tbody.innerHTML = mySales.map(t => `
+        <tr>
+          <td>${formatDate(t.date)}</td>
+          <td>${t.itemName || "—"}</td>
+          <td>${t.quantity}</td>
+          <td class="mono">${formatCurrency(t.salePrice, currency)}</td>
+          <td class="mono"><strong>${formatCurrency(t.amount, currency)}</strong></td>
+          <td><span class="badge badge-blue">${t.paymentMethod || "—"}</span></td>
+        </tr>
+      `).join("");
+    }
+  }
+
+  function renderStock() {
+    const tbody = document.getElementById("stock-body");
+    if (stockItems.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text2);">No items.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = stockItems.map(s => {
+      const low = s.quantity <= (s.reorderLevel || 5);
+      return `<tr>
+        <td><strong>${s.name}</strong></td>
+        <td>${s.category || "—"}</td>
+        <td class="mono">${s.quantity} ${s.unit || "pcs"}</td>
+        <td>${s.reorderLevel || 5}</td>
+        <td class="mono">${formatCurrency(s.sellingPrice, currency)}</td>
+        <td><span class="badge ${low ? "badge-red" : "badge-green"}">${low ? "Low Stock" : "OK"}</span></td>
+      </tr>`;
+    }).join("");
+  }
+
+  async function submitSale() {
+    const itemId = document.getElementById("sale-item").value;
+    const qty = Number(document.getElementById("sale-qty").value);
+    const price = Number(document.getElementById("sale-price").value);
+    const method = document.getElementById("sale-method").value;
+
+    if (!itemId) return showAlert("Select an item.");
+    if (!qty || qty < 1) return showAlert("Enter a valid quantity.");
+    if (!price || price < 0) return showAlert("Enter a valid price.");
+
+    const btn = document.getElementById("sale-btn");
+    btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+
+    try {
+      await recordSale(user.businessId, itemId, qty, price, method, user.name, user.role, currency);
+      showAlert("Sale recorded successfully!", "success");
+      showToast("Sale recorded!");
+      await loadData();
+      // Reset form
+      document.getElementById("sale-qty").value = 1;
+      document.getElementById("sale-price").value = "";
+      document.getElementById("sale-total").textContent = "—";
+      showTab("dash");
+    } catch (e) { showAlert("Error: " + e.message); }
+    btn.innerHTML = "✓ Record Sale"; btn.disabled = false;
+  }
+
+  async function submitRestock() {
+    const itemId = document.getElementById("restock-item").value;
+    const qty = Number(document.getElementById("restock-qty").value);
+    const cost = Number(document.getElementById("restock-cost").value || 0);
+    const method = document.getElementById("restock-method").value;
+
+    if (!itemId) return showAlert("Select an item.");
+    if (!qty || qty < 1) return showAlert("Enter a valid quantity.");
+
+    const btn = document.getElementById("restock-btn");
+    btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+
+    try {
+      await recordRestock(user.businessId, itemId, qty, cost, method, user.name, currency);
+      showAlert("Restock recorded!", "success");
+      showToast("Restock recorded!");
+      await loadData();
+      showTab("dash");
+    } catch (e) { showAlert("Error: " + e.message); }
+    btn.innerHTML = "✓ Record Restock"; btn.disabled = false;
+  }
+
+  loadData();
+</script>
+</body>
+</html>
