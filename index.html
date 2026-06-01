@@ -1,555 +1,2012 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
-<title>Pro Books — Business Accounting</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProBooks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- ============================================================
+     PROBOOKS — Single File App
+     
+     BEFORE DEPLOYING — fill in your keys in the CONFIG section
+     below (search for REPLACE_). Instructions in README section.
+     ============================================================ -->
+
 <style>
+/* ===================== RESET & VARS ===================== */
 :root{
-  --bg:#080c14;--bg2:#0c1220;--bg3:#101828;
-  --card:#141e32;--card2:#1a2540;--card3:#202d4a;
-  --border:#1e2d45;--border2:#243354;
-  --g:#22c55e;--g2:#16a34a;--gg:rgba(34,197,94,.1);--gb:rgba(34,197,94,.22);
-  --r:#ef4444;--r2:#dc2626;--rg:rgba(239,68,68,.1);--rb:rgba(239,68,68,.22);
-  --y:#f59e0b;--yg:rgba(245,158,11,.1);--yb:rgba(245,158,11,.22);
-  --b:#3b82f6;--bg4:rgba(59,130,246,.1);--bb:rgba(59,130,246,.22);
-  --tx:#e2e8f5;--tx2:#8899bb;--tx3:#3d4f70;
-  --f:"Inter",sans-serif;--fh:"Syne",sans-serif;--fm:"JetBrains Mono",monospace;
-  --sw:252px;--rsm:8px;--rmd:12px;--rlg:16px;
+  --bg:#0b0f1a; --surface:#111827; --s2:#1a2235; --border:#1f2d42;
+  --accent:#3b82f6; --green:#10b981; --red:#ef4444; --yellow:#f59e0b;
+  --purple:#8b5cf6; --cyan:#0ea5e9;
+  --text:#e2e8f0; --t2:#94a3b8; --t3:#4b5563;
+  --r:12px; --sh:0 4px 24px rgba(0,0,0,.45);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:var(--f);font-size:14px;-webkit-font-smoothing:antialiased}
-body{background:var(--bg);color:var(--tx);overflow:hidden}
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
-input,select,textarea,button{font-family:var(--f)}
-.screen{display:none;height:100dvh;overflow:hidden}
-.screen.active{display:flex}
-#screen-admin,#screen-login,#screen-setup,#screen-connect{
-  align-items:center;justify-content:center;flex-direction:column;
-  background:radial-gradient(ellipse 60% 50% at 15% 50%,rgba(34,197,94,.07),transparent 70%),
-    radial-gradient(ellipse 40% 40% at 85% 20%,rgba(59,130,246,.05),transparent 60%),var(--bg);
-}
-.auth-card{width:min(440px,calc(100vw - 28px));background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:40px 36px;box-shadow:0 32px 80px rgba(0,0,0,.6)}
-.auth-logo{font-family:var(--fh);font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
-.auth-logo em{color:var(--g);font-style:normal}
-.auth-tag{font-size:12px;color:var(--tx2);margin-bottom:28px;letter-spacing:.3px}
-.fl{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tx2);margin-bottom:6px;display:block}
-.fi{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:11px 14px;color:var(--tx);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;margin-bottom:14px}
-.fi:focus{border-color:var(--gb);box-shadow:0 0 0 3px rgba(34,197,94,.08)}
-.fi::placeholder{color:var(--tx3)}
-.fi-sel{cursor:pointer}.fi-sel option{background:var(--bg3)}
-.auth-btn{width:100%;background:var(--g2);color:#fff;border:none;border-radius:var(--rsm);padding:13px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;letter-spacing:.3px;margin-top:4px}
-.auth-btn:hover{background:var(--g)}
-.auth-btn:disabled{opacity:.5;cursor:not-allowed}
-.auth-err{color:var(--r);font-size:12px;margin-top:8px;min-height:16px}
-.auth-link{text-align:center;margin-top:14px;font-size:12px;color:var(--tx2);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.code-box{background:var(--bg3);border:2px solid var(--gb);border-radius:var(--rsm);padding:14px;text-align:center;margin:12px 0}
-.code-val{font-family:var(--fm);font-size:28px;font-weight:700;color:var(--g);letter-spacing:4px}
-.code-hint{font-size:11px;color:var(--tx2);margin-top:6px}
-#screen-app{flex-direction:row}
-.sidebar{width:var(--sw);min-width:var(--sw);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:200;flex-shrink:0}
-.sb-top{padding:22px 18px 16px;border-bottom:1px solid var(--border)}
-.sb-logo{font-family:var(--fh);font-size:20px;font-weight:800;letter-spacing:-.3px}
-.sb-logo em{color:var(--g);font-style:normal}
-.sb-ver{font-size:10px;color:var(--tx3);margin-top:2px;letter-spacing:.5px}
-.sb-user{margin:10px 10px 0;background:var(--card);border:1px solid var(--border);border-radius:var(--rsm);padding:11px 13px}
-.sb-uname{font-size:13px;font-weight:600}
-.sb-urole{font-size:11px;color:var(--tx2);margin-top:2px}
-.sb-ubiz{font-size:11px;color:var(--g);margin-top:2px;font-weight:500}
-.nav-lbl{padding:16px 14px 5px;font-size:9.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--tx3)}
-.nav-it{display:flex;align-items:center;gap:9px;padding:9px 14px;margin:1px 8px;border-radius:var(--rsm);cursor:pointer;font-size:13px;color:var(--tx2);transition:all .14s;border:1px solid transparent;user-select:none}
-.nav-it:hover{background:var(--card2);color:var(--tx)}
-.nav-it.on{background:rgba(34,197,94,.1);color:var(--g);border-color:var(--gb)}
-.nav-it .ic{font-size:14px;width:17px;text-align:center;flex-shrink:0}
-.sb-bot{margin-top:auto;border-top:1px solid var(--border);padding:8px}
-.sb-out{display:flex;align-items:center;gap:9px;padding:9px 13px;border-radius:var(--rsm);cursor:pointer;color:var(--r);font-size:13px;transition:background .14s}
-.sb-out:hover{background:var(--rg)}
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 22px;display:flex;align-items:center;gap:12px;flex-shrink:0}
-.hmbg{display:none;background:none;border:none;color:var(--tx2);font-size:22px;cursor:pointer;padding:2px;flex-shrink:0}
-.tb-title{font-family:var(--fh);font-size:17px;font-weight:700;flex:1;letter-spacing:-.2px}
-.tb-right{display:flex;gap:8px;align-items:center;flex-shrink:0}
-.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:.3px}
-.pill-g{background:var(--gg);color:var(--g);border:1px solid var(--gb)}
-.pill-b{background:var(--bg4);color:var(--b);border:1px solid var(--bb)}
-.pill-y{background:var(--yg);color:var(--y);border:1px solid var(--yb)}
-.pill-r{background:var(--rg);color:var(--r);border:1px solid var(--rb)}
-.pdot{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 5px currentColor}
-.pg{display:none;flex:1;overflow-y:auto;padding:22px}
-.pg.on{display:block}
-.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:13px;margin-bottom:22px}
-.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--rmd);padding:18px 20px;position:relative;overflow:hidden;transition:border-color .15s,box-shadow .15s}
-.sc::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--g));opacity:.6}
-.sc:hover{border-color:var(--border2);box-shadow:0 4px 20px rgba(0,0,0,.3)}
-.sl{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tx2);margin-bottom:10px}
-.sv{font-family:var(--fm);font-size:21px;font-weight:500;line-height:1.2}
-.sv.g{color:var(--g)}.sv.r{color:var(--r)}.sv.y{color:var(--y)}
-.sd{font-size:11px;color:var(--tx2);margin-top:5px}
-.cc{background:var(--card);border:1px solid var(--border);border-radius:var(--rmd);margin-bottom:16px;overflow:hidden}
-.ch{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
-.cht{font-family:var(--fh);font-size:14px;font-weight:700;letter-spacing:-.1px}
-.cb{padding:18px 20px}
-.tbl{width:100%;border-collapse:collapse;font-size:13px}
-.tbl th{text-align:left;padding:9px 13px;font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tx2);border-bottom:1px solid var(--border);white-space:nowrap}
-.tbl td{padding:11px 13px;border-bottom:1px solid var(--border);color:var(--tx);vertical-align:middle}
-.tbl tr:last-child td{border-bottom:none}
-.tbl tbody tr:hover td{background:rgba(255,255,255,.02)}
-.te{text-align:center;padding:36px 20px;color:var(--tx2);font-size:13px}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--rsm);border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .14s;letter-spacing:.2px;white-space:nowrap}
-.bg{background:var(--g2);color:#fff}.bg:hover{background:var(--g)}
-.bgh{background:var(--card2);color:var(--tx);border:1px solid var(--border)}.bgh:hover{border-color:var(--border2);background:var(--card3)}
-.br{background:var(--r2);color:#fff}.br:hover{background:var(--r)}
-.bb{background:rgba(59,130,246,.15);color:var(--b);border:1px solid var(--bb)}.bb:hover{background:rgba(59,130,246,.25)}
-.bsm{padding:5px 11px;font-size:12px}.bxs{padding:3px 8px;font-size:11px}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.fr{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px}
-.fr.s1{grid-template-columns:1fr}
-.fg{display:flex;flex-direction:column;gap:5px}
-.flb{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx2)}
-.fin,.fse,.fta{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 13px;color:var(--tx);font-size:13px;outline:none;transition:border-color .14s,box-shadow .14s;width:100%}
-.fin:focus,.fse:focus,.fta:focus{border-color:var(--gb);box-shadow:0 0 0 3px rgba(34,197,94,.07)}
-.fin::placeholder{color:var(--tx3)}.fse{cursor:pointer}.fse option{background:var(--bg3)}
-.fta{resize:vertical;min-height:80px}
-.mbg{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px}
-.mbg.open{display:flex}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);width:min(540px,100%);max-height:92dvh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.7)}
-.mh{padding:20px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.mt{font-family:var(--fh);font-size:15px;font-weight:700}
-.mx{background:none;border:none;color:var(--tx2);font-size:22px;cursor:pointer;padding:0 4px;border-radius:4px;transition:color .14s;line-height:1}
-.mx:hover{color:var(--tx)}
-.mb{padding:22px}.mf{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
-#toasts{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-.toast{background:var(--card);border:1px solid var(--border);border-radius:var(--rmd);padding:13px 16px;font-size:13px;min-width:240px;max-width:340px;box-shadow:0 12px 32px rgba(0,0,0,.5);animation:tin .3s ease;pointer-events:all}
-.toast.ok{border-left:3px solid var(--g)}.toast.err{border-left:3px solid var(--r)}.toast.info{border-left:3px solid var(--b)}.toast.warn{border-left:3px solid var(--y)}
-@keyframes tin{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
-.nb{position:relative;cursor:pointer;padding:5px;font-size:19px;border-radius:var(--rsm);transition:background .14s}
-.nb:hover{background:var(--card2)}
-.nd{width:7px;height:7px;border-radius:50%;background:var(--r);position:absolute;top:2px;right:2px;display:none;box-shadow:0 0 6px var(--r)}
-.np{display:none;position:absolute;top:calc(100% + 8px);right:0;width:310px;background:var(--card);border:1px solid var(--border);border-radius:var(--rmd);box-shadow:0 16px 40px rgba(0,0,0,.5);z-index:300;max-height:380px;overflow-y:auto}
-.np.open{display:block}
-.nph{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700}
-.ni{padding:12px 16px;border-bottom:1px solid var(--border);font-size:12.5px;line-height:1.5}
-.ni:last-child{border-bottom:none}
-.ni.ur{background:rgba(34,197,94,.04)}
-.nt{font-size:11px;color:var(--tx2);margin-top:3px}
-.bok{background:var(--gg);color:var(--g);border:1px solid var(--gb);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600;display:inline-flex}
-.blow{background:var(--yg);color:var(--y);border:1px solid var(--yb);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600;display:inline-flex}
-.bout{background:var(--rg);color:var(--r);border:1px solid var(--rb);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600;display:inline-flex}
-.ptag{background:var(--bg4);color:var(--b);border:1px solid var(--bb);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:500;display:inline-flex}
-.live-dot{width:8px;height:8px;border-radius:50%;background:var(--g);display:inline-block;margin-right:6px;box-shadow:0 0 6px var(--g);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.ai-wrap{display:flex;flex-direction:column;height:calc(100dvh - 53px)}
-.ai-hdr{padding:13px 18px;border-bottom:1px solid var(--border);background:var(--card2);display:flex;align-items:center;gap:11px;flex-shrink:0}
-.ai-msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:13px}
-.ai-msg{display:flex;gap:9px;max-width:88%}
-.ai-msg.usr{align-self:flex-end;flex-direction:row-reverse}
-.ai-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
-.ai-msg.ai .ai-av{background:var(--gg);border:1px solid var(--gb);color:var(--g)}
-.ai-msg.usr .ai-av{background:var(--card2);border:1px solid var(--border)}
-.ai-bub{padding:10px 14px;border-radius:11px;font-size:13px;line-height:1.65}
-.ai-msg.ai .ai-bub{background:var(--card2);border:1px solid var(--border);border-top-left-radius:3px}
-.ai-msg.usr .ai-bub{background:var(--g2);color:#fff;border-top-right-radius:3px}
-.ai-bub strong{color:var(--g);font-weight:600}
-.ai-chips{display:flex;flex-wrap:wrap;gap:6px;padding:9px 14px 0;flex-shrink:0}
-.ai-chip{background:var(--card2);border:1px solid var(--border);border-radius:100px;padding:5px 11px;font-size:11.5px;cursor:pointer;color:var(--tx2);transition:all .13s}
-.ai-chip:hover{border-color:var(--gb);color:var(--g);background:var(--gg)}
-.ai-inr{padding:11px 13px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;background:var(--card2);flex-shrink:0}
-.ai-ta{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 13px;color:var(--tx);font-size:13px;resize:none;outline:none;max-height:100px;transition:border-color .14s}
-.ai-ta:focus{border-color:var(--gb)}
-.ai-ta::placeholder{color:var(--tx3)}
-.ai-send{width:38px;height:38px;border-radius:var(--rsm);background:var(--g2);color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .14s;flex-shrink:0}
-.ai-send:hover{background:var(--g)}.ai-send:disabled{opacity:.35;cursor:not-allowed}
-.typing{display:flex;gap:4px;padding:5px 2px;align-items:center}
-.typing span{width:6px;height:6px;border-radius:50%;background:var(--g);opacity:.4;animation:tb .85s infinite}
-.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
-@keyframes tb{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-6px);opacity:1}}
-#sb-ov{display:none;position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.65);backdrop-filter:blur(3px)}
-#load-overlay{display:none;position:fixed;inset:0;z-index:9000;background:rgba(8,12,20,.85);backdrop-filter:blur(4px);align-items:center;justify-content:center;flex-direction:column;gap:16px}
-#load-overlay.show{display:flex}
-.spinner{width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--g);border-radius:50%;animation:spin .8s linear infinite}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-size:14px;min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+button{cursor:pointer;font-family:inherit}
+input,select,textarea{font-family:inherit}
+
+/* ===================== UTILITY ===================== */
+.hi{display:none!important}
+.flex{display:flex;align-items:center}
+.between{display:flex;align-items:center;justify-content:space-between}
+.gap{gap:10px}
+.g6{gap:6px}
+.col{flex-direction:column}
+.wrap{flex-wrap:wrap}
+.grow{flex:1}
+.mn{font-family:'JetBrains Mono',monospace}
+.tm{color:var(--t2);font-size:12px}
+.tr{text-align:right}
+.mb8{margin-bottom:8px}
+.mb16{margin-bottom:16px}
+.mb24{margin-bottom:24px}
+.mt16{margin-top:16px}
+.w100{width:100%}
+.bold{font-weight:700}
+
+/* ===================== ALERTS ===================== */
+.alert{padding:11px 16px;border-radius:8px;font-size:13px;margin-bottom:14px}
+.a-err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red)}
+.a-ok{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green)}
+.a-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--yellow)}
+
+/* ===================== BUTTONS ===================== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:8px;border:none;font-size:13px;font-weight:600;transition:all .15s;white-space:nowrap}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:#2563eb}
+.btn-s{background:var(--green);color:#fff}.btn-s:hover{background:#059669}
+.btn-d{background:var(--red);color:#fff}.btn-d:hover{background:#dc2626}
+.btn-o{background:transparent;border:1px solid var(--border);color:var(--t2)}.btn-o:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+
+/* ===================== FORMS ===================== */
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:11px;font-weight:600;color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.fc{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;transition:border-color .15s}
+.fc:focus{outline:none;border-color:var(--accent)}
+select.fc option{background:var(--s2)}
+textarea.fc{resize:none}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* ===================== CARDS ===================== */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.stat .lbl{font-size:11px;color:var(--t2);margin-bottom:8px}
+.stat .val{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.val-g{color:var(--green)}.val-r{color:var(--red)}.val-b{color:var(--accent)}.val-p{color:var(--purple)}.val-y{color:var(--yellow)}
+
+/* ===================== BADGES ===================== */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.b-g{background:rgba(16,185,129,.15);color:var(--green)}
+.b-r{background:rgba(239,68,68,.15);color:var(--red)}
+.b-b{background:rgba(59,130,246,.15);color:var(--accent)}
+.b-y{background:rgba(245,158,11,.15);color:var(--yellow)}
+.b-p{background:rgba(139,92,246,.15);color:var(--purple)}
+.b-c{background:rgba(14,165,233,.15);color:var(--cyan)}
+
+/* ===================== TABLE ===================== */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 13px;font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+td{padding:11px 13px;border-bottom:1px solid rgba(31,45,66,.5)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+/* ===================== MODAL ===================== */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:var(--sh)}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:18px}
+.modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+
+/* ===================== SPINNER ===================== */
+.sp{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.load-txt{font-size:13px;color:var(--tx2)}
-#print-area{display:none}
-@media print{
-  body>*{display:none!important}
-  #print-area{display:block!important;font-family:Arial,sans-serif;color:#111;background:#fff;font-size:12px}
-  .prp{page-break-after:always;padding:32px 36px}
-  .prp:last-child{page-break-after:auto}
-  .prh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;padding-bottom:14px;border-bottom:2px solid #16a34a}
-  .prh-biz{font-size:22px;font-weight:800}.prh-biz span{color:#16a34a}
-  .prh-meta{text-align:right;font-size:11px;color:#666;line-height:1.6}
-  .prtitle{font-size:15px;font-weight:800;margin-bottom:18px;text-transform:uppercase;letter-spacing:1px}
-  .prsg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
-  .prsc{background:#f8f9fa;border:1px solid #e5e7eb;border-radius:8px;padding:12px}
-  .prsl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:5px}
-  .prsv{font-size:17px;font-weight:700}.prsv.g{color:#16a34a}.prsv.r{color:#dc2626}
-  .prs{margin-bottom:20px}
-  .prst{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#374151;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #e5e7eb}
-  .prtbl{width:100%;border-collapse:collapse;font-size:11px}
-  .prtbl th{background:#f3f4f6;padding:7px 9px;text-align:left;font-weight:700;font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:#6b7280;border:1px solid #e5e7eb}
-  .prtbl td{padding:7px 9px;border:1px solid #e5e7eb;color:#374151}
-  .prtbl tr:nth-child(even) td{background:#fafafa}
-  .prr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px}
-  .prtot{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;font-weight:700}
-  .prbox{background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:13px;margin-top:10px}
-  .prbox.loss{background:#fef2f2;border-color:#dc2626}
-  .prft{margin-top:20px;padding-top:10px;border-top:1px solid #e5e7eb;font-size:10px;color:#9ca3af;display:flex;justify-content:space-between}
-}
-@media(max-width:720px){
-  .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);box-shadow:6px 0 32px rgba(0,0,0,.6)}
+
+/* ===================== AUTH / SETUP SCREENS ===================== */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
+.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:36px;width:100%;max-width:440px;box-shadow:var(--sh)}
+.auth-logo{text-align:center;margin-bottom:26px}
+.auth-logo .icon{font-size:46px;display:block;margin-bottom:8px}
+.auth-logo h1{font-size:26px;font-weight:700;color:var(--accent)}
+.auth-logo p{color:var(--t2);font-size:13px;margin-top:4px}
+.step-bar{display:flex;gap:6px;margin-bottom:22px}
+.dot{height:4px;border-radius:2px;flex:1;background:var(--border);transition:background .3s}
+.dot.on{background:var(--accent)}
+.step-title{font-size:15px;font-weight:700;margin-bottom:5px}
+.step-sub{font-size:13px;color:var(--t2);margin-bottom:18px;line-height:1.6}
+.btns2{display:flex;gap:10px}
+.btns2 .btn{flex:1}
+.admin-link{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center}
+.admin-link p{font-size:12px;color:var(--t2);margin-bottom:8px}
+
+/* ===================== APP LAYOUT ===================== */
+#app-shell{display:none}
+.app-layout{display:flex;min-height:100vh}
+.sidebar{width:238px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s;overflow-y:auto}
+.sb-logo{padding:20px 18px 14px;border-bottom:1px solid var(--border)}
+.sb-logo h1{font-size:18px;font-weight:700;color:var(--accent);letter-spacing:-.4px}
+.sb-logo p{font-size:11px;color:var(--t2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-user{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.av-o{background:rgba(139,92,246,.2);color:var(--purple)}
+.av-m{background:rgba(14,165,233,.2);color:var(--cyan)}
+.av-s{background:rgba(16,185,129,.2);color:var(--green)}
+.sb-uinfo strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-uinfo span{font-size:11px;color:var(--t2);text-transform:capitalize}
+.sb-nav{flex:1;padding:10px 0;overflow-y:auto}
+.nav-sec{padding:8px 16px 3px;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.08em}
+.nl{display:flex;align-items:center;gap:8px;padding:9px 16px;color:var(--t2);font-size:13px;font-weight:500;border-left:3px solid transparent;transition:all .15s;cursor:pointer}
+.nl:hover{background:var(--s2);color:var(--text)}
+.nl.on{background:rgba(59,130,246,.08);color:var(--accent);border-left-color:var(--accent)}
+.nl .ic{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.sb-foot{padding:10px;border-top:1px solid var(--border)}
+.lout{width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:var(--r);color:var(--t2);font-size:13px;transition:all .15s}
+.lout:hover{background:rgba(239,68,68,.1);border-color:var(--red);color:var(--red)}
+.main{margin-left:238px;flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:13px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:90}
+.topbar-title{font-size:16px;font-weight:700}
+.topbar-r{display:flex;align-items:center;gap:10px}
+.nb-btn{position:relative;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:15px;line-height:1;color:var(--text)}
+.nb{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center}
+.pb{padding:22px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.page-header h2{font-size:16px;font-weight:700}
+.hbg{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:0 4px}
+
+/* ===================== NOTIF PANEL ===================== */
+.np{position:fixed;top:58px;right:18px;width:320px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);z-index:200;display:none;max-height:400px;overflow-y:auto}
+.np.open{display:block}
+.np-hd{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600}
+.ni{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer}
+.ni.unread{background:rgba(59,130,246,.05)}
+.ni-t{font-size:11px;color:var(--t2);margin-top:3px}
+
+/* ===================== TABS ===================== */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto}
+.tab{padding:9px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--t2);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;margin-bottom:-1px;transition:all .15s}
+.tab.on{border-bottom-color:var(--accent);color:var(--accent)}
+
+/* ===================== AI CHAT ===================== */
+#view-ai .main{overflow:hidden}
+.chat-outer{display:flex;flex-direction:column;height:calc(100vh - 56px)}
+.chat-msgs{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
+.chat-welcome{text-align:center;padding:40px 20px;margin:auto}
+.chat-welcome .bot{font-size:50px;margin-bottom:12px}
+.chat-welcome h2{font-size:19px;font-weight:700;margin-bottom:7px}
+.chat-welcome p{color:var(--t2);font-size:13px;max-width:400px;margin:0 auto;line-height:1.7}
+.cmsg{max-width:70%;padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.7}
+.cmsg.u{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.cmsg.a{align-self:flex-start;background:var(--s2);border:1px solid var(--border);border-bottom-left-radius:4px}
+.cmsg.a .albl{font-size:10px;font-weight:700;color:var(--green);margin-bottom:5px;letter-spacing:.05em}
+.chips{display:flex;flex-wrap:wrap;gap:7px;padding:6px 22px 10px}
+.chip{padding:6px 13px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;color:var(--t2);background:var(--surface);transition:all .15s}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chat-input{display:flex;gap:10px;padding:12px 22px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.chat-input textarea{flex:1;min-height:40px;max-height:110px;resize:none}
+.chat-send{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;align-self:flex-end;transition:background .15s}
+.chat-send:hover{background:#2563eb}.chat-send:disabled{opacity:.5;cursor:not-allowed}
+
+/* ===================== INVOICE ===================== */
+.inv-items-table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:13px}
+.inv-items-table th{padding:7px 10px;background:var(--s2);border:1px solid var(--border);font-size:11px;text-transform:uppercase;color:var(--t2)}
+.inv-items-table td{padding:7px 10px;border:1px solid var(--border)}
+
+/* ===================== SETTINGS ===================== */
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-row .lbl{color:var(--t2)}
+
+/* ===================== RESPONSIVE ===================== */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
   .sidebar.open{transform:translateX(0)}
-  #sb-ov.show{display:block}
-  .hmbg{display:block}
-  .main{width:100%}
-  .fr{grid-template-columns:1fr}
-  .sg{grid-template-columns:1fr 1fr}
-  .pg{padding:14px}
-  .topbar{padding:10px 14px}
-  .auth-card{padding:28px 20px}
+  .main{margin-left:0}
+  .hbg{display:block}
+  .r2,.r3{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .pb{padding:14px}
+  .cmsg{max-width:88%}
 }
-@media(max-width:440px){
-  .sg{grid-template-columns:1fr}
-  .tbl th:nth-child(n+5),.tbl td:nth-child(n+5){display:none}
-  .auth-card{padding:22px 16px}
+@media(max-width:480px){
+  .stat-grid{grid-template-columns:1fr}
+  .auth-box{padding:24px}
 }
+
+/* ===================== NOTICE BOX ===================== */
+.notice{background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:11px 15px;font-size:13px;color:var(--t2);margin-bottom:16px}
+
+/* ===================== TOTAL DISPLAY ===================== */
+.total-display{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 </style>
 </head>
 <body>
-<div id="print-area"></div>
-<div id="toasts"></div>
-<div id="load-overlay"><div class="spinner"></div><div class="load-txt" id="load-txt">Loading...</div></div>
-<div id="sb-ov" onclick="closeSB()"></div>
 
-<!-- ADMIN -->
-<div id="screen-admin" class="screen">
-  <div class="auth-card">
-    <div class="auth-logo">Pro <em>Books</em></div>
-    <div class="auth-tag">First-time setup · Admin authentication</div>
-    <label class="fl">Admin Password</label>
-    <input class="fi" type="password" id="admin-pw" placeholder="Enter admin password" onkeydown="if(event.key===\'Enter\')adminUnlock()"/>
-    <div id="admin-err" class="auth-err"></div>
-    <button class="auth-btn" onclick="adminUnlock()">Unlock Setup →</button>
-    <div class="auth-link" onclick="showConnect()">Already have a business? Connect this device</div>
+<!-- ============================================================
+     ██████████  CONFIG — FILL THESE IN  ██████████
+     ============================================================
+     Step 1: Go to https://console.firebase.google.com
+             Create a project → Add a web app → Copy the config
+     Step 2: Go to https://aistudio.google.com/app/apikey
+             Create a free API key (no credit card needed)
+     Step 3: Replace every "REPLACE_..." value below
+     ============================================================ -->
+<script>
+const FB = {
+  apiKey:            "REPLACE_API_KEY",
+  authDomain:        "REPLACE_PROJECT_ID.firebaseapp.com",
+  projectId:         "REPLACE_PROJECT_ID",
+  storageBucket:     "REPLACE_PROJECT_ID.appspot.com",
+  messagingSenderId: "REPLACE_SENDER_ID",
+  appId:             "REPLACE_APP_ID"
+};
+const GEMINI_KEY = "REPLACE_GEMINI_KEY";
+</script>
+<!-- ============================================================ -->
+
+<!-- FIREBASE SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<!-- ============================================================
+     SCREEN CONTAINERS
+     Only one is visible at a time. JS controls which shows.
+     ============================================================ -->
+
+<!-- ==================== SETUP SCREEN ==================== -->
+<div id="screen-setup" class="auth-wrap">
+  <div class="auth-box" style="max-width:480px">
+    <div class="auth-logo"><span class="icon">📚</span><h1>ProBooks</h1><p>First-time admin setup</p></div>
+    <div class="step-bar"><div class="dot on" id="sd1"></div><div class="dot" id="sd2"></div><div class="dot" id="sd3"></div></div>
+    <div id="setup-alert"></div>
+
+    <!-- Step 1: Admin password -->
+    <div id="ss1">
+      <div class="step-title">Step 1 of 3 — Admin Password</div>
+      <div class="step-sub">This is your personal ProBooks administrator password. It is required before any new business can be registered. Keep it secret and safe.</div>
+      <div class="fg"><label>Set Admin Password</label><input type="password" id="ap1" class="fc" placeholder="Min 6 characters"></div>
+      <div class="fg"><label>Confirm Password</label><input type="password" id="ap2" class="fc" placeholder="Repeat password"></div>
+      <button class="btn btn-p w100" onclick="setupStep1()">Continue →</button>
+    </div>
+
+    <!-- Step 2: Business details -->
+    <div id="ss2" class="hi">
+      <div class="step-title">Step 2 of 3 — Business Details</div>
+      <div class="step-sub">Enter details for the first business using ProBooks.</div>
+      <div class="fg"><label>Business Name</label><input type="text" id="s-bn" class="fc" placeholder="e.g. Kamau Traders"></div>
+      <div class="r2">
+        <div class="fg"><label>Business Type</label>
+          <select id="s-bt" class="fc"><option>Retail</option><option>Restaurant</option><option>Services</option><option>Manufacturing</option><option>Wholesale</option><option>Other</option></select>
+        </div>
+        <div class="fg"><label>Currency</label>
+          <select id="s-bc" class="fc">
+            <option value="KES">KES — Kenya Shilling</option><option value="USD">USD — US Dollar</option>
+            <option value="UGX">UGX — Uganda Shilling</option><option value="TZS">TZS — Tanzania Shilling</option>
+            <option value="ZAR">ZAR — South African Rand</option><option value="GBP">GBP — British Pound</option>
+            <option value="EUR">EUR — Euro</option><option value="NGN">NGN — Nigerian Naira</option>
+          </select>
+        </div>
+      </div>
+      <div class="r2">
+        <div class="fg"><label>Phone / Email</label><input type="text" id="s-bcontact" class="fc" placeholder="0712345678"></div>
+        <div class="fg"><label>Address</label><input type="text" id="s-baddr" class="fc" placeholder="Nairobi, Kenya"></div>
+      </div>
+      <div class="btns2">
+        <button class="btn btn-o" onclick="setupGo(1)">← Back</button>
+        <button class="btn btn-p" onclick="setupStep2()">Continue →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Owner account -->
+    <div id="ss3" class="hi">
+      <div class="step-title">Step 3 of 3 — Owner Account</div>
+      <div class="step-sub">Create the owner login for this business. The owner has full access to everything including the AI Accountant.</div>
+      <div class="fg"><label>Owner's Full Name</label><input type="text" id="s-on" class="fc" placeholder="Name used to log in"></div>
+      <div class="r2">
+        <div class="fg"><label>Owner Password</label><input type="password" id="s-op1" class="fc" placeholder="Min 6 characters"></div>
+        <div class="fg"><label>Confirm Password</label><input type="password" id="s-op2" class="fc" placeholder="Repeat password"></div>
+      </div>
+      <div class="btns2">
+        <button class="btn btn-o" onclick="setupGo(2)">← Back</button>
+        <button class="btn btn-s" id="finish-btn" onclick="setupFinish()">✓ Complete Setup</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- SETUP -->
-<div id="screen-setup" class="screen">
-  <div class="auth-card" style="max-width:460px">
-    <div class="auth-logo">Pro <em>Books</em></div>
-    <div class="auth-tag">Create your business on the cloud</div>
-    <label class="fl">Business Name</label>
-    <input class="fi" id="s-biz" placeholder="e.g. One Plus Chemist"/>
-    <label class="fl">Your Name (Owner)</label>
-    <input class="fi" id="s-own" placeholder="Your full name"/>
-    <label class="fl">Create Owner Password</label>
-    <input class="fi" type="password" id="s-pw" placeholder="Minimum 6 characters"/>
-    <label class="fl">Business Type</label>
-    <select class="fi fi-sel" id="s-type">
-      <option value="retail">Retail Shop</option>
-      <option value="pharmacy">Pharmacy / Chemist</option>
-      <option value="restaurant">Restaurant / Food</option>
-      <option value="wholesale">Wholesale</option>
-      <option value="services">Services</option>
-      <option value="other">Other</option>
-    </select>
-    <div id="setup-err" class="auth-err"></div>
-    <button class="auth-btn" id="setup-btn" onclick="doSetup()">Create Business →</button>
+<!-- ==================== LOGIN SCREEN ==================== -->
+<div id="screen-login" class="auth-wrap hi">
+  <div class="auth-box">
+    <div class="auth-logo"><span class="icon">📚</span><h1>ProBooks</h1><p>Sign in to your account</p></div>
+    <div id="login-alert"></div>
+    <div class="fg"><label>Business</label><select id="l-biz" class="fc"><option>Loading...</option></select></div>
+    <div class="fg"><label>Your Name</label><input type="text" id="l-name" class="fc" placeholder="Enter your full name"></div>
+    <div class="fg"><label>Password</label><input type="password" id="l-pwd" class="fc" placeholder="Enter your password"></div>
+    <button class="btn btn-p w100" style="padding:12px" id="login-btn" onclick="doLogin()">Sign In</button>
+
+    <div class="admin-link">
+      <p>ProBooks administrator?</p>
+      <button class="btn btn-o btn-sm" onclick="toggleAdminSection()">🔐 Admin Options</button>
+    </div>
+    <div id="admin-section" class="hi mt16">
+      <div class="fg"><label>Admin Password</label><input type="password" id="l-admin-pwd" class="fc" placeholder="Enter admin password"></div>
+      <div class="flex gap" style="flex-wrap:wrap">
+        <button class="btn btn-o btn-sm" onclick="verifyAdmin()">Verify</button>
+        <button class="btn btn-o btn-sm hi" id="manage-btn" onclick="showAdminPanel()">⚙️ Manage Businesses</button>
+        <button class="btn btn-o btn-sm hi" id="add-biz-btn" onclick="showAddBizFlow()">➕ Add Business</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- SETUP SUCCESS (shows Business Code) -->
-<div id="screen-code" class="screen">
-  <div class="auth-card" style="max-width:440px;text-align:center">
-    <div style="font-size:40px;margin-bottom:12px">🎉</div>
-    <div class="auth-logo">Pro <em>Books</em></div>
-    <div class="auth-tag">Business created successfully!</div>
-    <div style="font-size:13px;color:var(--tx2);margin-bottom:16px;line-height:1.6">
-      Share this <strong style="color:var(--tx)">Business Code</strong> with your staff so they can connect their devices. Keep it safe.
+<!-- ==================== APP SHELL ==================== -->
+<div id="app-shell">
+  <div class="app-layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <div class="sb-logo"><h1>📚 ProBooks</h1><p id="sb-bizname">Loading...</p></div>
+      <div class="sb-user">
+        <div class="av" id="sb-av">?</div>
+        <div class="sb-uinfo"><strong id="sb-uname">...</strong><span id="sb-role">...</span></div>
+      </div>
+      <nav class="sb-nav" id="sb-nav"></nav>
+      <div class="sb-foot"><button class="lout" onclick="doLogout()">🔒 Sign Out</button></div>
     </div>
-    <div class="code-box">
-      <div class="code-val" id="biz-code-display">——————</div>
-      <div class="code-hint">Your Business Code · Share with staff only</div>
-    </div>
-    <div style="font-size:12px;color:var(--tx2);margin:14px 0 20px;padding:10px;background:var(--bg3);border-radius:var(--rsm);line-height:1.6">
-      📱 On each staff device: open the app → click "Connect this device" → enter this code → sign in
-    </div>
-    <button class="auth-btn" onclick="goToLogin()">Continue to Sign In →</button>
-  </div>
-</div>
 
-<!-- CONNECT DEVICE -->
-<div id="screen-connect" class="screen">
-  <div class="auth-card">
-    <div class="auth-logo">Pro <em>Books</em></div>
-    <div class="auth-tag">Connect this device to your business</div>
-    <div style="font-size:12px;color:var(--tx2);margin-bottom:20px;padding:10px;background:var(--bg3);border-radius:var(--rsm);line-height:1.6">
-      💡 Get the Business Code from your owner. It was shown when the business was first created.
-    </div>
-    <label class="fl">Business Code</label>
-    <input class="fi" id="c-code" placeholder="Enter 8-character code (e.g. AB12CD34)" style="text-transform:uppercase;letter-spacing:3px;font-family:var(--fm);font-size:18px" maxlength="8"/>
-    <div id="connect-err" class="auth-err"></div>
-    <button class="auth-btn" id="connect-btn" onclick="doConnect()">Connect Device →</button>
-    <div class="auth-link" onclick="show(\'admin\')">Back</div>
-  </div>
-</div>
+    <!-- MAIN AREA -->
+    <div class="main" id="main-area">
+      <div class="topbar">
+        <div class="flex gap">
+          <button class="hbg" onclick="toggleSidebar()">☰</button>
+          <span class="topbar-title" id="topbar-title">Dashboard</span>
+        </div>
+        <div class="topbar-r" id="topbar-r">
+          <!-- Role-specific topbar controls injected here -->
+        </div>
+      </div>
 
-<!-- LOGIN -->
-<div id="screen-login" class="screen">
-  <div class="auth-card">
-    <div class="auth-logo">Pro <em>Books</em></div>
-    <div class="auth-tag" id="login-sub">Sign in to your account</div>
-    <label class="fl">Your Name</label>
-    <input class="fi" id="l-name" placeholder="Enter your full name"/>
-    <label class="fl">Password</label>
-    <input class="fi" type="password" id="l-pw" placeholder="Enter your password" onkeydown="if(event.key===\'Enter\')doLogin()"/>
-    <div id="login-err" class="auth-err"></div>
-    <button class="auth-btn" id="login-btn" onclick="doLogin()">Sign In →</button>
-    <div class="auth-link" onclick="openReset()">Forgot password? Reset with admin key</div>
-  </div>
-</div>
+      <!-- PAGE VIEWS — only one shown at a time -->
+      <div id="views-container">
 
-<!-- APP -->
-<div id="screen-app" class="screen">
-  <nav class="sidebar" id="sidebar">
-    <div class="sb-top">
-      <div class="sb-logo">Pro <em>Books</em></div>
-      <div class="sb-ver" id="sb-biz">v2.0 Cloud</div>
-    </div>
-    <div class="sb-user">
-      <div class="sb-uname" id="sb-uname">—</div>
-      <div class="sb-urole" id="sb-urole">—</div>
-      <div class="sb-ubiz" id="sb-ubiz">—</div>
-    </div>
-    <div id="sb-nav"></div>
-    <div class="sb-bot">
-      <div style="padding:6px 12px;font-size:11px;color:var(--tx3)"><span class="live-dot"></span>Live sync enabled</div>
-      <div class="sb-out" onclick="logout()"><span>⇠</span><span>Sign Out</span></div>
-    </div>
-  </nav>
-  <div class="main">
-    <div class="topbar">
-      <button class="hmbg" onclick="openSB()">☰</button>
-      <div class="tb-title" id="tb-title">Dashboard</div>
-      <div class="tb-right">
-        <div id="notif-wrap" style="position:relative;display:none">
-          <div class="nb" onclick="togNotif()" id="nb-btn">🔔<span class="nd" id="nd"></span></div>
-          <div class="np" id="np">
-            <div class="nph">Notifications <span style="color:var(--g);cursor:pointer;font-size:11px;font-weight:400" onclick="clrNotifs()">Clear all</span></div>
-            <div id="np-list"><div class="te" style="padding:20px">No notifications yet</div></div>
+        <!-- ====== OWNER: DASHBOARD ====== -->
+        <div id="view-owner-dashboard" class="pb hi">
+          <div id="v-db-alert"></div>
+          <div class="between mb24">
+            <div><div id="db-greeting" style="font-size:15px;font-weight:600"></div><div class="tm" id="db-bizname"></div></div>
+            <select class="fc" style="width:auto;padding:7px 12px;font-size:13px" id="db-period" onchange="loadOwnerDashboard()">
+              <option value="month">This Month</option>
+              <option value="year">This Year</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+          <div class="stat-grid">
+            <div class="stat"><div class="lbl">Total Income</div><div class="val val-g" id="db-income">—</div></div>
+            <div class="stat"><div class="lbl">Total Expenses</div><div class="val val-r" id="db-expenses">—</div></div>
+            <div class="stat"><div class="lbl">Net Profit</div><div class="val val-b" id="db-profit">—</div></div>
+            <div class="stat"><div class="lbl">Sales Count</div><div class="val val-p" id="db-scount">—</div></div>
+          </div>
+          <div class="card mb16 hi" id="db-lowstock-card" style="border-color:rgba(245,158,11,.35)">
+            <div class="between mb16"><strong>⚠️ Low Stock Alerts</strong><button class="btn btn-o btn-sm" onclick="navTo('owner-stock')">Manage Stock</button></div>
+            <div id="db-lowstock-list"></div>
+          </div>
+          <div class="card">
+            <div class="between mb16"><strong>Recent Transactions</strong><button class="btn btn-o btn-sm" onclick="navTo('owner-income')">View All</button></div>
+            <div class="tw"><table><thead><tr><th>Date</th><th>Type</th><th>Item / Category</th><th>Method</th><th>Recorded By</th><th class="tr">Amount</th></tr></thead>
+            <tbody id="db-tx-body"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t2)">Loading...</td></tr></tbody></table></div>
           </div>
         </div>
-        <span class="pill pill-g" id="tb-role">Owner</span>
-      </div>
-    </div>
 
-    <!-- DASHBOARD -->
-    <div id="pg-dash" class="pg">
-      <div class="sg" id="dash-stats"></div>
-      <div class="cc"><div class="ch"><div class="cht">Recent Sales</div><button class="btn bgh bsm" onclick="goTo(\'sales\')">View All →</button></div>
-        <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Time</th><th>Product</th><th>Qty</th><th>Total</th><th>Payment</th><th>By</th></tr></thead><tbody id="dash-sales"><tr><td colspan="6" class="te">No sales yet</td></tr></tbody></table></div>
-      </div>
-      <div class="cc"><div class="ch"><div class="cht">⚠️ Low Stock Alerts</div></div>
-        <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Product</th><th>In Stock</th><th>Min Level</th><th>Status</th></tr></thead><tbody id="dash-low"><tr><td colspan="4" class="te">All stock levels OK ✓</td></tr></tbody></table></div>
-      </div>
-    </div>
-
-    <!-- SALES -->
-    <div id="pg-sales" class="pg">
-      <div class="cc"><div class="ch"><div class="cht">Record New Sale</div></div><div class="cb">
-        <div class="fr"><div class="fg"><div class="flb">Product</div><select class="fse" id="s-prod" onchange="fillPrice()"><option value="">Select product...</option></select></div>
-          <div class="fg"><div class="flb">Quantity</div><input class="fin" type="number" id="s-qty" min="1" value="1" oninput="calcTot()"/></div></div>
-        <div class="fr"><div class="fg"><div class="flb">Price Per Unit (KES)</div><input class="fin" type="number" id="s-price" min="0" step="0.01" oninput="calcTot()"/></div>
-          <div class="fg"><div class="flb">Total (KES)</div><input class="fin" type="number" id="s-total" readonly style="opacity:.6;background:var(--bg)"/></div></div>
-        <div class="fr"><div class="fg"><div class="flb">Payment Method</div><select class="fse" id="s-pay"><option>Cash</option><option>M-Pesa</option><option>Card</option><option>Bank Transfer</option><option>Cheque</option></select></div>
-          <div class="fg"><div class="flb">Customer (optional)</div><input class="fin" id="s-cust" placeholder="Walk-in customer"/></div></div>
-        <div class="fr s1"><div class="fg"><div class="flb">Notes (optional)</div><input class="fin" id="s-notes" placeholder="Any notes..."/></div></div>
-        <button class="btn bg" id="sale-btn" onclick="recordSale()">✓ Record Sale</button>
-      </div></div>
-      <div class="cc"><div class="ch"><div class="cht">Sales History</div>
-        <input class="fin" style="width:150px;padding:6px 10px;font-size:12px" type="date" id="sales-date" onchange="rSales()"/>
-      </div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date/Time</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Payment</th><th>Customer</th><th>By</th></tr></thead><tbody id="sales-body"><tr><td colspan="8" class="te">Loading...</td></tr></tbody></table></div></div>
-    </div>
-
-    <!-- STOCK -->
-    <div id="pg-stock" class="pg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Stock / Inventory</div>
-        <div style="display:flex;gap:8px"><button class="btn bgh bsm" onclick="openRestock()">+ Restock</button><button class="btn bg bsm" id="add-prod-btn" onclick="openProd()" style="display:none">+ Add Product</button></div>
-      </div>
-      <div class="cc"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Product</th><th>Category</th><th>In Stock</th><th>Min Level</th><th id="buy-th">Buying Price</th><th>Selling Price</th><th>Status</th><th id="stk-act-th" style="display:none">Actions</th></tr></thead><tbody id="stock-body"><tr><td colspan="8" class="te">Loading...</td></tr></tbody></table></div></div>
-    </div>
-
-    <!-- INCOME -->
-    <div id="pg-income" class="pg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Income</div><button class="btn bg bsm" onclick="openIncome()">+ Add Income</button>
-      </div>
-      <div class="sg" id="inc-stats"></div>
-      <div class="cc"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Payment</th><th>Actions</th></tr></thead><tbody id="inc-body"><tr><td colspan="6" class="te">Loading...</td></tr></tbody></table></div></div>
-    </div>
-
-    <!-- EXPENSES -->
-    <div id="pg-exp" class="pg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Expenses</div><button class="btn bg bsm" onclick="openExp()">+ Add Expense</button>
-      </div>
-      <div class="sg" id="exp-stats"></div>
-      <div class="cc"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Payment</th><th>Actions</th></tr></thead><tbody id="exp-body"><tr><td colspan="6" class="te">Loading...</td></tr></tbody></table></div></div>
-    </div>
-
-    <!-- INVOICES -->
-    <div id="pg-inv" class="pg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Invoices</div><button class="btn bg bsm" onclick="openInv()">+ New Invoice</button>
-      </div>
-      <div class="cc"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>#</th><th>Date</th><th>Client</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="inv-body"><tr><td colspan="6" class="te">Loading...</td></tr></tbody></table></div></div>
-    </div>
-
-    <!-- REPORTS -->
-    <div id="pg-rep" class="pg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px">
-        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Reports</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn bb bsm" onclick="pRep(\'pl\')">⬇ P&L Report</button>
-          <button class="btn bb bsm" onclick="pRep(\'sales\')">⬇ Sales Report</button>
-          <button class="btn bb bsm" onclick="pRep(\'stock\')">⬇ Stock Report</button>
-          <button class="btn bg bsm" onclick="pRep(\'full\')">⬇ Full Report</button>
+        <!-- ====== OWNER: INCOME ====== -->
+        <div id="view-owner-income" class="pb hi">
+          <div class="page-header"><h2>💰 Income Records</h2><button class="btn btn-s" onclick="openModal('income-modal')">+ Add Income</button></div>
+          <div id="inc-alert"></div>
+          <div class="card">
+            <div class="between mb16 flex wrap gap">
+              <div class="flex gap wrap">
+                <select id="inc-filter-type" class="fc" style="width:auto" onchange="loadIncome()"><option value="">All Types</option><option value="income">Manual Income</option><option value="sale">Sales</option></select>
+                <input type="month" id="inc-filter-month" class="fc" style="width:auto" onchange="loadIncome()">
+              </div>
+              <div class="tr"><div class="tm">Total</div><div class="mn bold val-g" id="inc-total" style="font-size:20px">—</div></div>
+            </div>
+            <div class="tw"><table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Method</th><th>By</th><th>Description</th><th class="tr">Amount</th><th></th></tr></thead>
+            <tbody id="inc-body"></tbody></table></div>
+          </div>
         </div>
-      </div>
-      <div class="sg" id="rep-stats"></div>
-      <div class="cc"><div class="ch"><div class="cht">Profit &amp; Loss</div>
-        <select class="fse" id="pl-period" style="padding:6px 10px;font-size:12px;width:auto" onchange="renderPL()">
-          <option value="month">This Month</option><option value="quarter">This Quarter</option><option value="year">This Year</option><option value="all">All Time</option>
-        </select>
-      </div><div class="cb" id="pl-body"></div></div>
-      <div class="cc"><div class="ch"><div class="cht">Sales by Payment Method</div></div><div class="cb" id="pay-bkdn"></div></div>
-      <div class="cc"><div class="ch"><div class="cht">Full Sales Report</div></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Unit</th><th>Total</th><th>Payment</th><th>By</th></tr></thead><tbody id="rep-sales"><tr><td colspan="7" class="te">Loading...</td></tr></tbody></table></div></div>
-      <div class="cc"><div class="ch"><div class="cht">Stock Report</div></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Min</th><th>Buy</th><th>Sell</th><th>Status</th></tr></thead><tbody id="rep-stock"><tr><td colspan="7" class="te">Loading...</td></tr></tbody></table></div></div>
-      <div class="cc"><div class="ch"><div class="cht">Invoice Report</div></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>#</th><th>Client</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody id="rep-inv"><tr><td colspan="5" class="te">Loading...</td></tr></tbody></table></div></div>
-    </div>
 
-    <!-- STAFF -->
-    <div id="pg-staff" class="pg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-        <div style="font-family:var(--fh);font-size:17px;font-weight:700">Staff Management</div><button class="btn bg bsm" onclick="openStaff()">+ Add Staff</button>
-      </div>
-      <div class="cc"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Added</th><th>Actions</th></tr></thead><tbody id="staff-body"><tr><td colspan="4" class="te">Loading...</td></tr></tbody></table></div></div>
-    </div>
+        <!-- ====== OWNER: EXPENSES ====== -->
+        <div id="view-owner-expenses" class="pb hi">
+          <div class="page-header"><h2>💸 Expenses</h2><button class="btn btn-d" onclick="openModal('expense-modal')">+ Add Expense</button></div>
+          <div id="exp-alert"></div>
+          <div class="card">
+            <div class="between mb16 flex wrap gap">
+              <div class="flex gap wrap">
+                <select id="exp-filter-type" class="fc" style="width:auto" onchange="loadExpenses()"><option value="">All Expenses</option><option value="expense">Manual Expense</option><option value="restock">Restocks</option></select>
+                <input type="month" id="exp-filter-month" class="fc" style="width:auto" onchange="loadExpenses()">
+              </div>
+              <div class="tr"><div class="tm">Total</div><div class="mn bold val-r" id="exp-total" style="font-size:20px">—</div></div>
+            </div>
+            <div class="tw"><table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Method</th><th>By</th><th>Description</th><th class="tr">Amount</th><th></th></tr></thead>
+            <tbody id="exp-body"></tbody></table></div>
+          </div>
+        </div>
 
-    <!-- AI -->
-    <div id="pg-ai" class="pg" style="padding:0">
-      <div class="ai-wrap">
-        <div class="ai-hdr"><span style="font-size:20px">🤖</span>
-          <div><div style="font-family:var(--fh);font-size:14px;font-weight:700">AI Accountant</div><div style="font-size:11px;color:var(--tx2)">Powered by Gemini · Reads your live business data</div></div>
-          <span class="pill pill-g" style="margin-left:auto"><span class="pdot"></span> Free</span>
+        <!-- ====== OWNER: P&L ====== -->
+        <div id="view-owner-pnl" class="pb hi">
+          <div class="page-header">
+            <h2>📊 Profit & Loss</h2>
+            <select id="pnl-period" class="fc" style="width:auto" onchange="loadPnL()"><option value="month">This Month</option><option value="year">This Year</option><option value="all">All Time</option></select>
+          </div>
+          <div class="stat-grid">
+            <div class="stat"><div class="lbl">Total Income</div><div class="val val-g" id="pnl-inc">—</div></div>
+            <div class="stat"><div class="lbl">Total Expenses</div><div class="val val-r" id="pnl-exp">—</div></div>
+            <div class="stat"><div class="lbl">Net Profit</div><div class="val val-b" id="pnl-net">—</div></div>
+            <div class="stat"><div class="lbl">Profit Margin</div><div class="val val-p" id="pnl-margin">—</div></div>
+          </div>
+          <div class="r2">
+            <div class="card"><div class="bold mb16">Income by Payment Method</div><div id="pnl-inc-methods"></div></div>
+            <div class="card"><div class="bold mb16">Expenses by Category</div><div id="pnl-exp-cats"></div></div>
+          </div>
+          <div class="card mt16">
+            <div class="bold mb16">Top Selling Items</div>
+            <div class="tw"><table><thead><tr><th>Item</th><th>Units Sold</th><th class="tr">Revenue</th></tr></thead>
+            <tbody id="pnl-top-items"></tbody></table></div>
+          </div>
         </div>
-        <div class="ai-chips">
-          <button class="ai-chip" onclick="aiQ(\'Give me a full financial summary\')">Financial summary</button>
-          <button class="ai-chip" onclick="aiQ(\'What is my profit this month?\')">This month profit</button>
-          <button class="ai-chip" onclick="aiQ(\'Which products are selling the most?\')">Best sellers</button>
-          <button class="ai-chip" onclick="aiQ(\'Are there any fraud risks or anomalies?\')">Fraud check</button>
-          <button class="ai-chip" onclick="aiQ(\'Calculate my VAT liability at 16%\')">VAT calculation</button>
-          <button class="ai-chip" onclick="aiQ(\'What stock needs urgent restocking?\')">Stock alerts</button>
-          <button class="ai-chip" onclick="aiQ(\'Show me a cash flow analysis\')">Cash flow</button>
-          <button class="ai-chip" onclick="aiQ(\'Who are my best performing staff?\')">Staff performance</button>
+
+        <!-- ====== OWNER: STOCK ====== -->
+        <div id="view-owner-stock" class="pb hi">
+          <div class="page-header"><h2>📦 Stock / Inventory</h2><button class="btn btn-p" onclick="openModal('stock-modal')">+ Add Item</button></div>
+          <div id="stk-alert"></div>
+          <div class="stat-grid">
+            <div class="stat"><div class="lbl">Total Items</div><div class="val val-b" id="stk-total">—</div></div>
+            <div class="stat"><div class="lbl">Low Stock</div><div class="val val-r" id="stk-low">—</div></div>
+            <div class="stat"><div class="lbl">Stock Value (Cost)</div><div class="val val-g" id="stk-value">—</div></div>
+            <div class="stat"><div class="lbl">Potential Revenue</div><div class="val val-p" id="stk-rev">—</div></div>
+          </div>
+          <div class="card">
+            <div class="between mb16">
+              <input type="text" id="stk-search" class="fc" style="max-width:260px;padding:8px 12px" placeholder="🔍 Search items..." oninput="renderStock()">
+              <span class="tm" id="stk-count"></span>
+            </div>
+            <div class="tw"><table><thead><tr><th>Item</th><th>SKU</th><th>Category</th><th>Unit</th><th>Qty</th><th>Cost Price</th><th>Sell Price</th><th>Reorder At</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="stk-body"></tbody></table></div>
+          </div>
         </div>
-        <div class="ai-msgs" id="ai-msgs">
-          <div class="ai-msg ai"><div class="ai-av">🤖</div><div class="ai-bub"><strong>Hello! I\'m your AI Accountant.</strong><br/>I read your live business data from the cloud — every sale, product, expense and invoice.<br/><br/>Try: <em>"Give me a financial summary"</em></div></div>
+
+        <!-- ====== OWNER: INVOICES ====== -->
+        <div id="view-owner-invoices" class="pb hi">
+          <div class="page-header"><h2>🧾 Invoices</h2><button class="btn btn-p" onclick="openModal('invoice-modal')">+ Create Invoice</button></div>
+          <div id="inv-alert"></div>
+          <div class="stat-grid">
+            <div class="stat"><div class="lbl">Total Invoices</div><div class="val val-b" id="inv-total">—</div></div>
+            <div class="stat"><div class="lbl">Paid</div><div class="val val-g" id="inv-paid">—</div></div>
+            <div class="stat"><div class="lbl">Unpaid</div><div class="val val-r" id="inv-unpaid">—</div></div>
+            <div class="stat"><div class="lbl">Outstanding</div><div class="val val-y" id="inv-out">—</div></div>
+          </div>
+          <div class="card">
+            <div class="tw"><table><thead><tr><th>Invoice #</th><th>Client</th><th>Date</th><th>Due Date</th><th>Status</th><th class="tr">Amount</th><th>Actions</th></tr></thead>
+            <tbody id="inv-body"></tbody></table></div>
+          </div>
         </div>
-        <div class="ai-inr">
-          <textarea class="ai-ta" id="ai-ta" rows="1" placeholder="Ask your AI Accountant anything..."
-            onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();aiSend()}"
-            oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,100)+\'px\'"></textarea>
-          <button class="ai-send" id="ai-btn" onclick="aiSend()">➤</button>
+
+        <!-- ====== OWNER: REPORTS ====== -->
+        <div id="view-owner-reports" class="pb hi">
+          <div class="page-header"><h2>📈 Reports</h2>
+            <select id="rep-period" class="fc" style="width:auto" onchange="loadReports()"><option value="month">This Month</option><option value="year">This Year</option><option value="all">All Time</option></select>
+          </div>
+          <div class="stat-grid">
+            <div class="stat"><div class="lbl">Total Revenue</div><div class="val val-g" id="rep-rev">—</div></div>
+            <div class="stat"><div class="lbl">Total Expenses</div><div class="val val-r" id="rep-exp">—</div></div>
+            <div class="stat"><div class="lbl">Net Profit</div><div class="val val-b" id="rep-net">—</div></div>
+            <div class="stat"><div class="lbl">M-Pesa Sales</div><div class="val val-p" id="rep-mpesa">—</div></div>
+            <div class="stat"><div class="lbl">Cash Sales</div><div class="val val-y" id="rep-cash">—</div></div>
+            <div class="stat"><div class="lbl">Avg Sale Value</div><div class="val val-c" id="rep-avg" style="color:var(--cyan)">—</div></div>
+          </div>
+          <div class="r2">
+            <div class="card"><div class="bold mb16">Sales by Staff Member</div><div id="rep-by-staff"></div></div>
+            <div class="card"><div class="bold mb16">Sales by Payment Method</div><div id="rep-by-method"></div></div>
+          </div>
         </div>
+
+        <!-- ====== OWNER: USERS ====== -->
+        <div id="view-owner-users" class="pb hi">
+          <div class="page-header"><h2>👥 Team / Users</h2><button class="btn btn-p" onclick="openModal('user-modal')">+ Add User</button></div>
+          <div id="usr-alert"></div>
+          <div class="notice">Only the owner can add or remove users. Sales people and managers cannot see this page.</div>
+          <div class="card">
+            <div class="tw"><table><thead><tr><th>Name</th><th>Role</th><th>Action</th></tr></thead>
+            <tbody id="usr-body"></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- ====== OWNER: AI ACCOUNTANT ====== -->
+        <div id="view-owner-ai" class="hi" style="display:flex;flex-direction:column;height:calc(100vh - 56px)">
+          <div class="chat-outer">
+            <div class="chat-msgs" id="ai-msgs">
+              <div class="chat-welcome">
+                <div class="bot">🤖</div>
+                <h2>ProBooks AI Accountant</h2>
+                <p>I have access to all your business data — transactions, stock, invoices, and settings. Ask me anything about your finances, tax, fraud, or business performance.</p>
+              </div>
+            </div>
+            <div class="chips" id="ai-chips">
+              <div class="chip" onclick="aiChip(this)">What's my profit this month?</div>
+              <div class="chip" onclick="aiChip(this)">Which items are low on stock?</div>
+              <div class="chip" onclick="aiChip(this)">Calculate my VAT this month</div>
+              <div class="chip" onclick="aiChip(this)">Any suspicious transactions?</div>
+              <div class="chip" onclick="aiChip(this)">Who made the most sales?</div>
+              <div class="chip" onclick="aiChip(this)">Generate a P&L summary</div>
+              <div class="chip" onclick="aiChip(this)">What are my unpaid invoices?</div>
+              <div class="chip" onclick="aiChip(this)">Calculate PAYE for this month</div>
+            </div>
+            <div class="chat-input">
+              <textarea id="ai-input" class="fc" placeholder="Ask your AI Accountant anything..." rows="1"
+                onkeydown="aiKey(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px'"></textarea>
+              <button class="chat-send" id="ai-send" onclick="aiSend()">Send ↑</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== OWNER: SETTINGS ====== -->
+        <div id="view-owner-settings" class="pb hi">
+          <div class="page-header"><h2>⚙️ Settings</h2></div>
+          <div id="set-alert"></div>
+          <div class="card mb16">
+            <div class="bold mb16">Business Information</div>
+            <div class="r2">
+              <div class="fg"><label>Business Name</label><input type="text" id="set-bname" class="fc"></div>
+              <div class="fg"><label>Business Type</label><select id="set-btype" class="fc"><option>Retail</option><option>Restaurant</option><option>Services</option><option>Manufacturing</option><option>Wholesale</option><option>Other</option></select></div>
+            </div>
+            <div class="r2">
+              <div class="fg"><label>Currency</label><select id="set-currency" class="fc"><option value="KES">KES</option><option value="USD">USD</option><option value="UGX">UGX</option><option value="TZS">TZS</option><option value="ZAR">ZAR</option><option value="GBP">GBP</option><option value="EUR">EUR</option><option value="NGN">NGN</option></select></div>
+              <div class="fg"><label>Contact</label><input type="text" id="set-contact" class="fc"></div>
+            </div>
+            <div class="fg"><label>Address</label><input type="text" id="set-address" class="fc"></div>
+            <button class="btn btn-s" id="set-save-btn" onclick="saveSettings()">Save Changes</button>
+          </div>
+          <div class="card">
+            <div class="bold mb16">Change My Password</div>
+            <div class="r3">
+              <div class="fg"><label>Current Password</label><input type="password" id="set-oldpwd" class="fc"></div>
+              <div class="fg"><label>New Password</label><input type="password" id="set-newpwd" class="fc"></div>
+              <div class="fg"><label>Confirm New Password</label><input type="password" id="set-newpwd2" class="fc"></div>
+            </div>
+            <button class="btn btn-p" id="pwd-save-btn" onclick="changePassword()">Change Password</button>
+          </div>
+        </div>
+
+        <!-- ====== MANAGER: DASHBOARD ====== -->
+        <div id="view-manager-dashboard" class="pb hi">
+          <div id="mgr-alert"></div>
+          <div style="margin-bottom:20px"><div id="mgr-greeting" style="font-size:15px;font-weight:600"></div><div class="tm" id="mgr-bizname"></div></div>
+          <div class="notice">You have view-only access to reports. To edit any record, contact the business owner.</div>
+          <div class="tabs">
+            <button class="tab on" onclick="mgrTab('sales',this)">📊 Sales Report</button>
+            <button class="tab" onclick="mgrTab('stock',this)">📦 Stock Report</button>
+            <button class="tab" onclick="mgrTab('lowstock',this)">⚠️ Low Stock</button>
+            <button class="tab" onclick="mgrTab('invoices',this)">🧾 Invoice Report</button>
+          </div>
+          <!-- Sales report -->
+          <div id="mgr-sales">
+            <div class="stat-grid mb16">
+              <div class="stat"><div class="lbl">Sales This Month</div><div class="val val-g" id="m-stotal">—</div></div>
+              <div class="stat"><div class="lbl">Number of Sales</div><div class="val val-b" id="m-scount">—</div></div>
+              <div class="stat"><div class="lbl">Via M-Pesa</div><div class="val val-p" id="m-mpesa">—</div></div>
+              <div class="stat"><div class="lbl">Via Cash</div><div class="val val-y" id="m-cash">—</div></div>
+            </div>
+            <div class="card">
+              <div class="between mb16"><strong>All Sales</strong>
+                <select id="mgr-period" class="fc" style="width:auto" onchange="loadMgrSales()"><option value="month">This Month</option><option value="year">This Year</option><option value="all">All Time</option></select>
+              </div>
+              <div class="tw"><table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Price/Unit</th><th>Method</th><th>By</th><th class="tr">Total</th></tr></thead>
+              <tbody id="mgr-sales-body"></tbody></table></div>
+            </div>
+          </div>
+          <div id="mgr-stock" class="hi"><div class="card"><div class="bold mb16">Current Stock Levels</div>
+            <div class="tw"><table><thead><tr><th>Item</th><th>Category</th><th>In Stock</th><th>Unit</th><th>Sell Price</th><th>Status</th></tr></thead>
+            <tbody id="mgr-stock-body"></tbody></table></div></div></div>
+          <div id="mgr-lowstock" class="hi"><div class="card"><div class="bold mb16">⚠️ Items Needing Restock</div><div id="mgr-low-list"></div></div></div>
+          <div id="mgr-invoices" class="hi">
+            <div class="stat-grid mb16">
+              <div class="stat"><div class="lbl">Total</div><div class="val val-b" id="mi-total">—</div></div>
+              <div class="stat"><div class="lbl">Paid</div><div class="val val-g" id="mi-paid">—</div></div>
+              <div class="stat"><div class="lbl">Unpaid</div><div class="val val-r" id="mi-unpaid">—</div></div>
+              <div class="stat"><div class="lbl">Outstanding</div><div class="val val-y" id="mi-out">—</div></div>
+            </div>
+            <div class="card"><div class="tw"><table><thead><tr><th>Date</th><th>Client</th><th>Due</th><th>Status</th><th class="tr">Total</th></tr></thead>
+            <tbody id="mgr-inv-body"></tbody></table></div></div>
+          </div>
+        </div>
+
+        <!-- ====== SALES: DASHBOARD ====== -->
+        <div id="view-sales-dashboard" class="pb hi">
+          <div id="sal-alert"></div>
+          <div style="margin-bottom:20px"><div id="sal-greeting" style="font-size:15px;font-weight:600"></div><div class="tm" id="sal-bizname"></div></div>
+          <div class="notice">ℹ️ You can record sales and restocks. To edit or correct a record, contact the business owner.</div>
+          <div class="tabs">
+            <button class="tab on" id="sal-t-dash" onclick="salTab('dash',this)">🏠 Dashboard</button>
+            <button class="tab" id="sal-t-sale" onclick="salTab('sale',this)">💵 Record Sale</button>
+            <button class="tab" id="sal-t-restock" onclick="salTab('restock',this)">📥 Record Restock</button>
+            <button class="tab" id="sal-t-stock" onclick="salTab('stock',this)">📦 View Stock</button>
+          </div>
+          <!-- Dash -->
+          <div id="sal-dash">
+            <div class="stat-grid">
+              <div class="stat"><div class="lbl">My Sales Today</div><div class="val val-g" id="sal-today">—</div></div>
+              <div class="stat"><div class="lbl">My Sales This Month</div><div class="val val-b" id="sal-month">—</div></div>
+              <div class="stat"><div class="lbl">Items in Stock</div><div class="val val-p" id="sal-sitems">—</div></div>
+              <div class="stat"><div class="lbl">Low Stock Items</div><div class="val val-r" id="sal-slow">—</div></div>
+            </div>
+            <div class="card"><div class="bold mb16">My Recent Sales</div>
+              <div class="tw"><table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Price/Unit</th><th>Method</th><th class="tr">Total</th></tr></thead>
+              <tbody id="sal-recent-body"></tbody></table></div>
+            </div>
+          </div>
+          <!-- Record Sale -->
+          <div id="sal-sale" class="hi">
+            <div class="card" style="max-width:520px">
+              <h2 style="font-size:16px;margin-bottom:18px">💵 Record a Sale</h2>
+              <div class="fg"><label>Select Item *</label><select id="sal-item" class="fc" onchange="salFillPrice()"><option value="">Select item...</option></select></div>
+              <div class="r2">
+                <div class="fg"><label>Quantity Sold *</label><input type="number" id="sal-qty" class="fc" min="1" value="1" oninput="salCalcTotal()"></div>
+                <div class="fg"><label>Sale Price / Unit *</label><input type="number" id="sal-price" class="fc" step="0.01" placeholder="Auto-filled" oninput="salCalcTotal()"></div>
+              </div>
+              <div class="fg"><label>Payment Method *</label>
+                <select id="sal-method" class="fc"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option><option>Card</option><option>Cheque</option></select>
+              </div>
+              <div class="total-display"><span style="color:var(--t2)">Total Amount</span><span class="mn bold" id="sal-total" style="font-size:22px;color:var(--green)">—</span></div>
+              <button class="btn btn-s w100" style="padding:12px" id="sal-submit-btn" onclick="submitSale()">✓ Record Sale</button>
+            </div>
+          </div>
+          <!-- Record Restock -->
+          <div id="sal-restock" class="hi">
+            <div class="card" style="max-width:520px">
+              <h2 style="font-size:16px;margin-bottom:18px">📥 Record Restock</h2>
+              <div class="fg"><label>Select Item *</label><select id="rs-item" class="fc"><option value="">Select item...</option></select></div>
+              <div class="r2">
+                <div class="fg"><label>Quantity Added *</label><input type="number" id="rs-qty" class="fc" min="1" value="1"></div>
+                <div class="fg"><label>Total Cost Paid</label><input type="number" id="rs-cost" class="fc" step="0.01" placeholder="0.00"></div>
+              </div>
+              <div class="fg"><label>Payment Method</label>
+                <select id="rs-method" class="fc"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option><option>Card</option><option>Cheque</option></select>
+              </div>
+              <button class="btn btn-p w100" style="padding:12px" id="rs-submit-btn" onclick="submitRestock()">✓ Record Restock</button>
+            </div>
+          </div>
+          <!-- View Stock -->
+          <div id="sal-stock" class="hi">
+            <div class="card"><div class="between mb16"><strong>Current Stock</strong><span class="tm" id="sal-stk-lbl"></span></div>
+              <div class="tw"><table><thead><tr><th>Item</th><th>Category</th><th>In Stock</th><th>Unit</th><th>Sell Price</th><th>Status</th></tr></thead>
+              <tbody id="sal-stk-body"></tbody></table></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /views-container -->
+    </div><!-- /main -->
+  </div><!-- /app-layout -->
+
+  <!-- NOTIFICATION PANEL -->
+  <div class="np" id="notif-panel">
+    <div class="np-hd"><span>Notifications</span><button class="btn btn-o btn-sm" onclick="markAllRead()">Mark all read</button></div>
+    <div id="notif-list"></div>
+  </div>
+</div><!-- /app-shell -->
+
+<!-- ============================================================
+     MODALS
+     ============================================================ -->
+
+<!-- Add Income -->
+<div class="overlay hi" id="income-modal">
+  <div class="modal">
+    <h2>💰 Add Income</h2>
+    <div id="inc-modal-alert"></div>
+    <div class="r2">
+      <div class="fg"><label>Date *</label><input type="date" id="im-date" class="fc"></div>
+      <div class="fg"><label>Amount *</label><input type="number" id="im-amount" class="fc" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="r2">
+      <div class="fg"><label>Category</label><select id="im-cat" class="fc"><option>Sales</option><option>Services</option><option>Consulting</option><option>Investment</option><option>Rental Income</option><option>Other Income</option></select></div>
+      <div class="fg"><label>Payment Method</label><select id="im-method" class="fc"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option><option>Card</option><option>Cheque</option></select></div>
+    </div>
+    <div class="fg"><label>Description</label><input type="text" id="im-desc" class="fc" placeholder="Optional notes"></div>
+    <div class="modal-foot"><button class="btn btn-o" onclick="closeModal('income-modal')">Cancel</button><button class="btn btn-s" id="inc-save-btn" onclick="saveIncome()">Save Income</button></div>
+  </div>
+</div>
+
+<!-- Add Expense -->
+<div class="overlay hi" id="expense-modal">
+  <div class="modal">
+    <h2>💸 Add Expense</h2>
+    <div id="exp-modal-alert"></div>
+    <div class="r2">
+      <div class="fg"><label>Date *</label><input type="date" id="em-date" class="fc"></div>
+      <div class="fg"><label>Amount *</label><input type="number" id="em-amount" class="fc" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="r2">
+      <div class="fg"><label>Category</label><select id="em-cat" class="fc"><option>Rent</option><option>Utilities</option><option>Salaries</option><option>Transport</option><option>Marketing</option><option>Equipment</option><option>Supplies</option><option>Other</option></select></div>
+      <div class="fg"><label>Payment Method</label><select id="em-method" class="fc"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option><option>Card</option><option>Cheque</option></select></div>
+    </div>
+    <div class="fg"><label>Description</label><input type="text" id="em-desc" class="fc" placeholder="Optional notes"></div>
+    <div class="modal-foot"><button class="btn btn-o" onclick="closeModal('expense-modal')">Cancel</button><button class="btn btn-d" id="exp-save-btn" onclick="saveExpense()">Save Expense</button></div>
+  </div>
+</div>
+
+<!-- Add Stock Item -->
+<div class="overlay hi" id="stock-modal">
+  <div class="modal">
+    <h2 id="stk-modal-title">Add Stock Item</h2>
+    <div id="stk-modal-alert"></div>
+    <div class="r2">
+      <div class="fg"><label>Item Name *</label><input type="text" id="sm-name" class="fc"></div>
+      <div class="fg"><label>SKU / Code</label><input type="text" id="sm-sku" class="fc" placeholder="Optional"></div>
+    </div>
+    <div class="r2">
+      <div class="fg"><label>Category</label><input type="text" id="sm-cat" class="fc" placeholder="e.g. Drinks"></div>
+      <div class="fg"><label>Unit</label><select id="sm-unit" class="fc"><option>pcs</option><option>kg</option><option>g</option><option>L</option><option>ml</option><option>boxes</option><option>bags</option><option>pairs</option><option>rolls</option></select></div>
+    </div>
+    <div class="r2">
+      <div class="fg"><label>Qty in Stock *</label><input type="number" id="sm-qty" class="fc" min="0" value="0"></div>
+      <div class="fg"><label>Reorder Level</label><input type="number" id="sm-reorder" class="fc" min="0" value="5"></div>
+    </div>
+    <div class="r2">
+      <div class="fg"><label>Cost Price</label><input type="number" id="sm-cost" class="fc" step="0.01" placeholder="0.00"></div>
+      <div class="fg"><label>Selling Price</label><input type="number" id="sm-sell" class="fc" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="fg"><label>Notes</label><input type="text" id="sm-notes" class="fc" placeholder="Optional"></div>
+    <div class="modal-foot"><button class="btn btn-o" onclick="closeModal('stock-modal')">Cancel</button><button class="btn btn-p" id="stk-save-btn" onclick="saveStockItem()">Save Item</button></div>
+  </div>
+</div>
+
+<!-- Create Invoice -->
+<div class="overlay hi" id="invoice-modal">
+  <div class="modal" style="max-width:560px">
+    <h2>🧾 Create Invoice</h2>
+    <div id="inv-modal-alert"></div>
+    <div class="r2">
+      <div class="fg"><label>Client Name *</label><input type="text" id="ivm-client" class="fc"></div>
+      <div class="fg"><label>Client Email / Phone</label><input type="text" id="ivm-contact" class="fc"></div>
+    </div>
+    <div class="r2">
+      <div class="fg"><label>Invoice Date *</label><input type="date" id="ivm-date" class="fc"></div>
+      <div class="fg"><label>Due Date *</label><input type="date" id="ivm-due" class="fc"></div>
+    </div>
+    <div class="fg"><label>Description / Services</label><textarea id="ivm-desc" class="fc" rows="2" placeholder="What this invoice is for..."></textarea></div>
+    <div class="fg"><label>Amount (KES) *</label><input type="number" id="ivm-amount" class="fc" step="0.01" placeholder="0.00"></div>
+    <div class="fg"><label>VAT (16% Kenya standard)</label><select id="ivm-vat" class="fc"><option value="0">No VAT</option><option value="16">Include 16% VAT</option></select></div>
+    <div class="fg"><label>Status</label><select id="ivm-status" class="fc"><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select></div>
+    <div class="fg"><label>Notes</label><input type="text" id="ivm-notes" class="fc" placeholder="Payment instructions, etc."></div>
+    <div class="modal-foot"><button class="btn btn-o" onclick="closeModal('invoice-modal')">Cancel</button><button class="btn btn-p" id="inv-save-btn" onclick="saveInvoice()">Create Invoice</button></div>
+  </div>
+</div>
+
+<!-- Add User -->
+<div class="overlay hi" id="user-modal">
+  <div class="modal">
+    <h2>👤 Add User</h2>
+    <div id="usr-modal-alert"></div>
+    <div class="notice">Users you add here can log in to ProBooks and will see their role-specific dashboard.</div>
+    <div class="fg"><label>Full Name *</label><input type="text" id="um-name" class="fc" placeholder="Name used to log in"></div>
+    <div class="fg"><label>Role *</label>
+      <select id="um-role" class="fc">
+        <option value="manager">Manager (sees sales, stock, invoice reports only)</option>
+        <option value="sales">Sales Person (records sales & restocks only)</option>
+      </select>
+    </div>
+    <div class="r2">
+      <div class="fg"><label>Password *</label><input type="password" id="um-pwd" class="fc" placeholder="Min 6 characters"></div>
+      <div class="fg"><label>Confirm Password</label><input type="password" id="um-pwd2" class="fc"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-o" onclick="closeModal('user-modal')">Cancel</button><button class="btn btn-p" id="usr-save-btn" onclick="saveUser()">Add User</button></div>
+  </div>
+</div>
+
+<!-- Admin: Manage Businesses -->
+<div class="overlay hi" id="admin-modal">
+  <div class="modal" style="max-width:600px">
+    <h2>⚙️ Admin Panel — All Businesses</h2>
+    <div id="admin-modal-alert"></div>
+    <div id="admin-biz-list"></div>
+    <div class="modal-foot"><button class="btn btn-o" onclick="closeModal('admin-modal')">Close</button></div>
+  </div>
+</div>
+
+<!-- Admin: Add New Business -->
+<div class="overlay hi" id="add-biz-modal">
+  <div class="modal">
+    <h2>➕ Add New Business</h2>
+    <div id="add-biz-alert"></div>
+    <div class="fg"><label>Business Name *</label><input type="text" id="ab-name" class="fc"></div>
+    <div class="r2">
+      <div class="fg"><label>Type</label><select id="ab-type" class="fc"><option>Retail</option><option>Restaurant</option><option>Services</option><option>Manufacturing</option><option>Wholesale</option><option>Other</option></select></div>
+      <div class="fg"><label>Currency</label><select id="ab-cur" class="fc"><option value="KES">KES</option><option value="USD">USD</option><option value="UGX">UGX</option><option value="TZS">TZS</option><option value="ZAR">ZAR</option><option value="GBP">GBP</option><option value="EUR">EUR</option><option value="NGN">NGN</option></select></div>
+    </div>
+    <div class="r2">
+      <div class="fg"><label>Contact</label><input type="text" id="ab-contact" class="fc" placeholder="Phone / Email"></div>
+      <div class="fg"><label>Address</label><input type="text" id="ab-addr" class="fc"></div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+      <div class="tm bold mb8">Owner Account for this Business</div>
+      <div class="fg"><label>Owner Name *</label><input type="text" id="ab-oname" class="fc"></div>
+      <div class="r2">
+        <div class="fg"><label>Owner Password *</label><input type="password" id="ab-opwd" class="fc"></div>
+        <div class="fg"><label>Confirm Password</label><input type="password" id="ab-opwd2" class="fc"></div>
       </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-o" onclick="closeModal('add-biz-modal')">Cancel</button><button class="btn btn-p" id="ab-save-btn" onclick="saveNewBusiness()">Create Business</button></div>
+  </div>
+</div>
+
+<!-- View Invoice Detail -->
+<div class="overlay hi" id="inv-view-modal">
+  <div class="modal" style="max-width:560px">
+    <h2>🧾 Invoice Detail</h2>
+    <div id="inv-view-content"></div>
+    <div class="modal-foot">
+      <button class="btn btn-o" onclick="closeModal('inv-view-modal')">Close</button>
+      <button class="btn btn-s hi" id="inv-mark-paid-btn">Mark as Paid</button>
     </div>
   </div>
 </div>
 
-<!-- MODALS -->
-<div class="mbg" id="m-prod"><div class="modal">
-  <div class="mh"><div class="mt" id="prod-title">Add Product</div><button class="mx" onclick="closeM(\'m-prod\')">✕</button></div>
-  <div class="mb">
-    <input type="hidden" id="prod-id"/>
-    <div class="fr"><div class="fg"><div class="flb">Product Name</div><input class="fin" id="p-name" placeholder="e.g. Paracetamol 500mg"/></div><div class="fg"><div class="flb">Category</div><input class="fin" id="p-cat" placeholder="e.g. Medication"/></div></div>
-    <div class="fr"><div class="fg"><div class="flb">Initial Stock</div><input class="fin" type="number" id="p-stock" min="0" value="0"/></div><div class="fg"><div class="flb">Min Stock Level</div><input class="fin" type="number" id="p-min" min="0" value="10"/></div></div>
-    <div class="fr"><div class="fg"><div class="flb">Buying Price (KES)</div><input class="fin" type="number" id="p-buy" min="0" step="0.01" value="0"/></div><div class="fg"><div class="flb">Selling Price (KES)</div><input class="fin" type="number" id="p-sell" min="0" step="0.01" value="0"/></div></div>
-  </div>
-  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-prod\')">Cancel</button><button class="btn bg" onclick="saveProd()">Save Product</button></div>
-</div></div>
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+// ============================================================
+// INIT FIREBASE
+// ============================================================
+firebase.initializeApp(FB);
+const db = firebase.firestore();
 
-<div class="mbg" id="m-restock"><div class="modal">
-  <div class="mh"><div class="mt">Restock Product</div><button class="mx" onclick="closeM(\'m-restock\')">✕</button></div>
-  <div class="mb">
-    <div class="fr s1"><div class="fg"><div class="flb">Product</div><select class="fse" id="r-prod"><option value="">Select product...</option></select></div></div>
-    <div class="fr"><div class="fg"><div class="flb">Quantity to Add</div><input class="fin" type="number" id="r-qty" min="1" value="1"/></div><div class="fg"><div class="flb">Cost Per Unit (KES)</div><input class="fin" type="number" id="r-cost" min="0" step="0.01" value="0"/></div></div>
-    <div class="fr s1"><div class="fg"><div class="flb">Supplier (optional)</div><input class="fin" id="r-sup" placeholder="Supplier name"/></div></div>
-  </div>
-  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-restock\')">Cancel</button><button class="btn bg" onclick="saveRestock()">Confirm Restock</button></div>
-</div></div>
+// ============================================================
+// HELPERS
+// ============================================================
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h=((h<<5)-h+c)|0;}return h.toString()}
+function fmtC(n){return`${CUR} ${Number(n||0).toLocaleString("en-KE",{minimumFractionDigits:2,maximumFractionDigits:2})}`}
+function fmtD(d){if(!d)return"—";try{return new Date(d).toLocaleDateString("en-KE",{day:"2-digit",month:"short",year:"numeric"});}catch{return d}}
+function today(){return new Date().toISOString().split("T")[0]}
+function thisMonth(){return today().slice(0,7)}
+function tAgo(ts){if(!ts)return"";const dt=ts.toDate?ts.toDate():new Date(ts);const m=Math.floor((Date.now()-dt)/60000);if(m<1)return"just now";if(m<60)return m+"m ago";const h=Math.floor(m/60);if(h<24)return h+"h ago";return Math.floor(h/24)+"d ago"}
+function toast(msg,ok=true){const t=document.createElement("div");t.style.cssText=`position:fixed;bottom:24px;right:24px;z-index:9999;background:${ok?"#10b981":"#ef4444"};color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:10000`;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
+function setAlert(id,msg,ok=false){const el=document.getElementById(id);if(el)el.innerHTML=msg?`<div class="alert ${ok?"a-ok":"a-err"}">${msg}</div>`:"";if(msg&&!ok)setTimeout(()=>{if(document.getElementById(id))document.getElementById(id).innerHTML=""},6000)}
+function openModal(id){document.getElementById(id).classList.remove("hi")}
+function closeModal(id){document.getElementById(id).classList.add("hi")}
+function showView(id){document.querySelectorAll("#views-container > div").forEach(d=>d.classList.add("hi"));const el=document.getElementById("view-"+id);if(el){el.classList.remove("hi");if(id==="owner-ai")el.style.display="flex";}}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open")}
+document.addEventListener("click",e=>{const sb=document.getElementById("sidebar");if(sb&&!sb.contains(e.target)&&!e.target.classList.contains("hbg")&&!e.target.closest(".hbg"))sb.classList.remove("open")})
 
-<div class="mbg" id="m-inc"><div class="modal">
-  <div class="mh"><div class="mt">Add Income</div><button class="mx" onclick="closeM(\'m-inc\')">✕</button></div>
-  <div class="mb">
-    <div class="fr s1"><div class="fg"><div class="flb">Description</div><input class="fin" id="i-desc" placeholder="e.g. Consultation fee"/></div></div>
-    <div class="fr"><div class="fg"><div class="flb">Amount (KES)</div><input class="fin" type="number" id="i-amt" min="0" step="0.01"/></div><div class="fg"><div class="flb">Category</div><select class="fse" id="i-cat"><option>Sales Revenue</option><option>Service Fee</option><option>Consultation</option><option>Rental Income</option><option>Other Income</option></select></div></div>
-    <div class="fr"><div class="fg"><div class="flb">Payment Method</div><select class="fse" id="i-pay"><option>Cash</option><option>M-Pesa</option><option>Card</option><option>Bank Transfer</option><option>Cheque</option></select></div><div class="fg"><div class="flb">Date</div><input class="fin" type="date" id="i-date"/></div></div>
-  </div>
-  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-inc\')">Cancel</button><button class="btn bg" onclick="saveIncome()">Save Income</button></div>
-</div></div>
+// ============================================================
+// SESSION
+// ============================================================
+let SESSION = null;
+let CUR = "KES";
+let stockCache = [];
+let editStockId = null;
+let editInvoiceId = null;
 
-<div class="mbg" id="m-exp"><div class="modal">
-  <div class="mh"><div class="mt">Add Expense</div><button class="mx" onclick="closeM(\'m-exp\')">✕</button></div>
-  <div class="mb">
-    <div class="fr s1"><div class="fg"><div class="flb">Description</div><input class="fin" id="e-desc" placeholder="e.g. Rent payment"/></div></div>
-    <div class="fr"><div class="fg"><div class="flb">Amount (KES)</div><input class="fin" type="number" id="e-amt" min="0" step="0.01"/></div><div class="fg"><div class="flb">Category</div><select class="fse" id="e-cat"><option>Rent</option><option>Utilities</option><option>Salaries</option><option>Stock Purchase</option><option>Transport</option><option>Marketing</option><option>Equipment</option><option>Other</option></select></div></div>
-    <div class="fr"><div class="fg"><div class="flb">Payment Method</div><select class="fse" id="e-pay"><option>Cash</option><option>M-Pesa</option><option>Card</option><option>Bank Transfer</option><option>Cheque</option></select></div><div class="fg"><div class="flb">Date</div><input class="fin" type="date" id="e-date"/></div></div>
-  </div>
-  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-exp\')">Cancel</button><button class="btn bg" onclick="saveExp()">Save Expense</button></div>
-</div></div>
+function loadSession(){
+  const s = sessionStorage.getItem("pb_sess");
+  return s ? JSON.parse(s) : null;
+}
+function saveSession(u){sessionStorage.setItem("pb_sess",JSON.stringify(u))}
+function doLogout(){sessionStorage.removeItem("pb_sess");location.reload()}
 
-<div class="mbg" id="m-inv"><div class="modal">
-  <div class="mh"><div class="mt">New Invoice</div><button class="mx" onclick="closeM(\'m-inv\')">✕</button></div>
-  <div class="mb">
-    <div class="fr"><div class="fg"><div class="flb">Client Name</div><input class="fin" id="v-cl" placeholder="Client or company name"/></div><div class="fg"><div class="flb">Date</div><input class="fin" type="date" id="v-date"/></div></div>
-    <div class="fr"><div class="fg"><div class="flb">Amount (KES)</div><input class="fin" type="number" id="v-amt" min="0" step="0.01"/></div><div class="fg"><div class="flb">Status</div><select class="fse" id="v-st"><option>Unpaid</option><option>Paid</option><option>Partial</option><option>Overdue</option></select></div></div>
-    <div class="fr s1"><div class="fg"><div class="flb">Description</div><textarea class="fta" id="v-desc" placeholder="Invoice details..."></textarea></div></div>
-  </div>
-  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-inv\')">Cancel</button><button class="btn bg" onclick="saveInv()">Save Invoice</button></div>
-</div></div>
+// ============================================================
+// APP BOOT — decide which screen to show
+// ============================================================
+firebase.app(); // ensure initialized
 
-<div class="mbg" id="m-staff"><div class="modal">
-  <div class="mh"><div class="mt">Add Staff Member</div><button class="mx" onclick="closeM(\'m-staff\')">✕</button></div>
-  <div class="mb">
-    <div class="fr"><div class="fg"><div class="flb">Full Name</div><input class="fin" id="st-nm" placeholder="Staff member\'s full name"/></div><div class="fg"><div class="flb">Role</div><select class="fse" id="st-role"><option value="salesperson">Sales Person</option><option value="manager">Manager</option></select></div></div>
-    <div class="fr s1"><div class="fg"><div class="flb">Password</div><input class="fin" type="password" id="st-pw" placeholder="Create a password (min 4 characters)"/></div></div>
-  </div>
-  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-staff\')">Cancel</button><button class="btn bg" onclick="saveStaff()">Add Staff</button></div>
-</div></div>
+async function boot(){
+  // If admin never set up, show setup screen
+  if(!localStorage.getItem("pb_admin")){
+    showScreen("setup");
+    return;
+  }
+  // If session exists, load app
+  const sess = loadSession();
+  if(sess){
+    SESSION = sess;
+    await loadBizSettings();
+    startApp();
+    return;
+  }
+  // Otherwise show login
+  showScreen("login");
+  loadLoginBizList();
+}
 
-<div class="mbg" id="m-reset"><div class="modal" style="max-width:400px">
-  <div class="mh"><div class="mt">Reset Password</div><button class="mx" onclick="closeM(\'m-reset\')">✕</button></div>
-  <div class="mb">
-    <div style="font-size:12px;color:var(--tx2);margin-bottom:16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:12px;line-height:1.6">
-      🔐 Enter the admin key to unlock password reset for any staff member.
-    </div>
-    <div class="fg" style="margin-bottom:13px"><div class="flb">Admin Key</div><input class="fin" type="password" id="reset-key" placeholder="Enter admin password"/></div>
-    <div id="reset-s2" style="display:none">
-      <div class="fg" style="margin-bottom:13px"><div class="flb">Select Staff Member</div><select class="fse" id="reset-who"></select></div>
-      <div class="fg"><div class="flb">New Password</div><input class="fin" type="password" id="reset-newpw" placeholder="New password (min 4 characters)"/></div>
-    </div>
-    <div id="reset-err" style="color:var(--r);font-size:12px;margin-top:8px;min-height:16px"></div>
-  </div>
-  <div class="mf"><button class="btn bgh" onclick="closeM(\'m-reset\')">Cancel</button><button class="btn bg" id="reset-btn" onclick="doReset()">Verify Admin Key</button></div>
-</div></div>
+function showScreen(name){
+  document.getElementById("screen-setup").classList.add("hi");
+  document.getElementById("screen-login").classList.add("hi");
+  document.getElementById("app-shell").style.display="none";
+  if(name==="setup")document.getElementById("screen-setup").classList.remove("hi");
+  else if(name==="login")document.getElementById("screen-login").classList.remove("hi");
+  else if(name==="app"){document.getElementById("app-shell").style.display="block";}
+}
+
+async function loadBizSettings(){
+  if(!SESSION)return;
+  const doc = await db.collection("businesses").doc(SESSION.businessId).get();
+  const biz = doc.data()||{};
+  CUR = biz.currency || "KES";
+}
+
+// ============================================================
+// SETUP FLOW
+// ============================================================
+let setupBizData = {};
+
+function setupGo(step){
+  [1,2,3].forEach(n=>{
+    document.getElementById("ss"+n).classList.toggle("hi",n!==step);
+    document.getElementById("sd"+n).classList.toggle("on",n<=step);
+  });
+  setAlert("setup-alert","");
+}
+
+function setupStep1(){
+  const p1=document.getElementById("ap1").value.trim();
+  const p2=document.getElementById("ap2").value.trim();
+  if(p1.length<6)return setAlert("setup-alert","Password must be at least 6 characters.");
+  if(p1!==p2)return setAlert("setup-alert","Passwords do not match.");
+  localStorage.setItem("pb_admin",hashStr(p1));
+  setupGo(2);
+}
+
+function setupStep2(){
+  const name=document.getElementById("s-bn").value.trim();
+  if(!name)return setAlert("setup-alert","Business name is required.");
+  setupBizData={businessName:name,businessType:document.getElementById("s-bt").value,currency:document.getElementById("s-bc").value,contact:document.getElementById("s-bcontact").value.trim(),address:document.getElementById("s-baddr").value.trim()};
+  setupGo(3);
+}
+
+async function setupFinish(){
+  const oname=document.getElementById("s-on").value.trim();
+  const p1=document.getElementById("s-op1").value.trim();
+  const p2=document.getElementById("s-op2").value.trim();
+  if(!oname)return setAlert("setup-alert","Owner name is required.");
+  if(p1.length<6)return setAlert("setup-alert","Password must be at least 6 characters.");
+  if(p1!==p2)return setAlert("setup-alert","Passwords do not match.");
+  const btn=document.getElementById("finish-btn");
+  btn.innerHTML='<span class="sp"></span> Creating...';btn.disabled=true;
+  try{
+    const bizRef=await db.collection("businesses").add({...setupBizData,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    await db.collection("businesses").doc(bizRef.id).collection("users").add({name:oname,passwordHash:hashStr(p1),role:"owner",businessName:setupBizData.businessName,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    setAlert("setup-alert","✓ Setup complete! Redirecting to login...",true);
+    setTimeout(()=>location.reload(),2000);
+  }catch(e){setAlert("setup-alert","Error: "+e.message);}
+  btn.innerHTML="✓ Complete Setup";btn.disabled=false;
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+async function loadLoginBizList(){
+  const sel=document.getElementById("l-biz");
+  sel.innerHTML='<option value="">Loading...</option>';
+  const snap=await db.collection("businesses").get();
+  if(snap.empty){sel.innerHTML='<option value="">No businesses found</option>';return;}
+  sel.innerHTML=snap.docs.map(d=>`<option value="${d.id}">${d.data().businessName}</option>`).join("");
+}
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&document.getElementById("screen-login")&&!document.getElementById("screen-login").classList.contains("hi"))doLogin();
+});
+
+async function doLogin(){
+  const bizId=document.getElementById("l-biz").value;
+  const name=document.getElementById("l-name").value.trim();
+  const pwd=document.getElementById("l-pwd").value;
+  if(!bizId)return setAlert("login-alert","Select a business.");
+  if(!name)return setAlert("login-alert","Enter your name.");
+  if(!pwd)return setAlert("login-alert","Enter your password.");
+  const btn=document.getElementById("login-btn");btn.innerHTML='<span class="sp"></span>';btn.disabled=true;
+  try{
+    const snap=await db.collection("businesses").doc(bizId).collection("users").where("name","==",name).where("passwordHash","==",hashStr(pwd)).get();
+    if(snap.empty){setAlert("login-alert","Invalid name or password.");btn.innerHTML="Sign In";btn.disabled=false;return;}
+    const u=snap.docs[0].data();
+    SESSION={id:snap.docs[0].id,name:u.name,role:u.role,businessId:bizId,businessName:u.businessName||""};
+    saveSession(SESSION);
+    await loadBizSettings();
+    startApp();
+  }catch(e){setAlert("login-alert","Error: "+e.message);btn.innerHTML="Sign In";btn.disabled=false;}
+}
+
+function toggleAdminSection(){document.getElementById("admin-section").classList.toggle("hi")}
+
+function verifyAdmin(){
+  const p=document.getElementById("l-admin-pwd").value;
+  if(localStorage.getItem("pb_admin")===hashStr(p)){
+    document.getElementById("manage-btn").classList.remove("hi");
+    document.getElementById("add-biz-btn").classList.remove("hi");
+    setAlert("login-alert","✓ Admin verified.",true);
+  }else{setAlert("login-alert","Wrong admin password.");}
+}
+
+// ============================================================
+// APP STARTUP — builds sidebar and shows right view
+// ============================================================
+function startApp(){
+  showScreen("app");
+  // Set sidebar user info
+  const role=SESSION.role;
+  document.getElementById("sb-bizname").textContent=SESSION.businessName||"ProBooks";
+  document.getElementById("sb-uname").textContent=SESSION.name;
+  document.getElementById("sb-role").textContent=role;
+  const av=document.getElementById("sb-av");
+  av.textContent=SESSION.name.charAt(0).toUpperCase();
+  av.className="av av-"+(role==="owner"?"o":role==="manager"?"m":"s");
+
+  // Build nav and load first view
+  if(role==="owner"){
+    document.getElementById("sb-nav").innerHTML=`
+      <div class="nav-sec">Overview</div>
+      <div class="nl on" onclick="navTo('owner-dashboard')"><span class="ic">🏠</span> Dashboard</div>
+      <div class="nav-sec">Finance</div>
+      <div class="nl" onclick="navTo('owner-income')"><span class="ic">💰</span> Income</div>
+      <div class="nl" onclick="navTo('owner-expenses')"><span class="ic">💸</span> Expenses</div>
+      <div class="nl" onclick="navTo('owner-pnl')"><span class="ic">📊</span> Profit & Loss</div>
+      <div class="nav-sec">Operations</div>
+      <div class="nl" onclick="navTo('owner-stock')"><span class="ic">📦</span> Stock</div>
+      <div class="nl" onclick="navTo('owner-invoices')"><span class="ic">🧾</span> Invoices</div>
+      <div class="nl" onclick="navTo('owner-reports')"><span class="ic">📈</span> Reports</div>
+      <div class="nav-sec">Team</div>
+      <div class="nl" onclick="navTo('owner-users')"><span class="ic">👥</span> Users</div>
+      <div class="nav-sec">AI</div>
+      <div class="nl" onclick="navTo('owner-ai')"><span class="ic">🤖</span> AI Accountant</div>
+      <div class="nav-sec">Settings</div>
+      <div class="nl" onclick="navTo('owner-settings')"><span class="ic">⚙️</span> Settings</div>`;
+    // Add notif bell for owner
+    document.getElementById("topbar-r").innerHTML=`<button class="nb-btn" onclick="toggleNotifPanel()">🔔<span class="nb hi" id="notif-badge">0</span></button>`;
+    navTo("owner-dashboard");
+  } else if(role==="manager"){
+    document.getElementById("sb-nav").innerHTML=`
+      <div class="nav-sec">Reports</div>
+      <div class="nl on" onclick="navTo('manager-dashboard')"><span class="ic">🏠</span> Dashboard</div>`;
+    document.getElementById("mgr-greeting").textContent=greet();
+    document.getElementById("mgr-bizname").textContent=SESSION.businessName;
+    navTo("manager-dashboard");
+    loadMgrSales();
+  } else {
+    document.getElementById("sb-nav").innerHTML=`
+      <div class="nav-sec">My Workspace</div>
+      <div class="nl on" onclick="navTo('sales-dashboard')"><span class="ic">🏠</span> Dashboard</div>`;
+    document.getElementById("sal-greeting").textContent=greet();
+    document.getElementById("sal-bizname").textContent=SESSION.businessName;
+    navTo("sales-dashboard");
+    loadSalesDash();
+  }
+}
+
+function greet(){const h=new Date().getHours();return(h<12?"Good morning":h<17?"Good afternoon":"Good evening")+" "+SESSION.name+" 👋"}
+
+function navTo(view){
+  // Highlight nav
+  document.querySelectorAll(".nl").forEach(n=>n.classList.remove("on"));
+  event&&event.currentTarget&&event.currentTarget.classList&&event.currentTarget.classList.add("on");
+  showView(view);
+  document.getElementById("sidebar").classList.remove("open");
+  // Set topbar title
+  const titles={
+    "owner-dashboard":"Dashboard","owner-income":"Income","owner-expenses":"Expenses",
+    "owner-pnl":"Profit & Loss","owner-stock":"Stock / Inventory","owner-invoices":"Invoices",
+    "owner-reports":"Reports","owner-users":"Team & Users","owner-ai":"🤖 AI Accountant",
+    "owner-settings":"Settings","manager-dashboard":"Manager Dashboard","sales-dashboard":"Sales Dashboard"
+  };
+  document.getElementById("topbar-title").textContent=titles[view]||view;
+  // Load data for view
+  const loaders={
+    "owner-dashboard":loadOwnerDashboard,"owner-income":loadIncome,"owner-expenses":loadExpenses,
+    "owner-pnl":loadPnL,"owner-stock":loadStockPage,"owner-invoices":loadInvoices,
+    "owner-reports":loadReports,"owner-users":loadUsers,"owner-settings":loadSettings,
+    "manager-dashboard":()=>{loadMgrSales();},"sales-dashboard":loadSalesDash
+  };
+  if(loaders[view])loaders[view]();
+  // Highlight correct nav item
+  document.querySelectorAll(".nl").forEach(n=>{
+    if(n.getAttribute("onclick")&&n.getAttribute("onclick").includes(view))n.classList.add("on");
+  });
+}
+
+// ============================================================
+// OWNER: DASHBOARD
+// ============================================================
+async function loadOwnerDashboard(){
+  const period=document.getElementById("db-period").value;
+  const now=new Date();
+  let start="2000-01-01";
+  if(period==="month")start=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split("T")[0];
+  else if(period==="year")start=`${now.getFullYear()}-01-01`;
+
+  const h=now.getHours();
+  document.getElementById("db-greeting").textContent=(h<12?"Good morning":h<17?"Good afternoon":"Good evening")+" "+SESSION.name+" 👋";
+  document.getElementById("db-bizname").textContent=SESSION.businessName;
+
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("transactions").orderBy("date","desc").get();
+  const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const filtered=all.filter(t=>(t.date||"")>=start);
+
+  let inc=0,exp=0,sc=0;
+  filtered.forEach(t=>{
+    if(t.type==="sale"||t.type==="income"){inc+=Number(t.amount||0);if(t.type==="sale")sc++;}
+    else if(t.type==="expense"||t.type==="restock")exp+=Number(t.amount||0);
+  });
+  document.getElementById("db-income").textContent=fmtC(inc);
+  document.getElementById("db-expenses").textContent=fmtC(exp);
+  document.getElementById("db-profit").textContent=fmtC(inc-exp);
+  document.getElementById("db-scount").textContent=sc;
+
+  const tbody=document.getElementById("db-tx-body");
+  const recent=all.slice(0,10);
+  const tc={sale:"b-g",income:"b-b",expense:"b-r",restock:"b-y"};
+  tbody.innerHTML=recent.length?recent.map(t=>`<tr>
+    <td>${fmtD(t.date)}</td><td><span class="badge ${tc[t.type]||"b-b"}">${t.type}</span></td>
+    <td>${t.itemName||t.category||t.description||"—"}</td>
+    <td>${t.paymentMethod||"—"}</td><td>${t.recordedBy||"owner"}</td>
+    <td class="tr mn"><strong>${fmtC(t.amount)}</strong></td>
+  </tr>`).join(""):'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t2)">No transactions yet. Start by adding stock and recording sales.</td></tr>';
+
+  // Low stock
+  const ss=await db.collection("businesses").doc(SESSION.businessId).collection("stock").get();
+  const low=ss.docs.map(d=>d.data()).filter(s=>s.quantity<=(s.reorderLevel||5));
+  const lc=document.getElementById("db-lowstock-card");
+  lc.classList.toggle("hi",!low.length);
+  if(low.length)document.getElementById("db-lowstock-list").innerHTML=low.map(s=>`
+    <div class="between" style="padding:8px 0;border-bottom:1px solid var(--border)"><span>${s.name}</span>
+    <span class="badge b-r">${s.quantity} left (reorder at ${s.reorderLevel||5})</span></div>`).join("");
+
+  loadNotifBadge();
+}
+
+// ============================================================
+// OWNER: INCOME
+// ============================================================
+async function loadIncome(){
+  const tf=document.getElementById("inc-filter-type").value;
+  const mf=document.getElementById("inc-filter-month").value;
+  let q=db.collection("businesses").doc(SESSION.businessId).collection("transactions").orderBy("date","desc");
+  const snap=await q.get();
+  let all=snap.docs.map(d=>({id:d.id,...d.data()})).filter(t=>t.type==="income"||t.type==="sale");
+  if(tf)all=all.filter(t=>t.type===tf);
+  if(mf)all=all.filter(t=>(t.date||"").startsWith(mf));
+  const total=all.reduce((s,t)=>s+Number(t.amount||0),0);
+  document.getElementById("inc-total").textContent=fmtC(total);
+  const tc={sale:"b-g",income:"b-b"};
+  document.getElementById("inc-body").innerHTML=all.length?all.map(t=>`<tr>
+    <td>${fmtD(t.date)}</td><td><span class="badge ${tc[t.type]||"b-b"}">${t.type}</span></td>
+    <td>${t.category||t.itemName||"—"}</td><td>${t.paymentMethod||"—"}</td>
+    <td>${t.recordedBy||"owner"}</td><td>${t.description||"—"}</td>
+    <td class="tr mn"><strong>${fmtC(t.amount)}</strong></td>
+    <td>${t.type!=="sale"?`<button class="btn btn-d btn-sm" onclick="delTx('${t.id}')">Del</button>`:""}</td>
+  </tr>`).join(""):'<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--t2)">No income records found.</td></tr>';
+}
+
+function openIncomeModal(){document.getElementById("im-date").value=today();setAlert("inc-modal-alert","");openModal("income-modal")}
+async function saveIncome(){
+  const amount=Number(document.getElementById("im-amount").value);
+  if(!amount)return setAlert("inc-modal-alert","Enter an amount.");
+  const btn=document.getElementById("inc-save-btn");btn.innerHTML='<span class="sp"></span>';btn.disabled=true;
+  try{
+    await db.collection("businesses").doc(SESSION.businessId).collection("transactions").add({
+      type:"income",date:document.getElementById("im-date").value,amount,
+      category:document.getElementById("im-cat").value,paymentMethod:document.getElementById("im-method").value,
+      description:document.getElementById("im-desc").value.trim(),recordedBy:SESSION.name,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeModal("income-modal");toast("Income saved!");loadIncome();
+  }catch(e){setAlert("inc-modal-alert","Error: "+e.message);}
+  btn.innerHTML="Save Income";btn.disabled=false;
+}
+
+async function delTx(id){
+  if(!confirm("Delete this record? This cannot be undone."))return;
+  await db.collection("businesses").doc(SESSION.businessId).collection("transactions").doc(id).delete();
+  toast("Deleted",false);loadIncome();
+}
+
+// ============================================================
+// OWNER: EXPENSES
+// ============================================================
+async function loadExpenses(){
+  const tf=document.getElementById("exp-filter-type").value;
+  const mf=document.getElementById("exp-filter-month").value;
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("transactions").orderBy("date","desc").get();
+  let all=snap.docs.map(d=>({id:d.id,...d.data()})).filter(t=>t.type==="expense"||t.type==="restock");
+  if(tf)all=all.filter(t=>t.type===tf);
+  if(mf)all=all.filter(t=>(t.date||"").startsWith(mf));
+  const total=all.reduce((s,t)=>s+Number(t.amount||0),0);
+  document.getElementById("exp-total").textContent=fmtC(total);
+  const tc={expense:"b-r",restock:"b-y"};
+  document.getElementById("exp-body").innerHTML=all.length?all.map(t=>`<tr>
+    <td>${fmtD(t.date)}</td><td><span class="badge ${tc[t.type]||"b-r"}">${t.type}</span></td>
+    <td>${t.category||t.itemName||"—"}</td><td>${t.paymentMethod||"—"}</td>
+    <td>${t.recordedBy||"owner"}</td><td>${t.description||"—"}</td>
+    <td class="tr mn"><strong>${fmtC(t.amount)}</strong></td>
+    <td>${t.type!=="restock"?`<button class="btn btn-d btn-sm" onclick="delExpTx('${t.id}')">Del</button>`:""}</td>
+  </tr>`).join(""):'<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--t2)">No expense records found.</td></tr>';
+}
+
+async function saveExpense(){
+  const amount=Number(document.getElementById("em-amount").value);
+  if(!amount)return setAlert("exp-modal-alert","Enter an amount.");
+  const btn=document.getElementById("exp-save-btn");btn.innerHTML='<span class="sp"></span>';btn.disabled=true;
+  try{
+    await db.collection("businesses").doc(SESSION.businessId).collection("transactions").add({
+      type:"expense",date:document.getElementById("em-date").value,amount,
+      category:document.getElementById("em-cat").value,paymentMethod:document.getElementById("em-method").value,
+      description:document.getElementById("em-desc").value.trim(),recordedBy:SESSION.name,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeModal("expense-modal");toast("Expense saved!");loadExpenses();
+  }catch(e){setAlert("exp-modal-alert","Error: "+e.message);}
+  btn.innerHTML="Save Expense";btn.disabled=false;
+}
+
+async function delExpTx(id){
+  if(!confirm("Delete this expense?"))return;
+  await db.collection("businesses").doc(SESSION.businessId).collection("transactions").doc(id).delete();
+  toast("Deleted",false);loadExpenses();
+}
+
+// ============================================================
+// OWNER: P&L
+// ============================================================
+async function loadPnL(){
+  const period=document.getElementById("pnl-period").value;
+  const now=new Date();
+  let start="2000-01-01";
+  if(period==="month")start=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split("T")[0];
+  else if(period==="year")start=`${now.getFullYear()}-01-01`;
+
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("transactions").orderBy("date","desc").get();
+  const all=snap.docs.map(d=>d.data()).filter(t=>(t.date||"")>=start);
+  const inc=all.filter(t=>t.type==="sale"||t.type==="income").reduce((s,t)=>s+Number(t.amount||0),0);
+  const exp=all.filter(t=>t.type==="expense"||t.type==="restock").reduce((s,t)=>s+Number(t.amount||0),0);
+  const net=inc-exp;
+  const margin=inc>0?((net/inc)*100).toFixed(1):0;
+
+  document.getElementById("pnl-inc").textContent=fmtC(inc);
+  document.getElementById("pnl-exp").textContent=fmtC(exp);
+  document.getElementById("pnl-net").textContent=fmtC(net);
+  document.getElementById("pnl-margin").textContent=margin+"%";
+
+  // Income by method
+  const methods={};
+  all.filter(t=>t.type==="sale"||t.type==="income").forEach(t=>{
+    const m=t.paymentMethod||"Unknown";
+    methods[m]=(methods[m]||0)+Number(t.amount||0);
+  });
+  document.getElementById("pnl-inc-methods").innerHTML=Object.entries(methods).sort((a,b)=>b[1]-a[1]).map(([m,v])=>`
+    <div class="between" style="padding:8px 0;border-bottom:1px solid var(--border)"><span>${m}</span><span class="mn">${fmtC(v)}</span></div>`).join("")||'<p class="tm">No data</p>';
+
+  // Expenses by category
+  const cats={};
+  all.filter(t=>t.type==="expense"||t.type==="restock").forEach(t=>{
+    const c=t.category||t.type||"Other";
+    cats[c]=(cats[c]||0)+Number(t.amount||0);
+  });
+  document.getElementById("pnl-exp-cats").innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`
+    <div class="between" style="padding:8px 0;border-bottom:1px solid var(--border)"><span>${c}</span><span class="mn">${fmtC(v)}</span></div>`).join("")||'<p class="tm">No data</p>';
+
+  // Top items
+  const items={};
+  all.filter(t=>t.type==="sale"&&t.itemName).forEach(t=>{
+    const k=t.itemName;
+    if(!items[k])items[k]={qty:0,rev:0};
+    items[k].qty+=Number(t.quantity||1);
+    items[k].rev+=Number(t.amount||0);
+  });
+  const sorted=Object.entries(items).sort((a,b)=>b[1].rev-a[1].rev).slice(0,10);
+  document.getElementById("pnl-top-items").innerHTML=sorted.length?sorted.map(([name,d])=>`<tr>
+    <td>${name}</td><td class="mn">${d.qty}</td><td class="tr mn"><strong>${fmtC(d.rev)}</strong></td>
+  </tr>`).join(""):'<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--t2)">No sales data.</td></tr>';
+}
+
+// ============================================================
+// OWNER: STOCK
+// ============================================================
+async function loadStockPage(){
+  await refreshStock();
+}
+
+async function refreshStock(){
+  const bizDoc=await db.collection("businesses").doc(SESSION.businessId).get();
+  CUR=(bizDoc.data()||{}).currency||"KES";
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("stock").orderBy("name").get();
+  stockCache=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const tv=stockCache.reduce((s,i)=>s+(Number(i.costPrice||0)*Number(i.quantity||0)),0);
+  const pr=stockCache.reduce((s,i)=>s+(Number(i.sellingPrice||0)*Number(i.quantity||0)),0);
+  const low=stockCache.filter(i=>i.quantity<=(i.reorderLevel||5));
+  document.getElementById("stk-total").textContent=stockCache.length;
+  document.getElementById("stk-low").textContent=low.length;
+  document.getElementById("stk-value").textContent=fmtC(tv);
+  document.getElementById("stk-rev").textContent=fmtC(pr);
+  renderStock();
+}
+
+function renderStock(){
+  const q=(document.getElementById("stk-search").value||"").toLowerCase();
+  const f=stockCache.filter(i=>i.name.toLowerCase().includes(q)||(i.sku||"").toLowerCase().includes(q)||(i.category||"").toLowerCase().includes(q));
+  document.getElementById("stk-count").textContent=f.length+" item"+(f.length!==1?"s":"");
+  document.getElementById("stk-body").innerHTML=f.length?f.map(item=>{
+    const low=item.quantity<=(item.reorderLevel||5);
+    return`<tr>
+      <td><strong>${item.name}</strong>${item.notes?`<div class="tm">${item.notes}</div>`:""}</td>
+      <td>${item.sku||"—"}</td><td>${item.category||"—"}</td><td>${item.unit||"pcs"}</td>
+      <td class="mn">${item.quantity}</td><td class="mn">${fmtC(item.costPrice)}</td>
+      <td class="mn">${fmtC(item.sellingPrice)}</td><td>${item.reorderLevel||5}</td>
+      <td><span class="badge ${low?"b-r":"b-g"}">${low?"⚠️ Low":"✓ OK"}</span></td>
+      <td><div class="flex g6">
+        <button class="btn btn-o btn-sm" onclick="editStock('${item.id}')">Edit</button>
+        <button class="btn btn-d btn-sm" onclick="delStock('${item.id}','${item.name.replace(/'/g,"\\'")}')">Del</button>
+      </div></td>
+    </tr>`;
+  }).join(""):'<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--t2)">No items found.</td></tr>';
+}
+
+function openStockModal(){
+  editStockId=null;
+  document.getElementById("stk-modal-title").textContent="Add Stock Item";
+  setAlert("stk-modal-alert","");
+  ["sm-name","sm-sku","sm-cat","sm-notes"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("sm-qty").value=0;document.getElementById("sm-reorder").value=5;
+  document.getElementById("sm-cost").value="";document.getElementById("sm-sell").value="";
+  openModal("stock-modal");
+}
+
+function editStock(id){
+  const item=stockCache.find(i=>i.id===id);if(!item)return;
+  editStockId=id;
+  document.getElementById("stk-modal-title").textContent="Edit Stock Item";
+  setAlert("stk-modal-alert","");
+  document.getElementById("sm-name").value=item.name||"";
+  document.getElementById("sm-sku").value=item.sku||"";
+  document.getElementById("sm-cat").value=item.category||"";
+  document.getElementById("sm-unit").value=item.unit||"pcs";
+  document.getElementById("sm-qty").value=item.quantity||0;
+  document.getElementById("sm-reorder").value=item.reorderLevel||5;
+  document.getElementById("sm-cost").value=item.costPrice||"";
+  document.getElementById("sm-sell").value=item.sellingPrice||"";
+  document.getElementById("sm-notes").value=item.notes||"";
+  openModal("stock-modal");
+}
+
+async function saveStockItem(){
+  const name=document.getElementById("sm-name").value.trim();
+  if(!name)return setAlert("stk-modal-alert","Item name is required.");
+  const data={name,sku:document.getElementById("sm-sku").value.trim(),category:document.getElementById("sm-cat").value.trim(),unit:document.getElementById("sm-unit").value,quantity:Number(document.getElementById("sm-qty").value),reorderLevel:Number(document.getElementById("sm-reorder").value),costPrice:Number(document.getElementById("sm-cost").value)||0,sellingPrice:Number(document.getElementById("sm-sell").value)||0,notes:document.getElementById("sm-notes").value.trim()};
+  const btn=document.getElementById("stk-save-btn");btn.innerHTML='<span class="sp"></span>';btn.disabled=true;
+  try{
+    const ref=db.collection("businesses").doc(SESSION.businessId).collection("stock");
+    if(editStockId)await ref.doc(editStockId).update(data);
+    else await ref.add({...data,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    closeModal("stock-modal");toast(editStockId?"Item updated!":"Item added!");await refreshStock();
+  }catch(e){setAlert("stk-modal-alert","Error: "+e.message);}
+  btn.innerHTML="Save Item";btn.disabled=false;
+}
+
+async function delStock(id,name){
+  if(!confirm(`Delete "${name}"? This cannot be undone.`))return;
+  await db.collection("businesses").doc(SESSION.businessId).collection("stock").doc(id).delete();
+  toast("Item deleted",false);await refreshStock();
+}
+
+// ============================================================
+// OWNER: INVOICES
+// ============================================================
+async function loadInvoices(){
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("invoices").orderBy("createdAt","desc").get();
+  const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const paid=all.filter(i=>i.status==="paid");
+  const unpaid=all.filter(i=>i.status==="unpaid");
+  const out=unpaid.reduce((s,i)=>s+Number(i.total||0),0);
+  document.getElementById("inv-total").textContent=all.length;
+  document.getElementById("inv-paid").textContent=paid.length;
+  document.getElementById("inv-unpaid").textContent=unpaid.length;
+  document.getElementById("inv-out").textContent=fmtC(out);
+  document.getElementById("inv-body").innerHTML=all.length?all.map(i=>`<tr>
+    <td class="mn">#${i.invoiceNumber||i.id.slice(-6).toUpperCase()}</td>
+    <td><strong>${i.clientName||"—"}</strong></td>
+    <td>${fmtD(i.invoiceDate)}</td><td>${fmtD(i.dueDate)}</td>
+    <td><span class="badge ${i.status==="paid"?"b-g":"b-r"}">${i.status}</span></td>
+    <td class="tr mn"><strong>${fmtC(i.total)}</strong></td>
+    <td><div class="flex g6">
+      <button class="btn btn-o btn-sm" onclick="viewInvoice('${i.id}')">View</button>
+      ${i.status==="unpaid"?`<button class="btn btn-s btn-sm" onclick="markInvoicePaid('${i.id}')">Mark Paid</button>`:""}
+      <button class="btn btn-d btn-sm" onclick="delInvoice('${i.id}')">Del</button>
+    </div></td>
+  </tr>`).join(""):'<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--t2)">No invoices yet.</td></tr>';
+}
+
+function openInvoiceModal(){
+  document.getElementById("ivm-date").value=today();
+  setAlert("inv-modal-alert","");
+  ["ivm-client","ivm-contact","ivm-desc","ivm-amount","ivm-notes"].forEach(id=>document.getElementById(id).value="");
+  openModal("invoice-modal");
+}
+
+async function saveInvoice(){
+  const client=document.getElementById("ivm-client").value.trim();
+  const amount=Number(document.getElementById("ivm-amount").value);
+  if(!client)return setAlert("inv-modal-alert","Client name is required.");
+  if(!amount)return setAlert("inv-modal-alert","Enter an amount.");
+  const vat=Number(document.getElementById("ivm-vat").value);
+  const vatAmt=amount*(vat/100);
+  const total=amount+vatAmt;
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("invoices").get();
+  const invoiceNumber=snap.size+1;
+  const btn=document.getElementById("inv-save-btn");btn.innerHTML='<span class="sp"></span>';btn.disabled=true;
+  try{
+    await db.collection("businesses").doc(SESSION.businessId).collection("invoices").add({
+      invoiceNumber,clientName:client,clientContact:document.getElementById("ivm-contact").value.trim(),
+      invoiceDate:document.getElementById("ivm-date").value,dueDate:document.getElementById("ivm-due").value,
+      description:document.getElementById("ivm-desc").value.trim(),
+      subTotal:amount,vatRate:vat,vatAmount:vatAmt,total,
+      status:document.getElementById("ivm-status").value,
+      notes:document.getElementById("ivm-notes").value.trim(),
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeModal("invoice-modal");toast("Invoice created!");loadInvoices();
+  }catch(e){setAlert("inv-modal-alert","Error: "+e.message);}
+  btn.innerHTML="Create Invoice";btn.disabled=false;
+}
+
+async function viewInvoice(id){
+  const doc=await db.collection("businesses").doc(SESSION.businessId).collection("invoices").doc(id).get();
+  const i=doc.data();
+  document.getElementById("inv-view-content").innerHTML=`
+    <div class="between mb16"><div><strong style="font-size:16px">${SESSION.businessName}</strong></div>
+    <div class="tr"><span class="badge ${i.status==="paid"?"b-g":"b-r"}" style="font-size:13px">${i.status.toUpperCase()}</span></div></div>
+    <div class="info-row"><span class="lbl">Invoice #</span><span class="mn">#${i.invoiceNumber||id.slice(-6).toUpperCase()}</span></div>
+    <div class="info-row"><span class="lbl">Client</span><span>${i.clientName}</span></div>
+    <div class="info-row"><span class="lbl">Contact</span><span>${i.clientContact||"—"}</span></div>
+    <div class="info-row"><span class="lbl">Invoice Date</span><span>${fmtD(i.invoiceDate)}</span></div>
+    <div class="info-row"><span class="lbl">Due Date</span><span>${fmtD(i.dueDate)}</span></div>
+    <div class="info-row"><span class="lbl">Description</span><span>${i.description||"—"}</span></div>
+    <div style="border-top:1px solid var(--border);margin:14px 0"></div>
+    <div class="info-row"><span class="lbl">Sub-Total</span><span class="mn">${fmtC(i.subTotal)}</span></div>
+    <div class="info-row"><span class="lbl">VAT (${i.vatRate||0}%)</span><span class="mn">${fmtC(i.vatAmount)}</span></div>
+    <div class="info-row"><strong>Total</strong><strong class="mn" style="font-size:18px;color:var(--accent)">${fmtC(i.total)}</strong></div>
+    ${i.notes?`<div class="notice mt16">${i.notes}</div>`:""}`;
+  const btn=document.getElementById("inv-mark-paid-btn");
+  if(i.status==="unpaid"){btn.classList.remove("hi");btn.onclick=()=>markInvoicePaid(id);}
+  else btn.classList.add("hi");
+  openModal("inv-view-modal");
+}
+
+async function markInvoicePaid(id){
+  await db.collection("businesses").doc(SESSION.businessId).collection("invoices").doc(id).update({status:"paid"});
+  toast("Marked as paid!");closeModal("inv-view-modal");loadInvoices();
+}
+
+async function delInvoice(id){
+  if(!confirm("Delete this invoice?"))return;
+  await db.collection("businesses").doc(SESSION.businessId).collection("invoices").doc(id).delete();
+  toast("Deleted",false);loadInvoices();
+}
+
+// ============================================================
+// OWNER: REPORTS
+// ============================================================
+async function loadReports(){
+  const period=document.getElementById("rep-period").value;
+  const now=new Date();
+  let start="2000-01-01";
+  if(period==="month")start=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split("T")[0];
+  else if(period==="year")start=`${now.getFullYear()}-01-01`;
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("transactions").orderBy("date","desc").get();
+  const all=snap.docs.map(d=>d.data()).filter(t=>(t.date||"")>=start);
+  const sales=all.filter(t=>t.type==="sale");
+  const rev=all.filter(t=>t.type==="sale"||t.type==="income").reduce((s,t)=>s+Number(t.amount||0),0);
+  const exp=all.filter(t=>t.type==="expense"||t.type==="restock").reduce((s,t)=>s+Number(t.amount||0),0);
+  const mpesa=sales.filter(t=>t.paymentMethod==="M-Pesa").reduce((s,t)=>s+Number(t.amount||0),0);
+  const cash=sales.filter(t=>t.paymentMethod==="Cash").reduce((s,t)=>s+Number(t.amount||0),0);
+  const avg=sales.length?rev/sales.length:0;
+  document.getElementById("rep-rev").textContent=fmtC(rev);
+  document.getElementById("rep-exp").textContent=fmtC(exp);
+  document.getElementById("rep-net").textContent=fmtC(rev-exp);
+  document.getElementById("rep-mpesa").textContent=fmtC(mpesa);
+  document.getElementById("rep-cash").textContent=fmtC(cash);
+  document.getElementById("rep-avg").textContent=fmtC(avg);
+  // By staff
+  const staff={};
+  sales.forEach(t=>{const k=t.recordedBy||"Owner";if(!staff[k])staff[k]={count:0,total:0};staff[k].count++;staff[k].total+=Number(t.amount||0);});
+  document.getElementById("rep-by-staff").innerHTML=Object.entries(staff).sort((a,b)=>b[1].total-a[1].total).map(([name,d])=>`
+    <div class="between" style="padding:8px 0;border-bottom:1px solid var(--border)">
+      <span><strong>${name}</strong> <span class="tm">(${d.count} sales)</span></span>
+      <span class="mn">${fmtC(d.total)}</span>
+    </div>`).join("")||'<p class="tm">No sales data.</p>';
+  // By method
+  const methods={};
+  sales.forEach(t=>{const m=t.paymentMethod||"Unknown";if(!methods[m])methods[m]=0;methods[m]+=Number(t.amount||0);});
+  document.getElementById("rep-by-method").innerHTML=Object.entries(methods).sort((a,b)=>b[1]-a[1]).map(([m,v])=>`
+    <div class="between" style="padding:8px 0;border-bottom:1px solid var(--border)"><span>${m}</span><span class="mn">${fmtC(v)}</span></div>`).join("")||'<p class="tm">No sales data.</p>';
+}
+
+// ============================================================
+// OWNER: USERS
+// ============================================================
+async function loadUsers(){
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("users").get();
+  const users=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const rc={owner:"b-p",manager:"b-c",sales:"b-g"};
+  document.getElementById("usr-body").innerHTML=users.length?users.map(u=>`<tr>
+    <td><strong>${u.name}</strong></td>
+    <td><span class="badge ${rc[u.role]||"b-b"}">${u.role}</span></td>
+    <td>${u.role!=="owner"?`<button class="btn btn-d btn-sm" onclick="delUser('${u.id}','${u.name.replace(/'/g,"\\'")}')">Remove</button>`:'<span class="tm">Owner</span>'}</td>
+  </tr>`).join(""):'<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--t2)">No users.</td></tr>';
+}
+
+function openUserModal(){setAlert("usr-modal-alert","");["um-name","um-pwd","um-pwd2"].forEach(id=>document.getElementById(id).value="");openModal("user-modal")}
+
+async function saveUser(){
+  const name=document.getElementById("um-name").value.trim();
+  const role=document.getElementById("um-role").value;
+  const p1=document.getElementById("um-pwd").value;
+  const p2=document.getElementById("um-pwd2").value;
+  if(!name)return setAlert("usr-modal-alert","Name is required.");
+  if(p1.length<6)return setAlert("usr-modal-alert","Password must be at least 6 characters.");
+  if(p1!==p2)return setAlert("usr-modal-alert","Passwords do not match.");
+  const btn=document.getElementById("usr-save-btn");btn.innerHTML='<span class="sp"></span>';btn.disabled=true;
+  try{
+    const existing=await db.collection("businesses").doc(SESSION.businessId).collection("users").where("name","==",name).get();
+    if(!existing.empty){btn.innerHTML="Add User";btn.disabled=false;return setAlert("usr-modal-alert","A user with that name already exists.");}
+    await db.collection("businesses").doc(SESSION.businessId).collection("users").add({name,role,passwordHash:hashStr(p1),businessName:SESSION.businessName,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    closeModal("user-modal");toast("User added!");loadUsers();
+  }catch(e){setAlert("usr-modal-alert","Error: "+e.message);}
+  btn.innerHTML="Add User";btn.disabled=false;
+}
+
+async function delUser(id,name){
+  if(!confirm(`Remove "${name}" from this business? They will no longer be able to log in.`))return;
+  await db.collection("businesses").doc(SESSION.businessId).collection("users").doc(id).delete();
+  toast("User removed",false);loadUsers();
+}
+
+// ============================================================
+// OWNER: SETTINGS
+// ============================================================
+async function loadSettings(){
+  const doc=await db.collection("businesses").doc(SESSION.businessId).get();
+  const biz=doc.data()||{};
+  document.getElementById("set-bname").value=biz.businessName||"";
+  document.getElementById("set-btype").value=biz.businessType||"Retail";
+  document.getElementById("set-currency").value=biz.currency||"KES";
+  document.getElementById("set-contact").value=biz.contact||"";
+  document.getElementById("set-address").value=biz.address||"";
+  ["set-oldpwd","set-newpwd","set-newpwd2"].forEach(id=>document.getElementById(id).value="");
+}
+
+async function saveSettings(){
+  const btn=document.getElementById("set-save-btn");btn.innerHTML='<span class="sp"></span>';btn.disabled=true;
+  try{
+    const data={businessName:document.getElementById("set-bname").value.trim(),businessType:document.getElementById("set-btype").value,currency:document.getElementById("set-currency").value,contact:document.getElementById("set-contact").value.trim(),address:document.getElementById("set-address").value.trim()};
+    await db.collection("businesses").doc(SESSION.businessId).update(data);
+    CUR=data.currency;
+    SESSION.businessName=data.businessName;
+    saveSession(SESSION);
+    document.getElementById("sb-bizname").textContent=data.businessName;
+    toast("Settings saved!");setAlert("set-alert","Settings saved!",true);
+  }catch(e){setAlert("set-alert","Error: "+e.message);}
+  btn.innerHTML="Save Changes";btn.disabled=false;
+}
+
+async function changePassword(){
+  const old=document.getElementById("set-oldpwd").value;
+  const n1=document.getElementById("set-newpwd").value;
+  const n2=document.getElementById("set-newpwd2").value;
+  if(!old||!n1)return setAlert("set-alert","Fill in all password fields.");
+  if(n1.length<6)return setAlert("set-alert","New password must be at least 6 characters.");
+  if(n1!==n2)return setAlert("set-alert","New passwords do not match.");
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("users").where("name","==",SESSION.name).where("passwordHash","==",hashStr(old)).get();
+  if(snap.empty)return setAlert("set-alert","Current password is incorrect.");
+  await db.collection("businesses").doc(SESSION.businessId).collection("users").doc(snap.docs[0].id).update({passwordHash:hashStr(n1)});
+  toast("Password changed!");setAlert("set-alert","Password changed successfully.",true);
+  ["set-oldpwd","set-newpwd","set-newpwd2"].forEach(id=>document.getElementById(id).value="");
+}
+
+// ============================================================
+// OWNER: NOTIFICATIONS
+// ============================================================
+async function loadNotifBadge(){
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("notifications").where("read","==",false).get();
+  const badge=document.getElementById("notif-badge");
+  if(badge){badge.textContent=snap.size;badge.classList.toggle("hi",!snap.size);}
+}
+
+let notifOpen=false;
+function toggleNotifPanel(){
+  notifOpen=!notifOpen;
+  document.getElementById("notif-panel").classList.toggle("open",notifOpen);
+  if(notifOpen)loadNotifs();
+}
+
+async function loadNotifs(){
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("notifications").orderBy("createdAt","desc").limit(30).get();
+  const list=document.getElementById("notif-list");
+  if(snap.empty){list.innerHTML='<div style="padding:16px;text-align:center;color:var(--t2);font-size:13px">No notifications</div>';return;}
+  list.innerHTML=snap.docs.map(d=>{const n=d.data();return`
+    <div class="ni${n.read?"":" unread"}" onclick="markNotifRead('${d.id}',this)">
+      <div>${n.type==="lowstock"?"⚠️":"💰"} ${n.message}</div>
+      <div class="ni-t">${tAgo(n.createdAt)}</div>
+    </div>`;}).join("");
+}
+
+async function markNotifRead(id,el){
+  await db.collection("businesses").doc(SESSION.businessId).collection("notifications").doc(id).update({read:true});
+  el.classList.remove("unread");
+  loadNotifBadge();
+}
+
+async function markAllRead(){
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("notifications").where("read","==",false).get();
+  const batch=db.batch();
+  snap.docs.forEach(d=>batch.update(d.ref,{read:true}));
+  await batch.commit();
+  await loadNotifs();
+  loadNotifBadge();
+}
+
+document.addEventListener("click",e=>{
+  const np=document.getElementById("notif-panel");
+  const btn=document.querySelector(".nb-btn");
+  if(np&&np.classList.contains("open")&&!np.contains(e.target)&&(!btn||!btn.contains(e.target))){
+    np.classList.remove("open");notifOpen=false;
+  }
+});
+
+// ============================================================
+// OWNER: AI ACCOUNTANT
+// ============================================================
+let aiHistory=[];let aiBusy=false;
+
+function aiKey(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();aiSend();}}
+function aiChip(el){document.getElementById("ai-input").value=el.textContent;aiSend();}
+
+function aiAppend(text,role){
+  const msgs=document.getElementById("ai-msgs");
+  const div=document.createElement("div");
+  div.className="cmsg "+role;
+  if(role==="a")div.innerHTML=`<div class="albl">AI ACCOUNTANT</div>${aiFormat(text)}`;
+  else div.textContent=text;
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+  return div;
+}
+
+function aiFormat(t){
+  return t.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g,"<em>$1</em>")
+    .replace(/`([^`\n]+)`/g,"<code style='background:rgba(255,255,255,.12);padding:1px 6px;border-radius:3px;font-family:monospace'>$1</code>")
+    .replace(/\n/g,"<br>");
+}
+
+async function aiSend(){
+  if(aiBusy)return;
+  const input=document.getElementById("ai-input");
+  const text=input.value.trim();if(!text)return;
+  document.getElementById("ai-chips").style.display="none";
+  aiAppend(text,"u");
+  aiHistory.push({role:"user",parts:[{text}]});
+  input.value="";input.style.height="auto";
+  aiBusy=true;document.getElementById("ai-send").disabled=true;
+
+  const msgs=document.getElementById("ai-msgs");
+  const typing=document.createElement("div");
+  typing.className="cmsg a";typing.id="ai-typing";
+  typing.innerHTML=`<div class="albl">AI ACCOUNTANT</div><em style="color:var(--t2)">Analysing your data...</em>`;
+  msgs.appendChild(typing);msgs.scrollTop=msgs.scrollHeight;
+
+  try{
+    const [bizSnap,txSnap,stkSnap,invSnap]=await Promise.all([
+      db.collection("businesses").doc(SESSION.businessId).get(),
+      db.collection("businesses").doc(SESSION.businessId).collection("transactions").orderBy("date","desc").limit(60).get(),
+      db.collection("businesses").doc(SESSION.businessId).collection("stock").get(),
+      db.collection("businesses").doc(SESSION.businessId).collection("invoices").limit(20).get()
+    ]);
+    const biz=bizSnap.data()||{};const cur=biz.currency||"KES";
+    const txs=txSnap.docs.map(d=>d.data());
+    const stk=stkSnap.docs.map(d=>d.data());
+    const invs=invSnap.docs.map(d=>d.data());
+    const now=new Date();const tm=now.toISOString().slice(0,7);
+    const mTx=txs.filter(t=>(t.date||"").startsWith(tm));
+    const mInc=mTx.filter(t=>t.type==="sale"||t.type==="income").reduce((s,t)=>s+Number(t.amount||0),0);
+    const mExp=mTx.filter(t=>t.type==="expense"||t.type==="restock").reduce((s,t)=>s+Number(t.amount||0),0);
+    const aInc=txs.filter(t=>t.type==="sale"||t.type==="income").reduce((s,t)=>s+Number(t.amount||0),0);
+    const aExp=txs.filter(t=>t.type==="expense"||t.type==="restock").reduce((s,t)=>s+Number(t.amount||0),0);
+    const low=stk.filter(s=>s.quantity<=(s.reorderLevel||5));
+    const unpaid=invs.filter(i=>i.status==="unpaid");
+    const uTotal=unpaid.reduce((s,i)=>s+Number(i.total||0),0);
+    const recent=txs.slice(0,25).map(t=>`${t.date}|${t.type}|${t.itemName||t.category||""}|${cur} ${Number(t.amount||0).toLocaleString()}|${t.paymentMethod||""}|by ${t.recordedBy||"owner"}`).join("\n");
+    const sysPrompt=`You are ProBooks AI Accountant for ${biz.businessName||"this business"}.
+Business: ${biz.businessName} | Type: ${biz.businessType||"N/A"} | Currency: ${cur} | Date: ${now.toDateString()}
+THIS MONTH (${tm}): Income: ${cur} ${mInc.toLocaleString()} | Expenses: ${cur} ${mExp.toLocaleString()} | Profit: ${cur} ${(mInc-mExp).toLocaleString()}
+ALL TIME: Income: ${cur} ${aInc.toLocaleString()} | Expenses: ${cur} ${aExp.toLocaleString()} | Profit: ${cur} ${(aInc-aExp).toLocaleString()}
+STOCK (${stk.length} items): ${stk.map(s=>`${s.name}: ${s.quantity} ${s.unit||"pcs"} @ sell ${cur}${s.sellingPrice||0}`).join(", ")||"None"}
+LOW STOCK: ${low.map(s=>s.name).join(", ")||"None"}
+UNPAID INVOICES: ${unpaid.length} | Outstanding: ${cur} ${uTotal.toLocaleString()}
+RECENT 25 TRANSACTIONS:\n${recent||"None yet."}
+YOUR ROLE: Answer accounting/business questions using real data above. Detect fraud or anomalies. Calculate Kenya VAT (16%), PAYE, or any tax. Generate P&L, cash flow, or any report. Give insights and recommendations. Be professional, concise, and accurate. Never fabricate data.`;
+
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({system_instruction:{parts:[{text:sysPrompt}]},contents:aiHistory.slice(-12),generationConfig:{temperature:0.4,maxOutputTokens:1200}})
+    });
+    const data=await res.json();
+    const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||(data.error?"API Error: "+data.error.message:"No response. Check your Gemini API key.");
+    document.getElementById("ai-typing").remove();
+    aiAppend(reply,"a");
+    aiHistory.push({role:"model",parts:[{text:reply}]});
+  }catch(e){
+    document.getElementById("ai-typing")?.remove();
+    aiAppend("Connection error: "+e.message+"\n\nMake sure your Gemini API key is correctly set in the CONFIG section at the top of index.html.","a");
+  }
+  aiBusy=false;document.getElementById("ai-send").disabled=false;
+}
+
+// ============================================================
+// MANAGER VIEWS
+// ============================================================
+let mgrCurrentTab="sales";
+
+function mgrTab(tab,btn){
+  mgrCurrentTab=tab;
+  document.querySelectorAll("#view-manager-dashboard .tab").forEach(t=>t.classList.remove("on"));
+  btn.classList.add("on");
+  ["sales","stock","lowstock","invoices"].forEach(t=>document.getElementById("mgr-"+t).classList.toggle("hi",t!==tab));
+  if(tab==="stock")loadMgrStock();
+  else if(tab==="lowstock")loadMgrLowStock();
+  else if(tab==="invoices")loadMgrInvoices();
+  else loadMgrSales();
+}
+
+async function loadMgrSales(){
+  const period=(document.getElementById("mgr-period")||{}).value||"month";
+  const now=new Date();
+  let start="2000-01-01";
+  if(period==="month")start=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split("T")[0];
+  else if(period==="year")start=`${now.getFullYear()}-01-01`;
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("transactions").orderBy("date","desc").get();
+  const sales=snap.docs.map(d=>d.data()).filter(t=>t.type==="sale"&&(t.date||"")>=start);
+  const total=sales.reduce((s,t)=>s+Number(t.amount||0),0);
+  const mpesa=sales.filter(t=>t.paymentMethod==="M-Pesa").reduce((s,t)=>s+Number(t.amount||0),0);
+  const cash=sales.filter(t=>t.paymentMethod==="Cash").reduce((s,t)=>s+Number(t.amount||0),0);
+  document.getElementById("m-stotal").textContent=fmtC(total);
+  document.getElementById("m-scount").textContent=sales.length;
+  document.getElementById("m-mpesa").textContent=fmtC(mpesa);
+  document.getElementById("m-cash").textContent=fmtC(cash);
+  document.getElementById("mgr-sales-body").innerHTML=sales.length?sales.map(t=>`<tr>
+    <td>${fmtD(t.date)}</td><td>${t.itemName||"—"}</td><td>${t.quantity||"—"}</td>
+    <td class="mn">${fmtC(t.salePrice)}</td><td><span class="badge b-b">${t.paymentMethod||"—"}</span></td>
+    <td>${t.recordedBy||"owner"}</td><td class="tr mn"><strong>${fmtC(t.amount)}</strong></td>
+  </tr>`).join(""):'<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--t2)">No sales in this period.</td></tr>';
+}
+
+async function loadMgrStock(){
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("stock").orderBy("name").get();
+  const items=snap.docs.map(d=>d.data());
+  document.getElementById("mgr-stock-body").innerHTML=items.length?items.map(s=>{const l=s.quantity<=(s.reorderLevel||5);return`<tr>
+    <td><strong>${s.name}</strong></td><td>${s.category||"—"}</td><td class="mn">${s.quantity}</td>
+    <td>${s.unit||"pcs"}</td><td class="mn">${fmtC(s.sellingPrice)}</td>
+    <td><span class="badge ${l?"b-r":"b-g"}">${l?"⚠️ Low":"✓ OK"}</span></td>
+  </tr>`}).join(""):'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t2)">No stock.</td></tr>';
+}
+
+async function loadMgrLowStock(){
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("stock").get();
+  const low=snap.docs.map(d=>d.data()).filter(s=>s.quantity<=(s.reorderLevel||5));
+  document.getElementById("mgr-low-list").innerHTML=low.length?low.map(s=>`
+    <div class="between" style="padding:12px;background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.2);border-radius:8px;margin-bottom:8px">
+      <div><strong>${s.name}</strong><div class="tm">${s.category||""}</div></div>
+      <div class="tr"><span class="badge b-r">${s.quantity} left</span><div class="tm mt16">Reorder at ${s.reorderLevel||5}</div></div>
+    </div>`).join(""):'<div class="alert a-ok">✓ All items are well-stocked.</div>';
+}
+
+async function loadMgrInvoices(){
+  const snap=await db.collection("businesses").doc(SESSION.businessId).collection("invoices").get();
+  const invs=snap.docs.map(d=>d.data());
+  const paid=invs.filter(i=>i.status==="paid");
+  const unpaid=invs.filter(i=>i.status==="unpaid");
+  const out=unpaid.reduce((s,i)=>s+Number(i.total||0),0);
+  document.getElementById("mi-total").textContent=invs.length;
+  document.getElementById("mi-paid").textContent=paid.length;
+  document.getElementById("mi-unpaid").textContent=unpaid.length;
+  document.getElementById("mi-out").textContent=fmtC(out);
+  document.getElementById("mgr-inv-body").innerHTML=invs.length?invs.map(i=>`<tr>
+    <td>${fmtD(i.invoiceDate)}</td><td>${i.clientName||"—"}</td>
+    <td>${fmtD(i.dueDate)}</td>
+    <td><span class="badge ${i.status==="paid"?"b-g":"b-r"}">${i.status}</span></td>
+    <td class="tr mn"><strong>${fmtC(i.total)}</strong></td>
+  </tr>`).join(""):'<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--t2)">No invoices.</td></tr>';
+}
+
+// ============================================================
+// SALES PERSON VIEWS
+// ============================================================
+let salStock=[];
+
+function salTab(tab,btn){
+  document.querySelectorAll("#view-sales-dashboard .tab").forEach(t=>t.classList.remove("on"));
+  btn.classList.add("on");
+  ["dash","sale","restock","stock"].forEach(t=>document.getElementById("sal-"+t).classList.toggle("hi",t!==tab));
+  if(tab==="stock")renderSalStock();
+}
+
+async function loadSalesDash(){
+  const bizDoc=await db.collection("businesses").doc(SESSION.businessId).get();
+  CUR=(bizDoc.data()||{}).currency||"KES";
+  const sSnap=await db.collection("businesses").doc(SESSION.businessId).collection("stock").orderBy("name").get();
+  salStock=sSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const opts=salStock.map(s=>`<option value="${s.id}">${s.name} (${s.quantity} in stock)</option>`).join("");
+  document.getElementById("sal-item").innerHTML='<option value="">Select item...</option>'+opts;
+  document.getElementById("rs-item").innerHTML='<option value="">Select item...</option>'+opts;
+
+  const txSnap=await db.collection("businesses").doc(SESSION.businessId).collection("transactions").orderBy("date","desc").get();
+  const all=txSnap.docs.map(d=>d.data());
+  const td=today();const tm=thisMonth();
+  const todaySales=all.filter(t=>t.type==="sale"&&t.date===td&&t.recordedBy===SESSION.name);
+  const monthSales=all.filter(t=>t.type==="sale"&&(t.date||"").startsWith(tm)&&t.recordedBy===SESSION.name);
+  document.getElementById("sal-today").textContent=fmtC(todaySales.reduce((s,t)=>s+Number(t.amount||0),0));
+  document.getElementById("sal-month").textContent=fmtC(monthSales.reduce((s,t)=>s+Number(t.amount||0),0));
+  document.getElementById("sal-sitems").textContent=salStock.length;
+  document.getElementById("sal-slow").textContent=salStock.filter(s=>s.quantity<=(s.reorderLevel||5)).length;
+  const myAll=all.filter(t=>t.type==="sale"&&t.recordedBy===SESSION.name).slice(0,15);
+  document.getElementById("sal-recent-body").innerHTML=myAll.length?myAll.map(t=>`<tr>
+    <td>${fmtD(t.date)}</td><td>${t.itemName||"—"}</td><td>${t.quantity||"—"}</td>
+    <td class="mn">${fmtC(t.salePrice)}</td><td><span class="badge b-b">${t.paymentMethod||"—"}</span></td>
+    <td class="tr mn"><strong>${fmtC(t.amount)}</strong></td>
+  </tr>`).join(""):'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t2)">No sales yet. Record your first sale!</td></tr>';
+}
+
+function salFillPrice(){
+  const id=document.getElementById("sal-item").value;
+  const item=salStock.find(s=>s.id===id);
+  if(item){document.getElementById("sal-price").value=item.sellingPrice||"";salCalcTotal();}
+}
+
+function salCalcTotal(){
+  const q=Number(document.getElementById("sal-qty").value||0);
+  const p=Number(document.getElementById("sal-price").value||0);
+  document.getElementById("sal-total").textContent=fmtC(q*p);
+}
+
+function renderSalStock(){
+  const low=salStock.filter(s=>s.quantity<=(s.reorderLevel||5));
+  document.getElementById("sal-stk-lbl").textContent=`${salStock.length} items · ${low.length} low`;
+  document.getElementById("sal-stk-body").innerHTML=salStock.length?salStock.map(s=>{const l=s.quantity<=(s.reorderLevel||5);return`<tr>
+    <td><strong>${s.name}</strong></td><td>${s.category||"—"}</td>
+    <td class="mn">${s.quantity}</td><td>${s.unit||"pcs"}</td>
+    <td class="mn">${fmtC(s.sellingPrice)}</td>
+    <td><span class="badge ${l?"b-r":"b-g"}">${l?"⚠️ Low":"✓ OK"}</span></td>
+  </tr>`}).join(""):'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t2)">No stock items.</td></tr>';
+}
+
+async function submitSale(){
+  const itemId=document.getElementById("sal-item").value;
+  const qty=Number(document.getElementById("sal-qty").value);
+  const price=Number(document.getElementById("sal-price").value);
+  const method=document.getElementById("sal-method").value;
+  if(!itemId)return setAlert("sal-alert","Select an item.");
+  if(qty<1)return setAlert("sal-alert","Enter a valid quantity.");
+  if(!price||price<0)return setAlert("sal-alert","Enter a valid price.");
+  const item=salStock.find(s=>s.id===itemId);
+  if(!item)return setAlert("sal-alert","Item not found.");
+  if(item.quantity<qty)return setAlert("sal-alert",`Not enough stock. Only ${item.quantity} available.`);
+  const btn=document.getElementById("sal-submit-btn");btn.innerHTML='<span class="sp"></span>';btn.disabled=true;
+  try{
+    const batch=db.batch();
+    const sRef=db.collection("businesses").doc(SESSION.businessId).collection("stock").doc(itemId);
+    batch.update(sRef,{quantity:firebase.firestore.FieldValue.increment(-qty)});
+    const tRef=db.collection("businesses").doc(SESSION.businessId).collection("transactions").doc();
+    batch.set(tRef,{type:"sale",itemName:item.name,itemId,quantity:qty,salePrice:price,amount:qty*price,paymentMethod:method,date:today(),recordedBy:SESSION.name,recordedByRole:"sales",currency:CUR,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    const nRef=db.collection("businesses").doc(SESSION.businessId).collection("notifications").doc();
+    batch.set(nRef,{message:`${SESSION.name} recorded a ${CUR} ${(qty*price).toLocaleString()} sale — ${item.name} (x${qty}) via ${method}.`,type:"sale",read:false,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    await batch.commit();
+    const newQty=item.quantity-qty;
+    if(newQty<=(item.reorderLevel||5)){
+      await db.collection("businesses").doc(SESSION.businessId).collection("notifications").add({message:`Low stock: ${item.name} now has only ${newQty} units left.`,type:"lowstock",read:false,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    }
+    toast("✓ Sale recorded! Owner notified.");
+    setAlert("sal-alert","✓ Sale recorded successfully!",true);
+    document.getElementById("sal-qty").value=1;document.getElementById("sal-price").value="";document.getElementById("sal-total").textContent="—";
+    await loadSalesDash();
+    salTab("dash",document.getElementById("sal-t-dash"));
+  }catch(e){setAlert("sal-alert","Error: "+e.message);}
+  btn.innerHTML="✓ Record Sale";btn.disabled=false;
+}
+
+async function submitRestock(){
+  const itemId=document.getElementById("rs-item").value;
+  const qty=Number(document.getElementById("rs-qty").value);
+  const cost=Number(document.getElementById("rs-cost").value||0);
+  const method=document.getElementById("rs-method").value;
+  if(!itemId)return setAlert("sal-alert","Select an item.");
+  if(qty<1)return setAlert("sal-alert","Enter a valid quantity.");
+  const item=salStock.find(s=>s.id===itemId);
+  if(!item)return setAlert("sal-alert","Item not found.");
+  const btn=document.getElementById("rs-submit-btn");btn.innerHTML='<span class="sp"></span>';btn.disabled=true;
+  try{
+    const batch=db.batch();
+    batch.update(db.collection("businesses").doc(SESSION.businessId).collection("stock").doc(itemId),{quantity:firebase.firestore.FieldValue.increment(qty)});
+    const tRef=db.collection("businesses").doc(SESSION.businessId).collection("transactions").doc();
+    batch.set(tRef,{type:"restock",itemName:item.name,itemId,quantity:qty,amount:cost,paymentMethod:method,date:today(),recordedBy:SESSION.name,currency:CUR,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    await batch.commit();
+    toast("✓ Restock recorded!");
+    setAlert("sal-alert","✓ Restock recorded!",true);
+    document.getElementById("rs-qty").value=1;document.getElementById("rs-cost").value="";
+    await loadSalesDash();
+    salTab("dash",document.getElementById("sal-t-dash"));
+  }catch(e){setAlert("sal-alert","Error: "+e.message);}
+  btn.innerHTML="✓ Record Restock";btn.disabled=false;
+}
+
+// ============================================================
+// ADMIN PANEL (from login screen)
+// ============================================================
+async function showAdminPanel(){
+  const snap=await db.collection("businesses").get();
+  let html="";
+  for(const bizDoc of snap.docs){
+    const biz=bizDoc.data();
+    const uSnap=await db.collection("businesses").doc(bizDoc.id).collection("users").get();
+    const users=uSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const rc={owner:"b-p",manager:"b-c",sales:"b-g"};
+    html+=`<div class="card mb16">
+      <div class="between mb16"><div><strong>${biz.businessName}</strong> <span class="tm">${biz.businessType} · ${biz.currency}</span></div></div>
+      <div class="tw"><table><thead><tr><th>Name</th><th>Role</th><th>Action</th></tr></thead><tbody>
+        ${users.map(u=>`<tr><td>${u.name}</td><td><span class="badge ${rc[u.role]||"b-b"}">${u.role}</span></td>
+          <td>${u.role!=="owner"?`<button class="btn btn-d btn-sm" onclick="adminDelUser('${bizDoc.id}','${u.id}','${u.name.replace(/'/g,"\\'")}')">Remove</button>`:"<span class='tm'>Owner</span>"}</td></tr>`).join("")}
+      </tbody></table></div></div>`;
+  }
+  document.getElementById("admin-biz-list").innerHTML=html||'<p class="tm">No businesses yet.</p>';
+  openModal("admin-modal");
+}
+
+async function adminDelUser(bizId,userId,name){
+  if(!confirm(`Remove "${name}"?`))return;
+  await db.collection("businesses").doc(bizId).collection("users").doc(userId).delete();
+  toast("User removed",false);showAdminPanel();
+}
+
+function showAddBizFlow(){openModal("add-biz-modal")}
+
+async function saveNewBusiness(){
+  const name=document.getElementById("ab-name").value.trim();
+  const oname=document.getElementById("ab-oname").value.trim();
+  const p1=document.getElementById("ab-opwd").value;
+  const p2=document.getElementById("ab-opwd2").value;
+  if(!name||!oname||!p1)return setAlert("add-biz-alert","All fields required.");
+  if(p1!==p2)return setAlert("add-biz-alert","Passwords don't match.");
+  if(p1.length<6)return setAlert("add-biz-alert","Password min 6 characters.");
+  const btn=document.getElementById("ab-save-btn");btn.innerHTML='<span class="sp"></span>';btn.disabled=true;
+  try{
+    const bizRef=await db.collection("businesses").add({businessName:name,businessType:document.getElementById("ab-type").value,currency:document.getElementById("ab-cur").value,contact:document.getElementById("ab-contact").value.trim(),address:document.getElementById("ab-addr").value.trim(),createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    await db.collection("businesses").doc(bizRef.id).collection("users").add({name:oname,passwordHash:hashStr(p1),role:"owner",businessName:name,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    closeModal("add-biz-modal");toast("Business created!");
+    loadLoginBizList();
+  }catch(e){setAlert("add-biz-alert","Error: "+e.message);}
+  btn.innerHTML="Create Business";btn.disabled=false;
+}
+
+// Override modal open buttons to also set dates
+const origOpen=window.openModal;
+window.openModal=function(id){
+  if(id==="income-modal"){document.getElementById("im-date").value=today();document.getElementById("im-amount").value="";}
+  if(id==="expense-modal"){document.getElementById("em-date").value=today();document.getElementById("em-amount").value="";}
+  if(id==="invoice-modal"){document.getElementById("ivm-date").value=today();}
+  document.getElementById(id).classList.remove("hi");
+};
+
+// ============================================================
+// BOOT
+// ============================================================
+boot();
 </script>
 </body>
 </html>
-
-
