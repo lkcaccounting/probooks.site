@@ -19,44 +19,43 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp, writeBatch, limit, enableNetwork, disableNetwork } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 // ─── FIREBASE CONFIG ─────────────────────────────────────────────────────────
-// Replace all values below with your Firebase project config
-// Get it from: console.firebase.google.com → Your Project → Project Settings → Your Apps
-const firebaseConfig = {
-  apiKey: "AIzaSyCI-eO-54IZIfitmIBiybZsflPLFpMDgNk",
-  authDomain: "probooks-63cc9.firebaseapp.com",
-  projectId: "probooks-63cc9",
-  storageBucket: "probooks-63cc9.firebasestorage.app",
-  messagingSenderId: "189809229091",
-  appId: "1:189809229091:web:ae7fece6fbfac500a9e096"
-};
+// Keys are loaded from localStorage (set once via the setup screen).
+// They are NEVER hardcoded here so GitHub never detects them as secrets.
+function getFirebaseConfig(){
+  try{ return JSON.parse(localStorage.getItem('pb_fbconfig')||'null'); }catch{ return null; }
+}
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// Force network on — fixes "client is offline" error caused by Firestore
-// going into offline mode if the page loaded while briefly disconnected
-try { await enableNetwork(db); } catch(e) { console.warn('enableNetwork failed', e); }
-
-window._db = db;
-window._col = collection;
-window._doc = doc;
-window._setDoc = setDoc;
-window._getDoc = getDoc;
-window._getDocs = getDocs;
-window._addDoc = addDoc;
-window._updateDoc = updateDoc;
-window._deleteDoc = deleteDoc;
-window._onSnapshot = onSnapshot;
-window._query = query;
-window._where = where;
-window._orderBy = orderBy;
-window._serverTimestamp = serverTimestamp;
-window._writeBatch = writeBatch;
-window._limit = limit;
-window._enableNetwork = enableNetwork;
-window._disableNetwork = disableNetwork;
-window._firebaseReady = true;
-document.dispatchEvent(new Event('firebase-ready'));
+const firebaseConfig = getFirebaseConfig();
+if(firebaseConfig && firebaseConfig.projectId && firebaseConfig.projectId !== 'REPLACE'){
+  try{
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    try { await enableNetwork(db); } catch(e) { console.warn('enableNetwork:', e); }
+    window._db = db;
+    window._col = collection;
+    window._doc = doc;
+    window._setDoc = setDoc;
+    window._getDoc = getDoc;
+    window._getDocs = getDocs;
+    window._addDoc = addDoc;
+    window._updateDoc = updateDoc;
+    window._deleteDoc = deleteDoc;
+    window._onSnapshot = onSnapshot;
+    window._query = query;
+    window._where = where;
+    window._orderBy = orderBy;
+    window._serverTimestamp = serverTimestamp;
+    window._writeBatch = writeBatch;
+    window._limit = limit;
+    window._enableNetwork = enableNetwork;
+    window._disableNetwork = disableNetwork;
+    window._firebaseReady = true;
+    document.dispatchEvent(new Event('firebase-ready'));
+  }catch(e){ console.error('Firebase init failed:',e); }
+} else {
+  // No config yet — app will prompt owner to enter it on first setup
+  window._firebaseReady = false;
+}
 </script>
 
 <style>
@@ -417,7 +416,31 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
   </div>
 </div>
 
-<!-- ═══════════════════ OWNER SETUP ═══════════════════ -->
+<!-- ═══════════════════ FIREBASE CONFIG SETUP ═══════════════════ -->
+<div class="screen hidden" id="screen-fbconfig">
+  <div class="glass setup-card" style="max-width:500px;max-height:92vh;overflow-y:auto;padding:30px;">
+    <div style="text-align:center;margin-bottom:22px;">
+      <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,160,0,.1);border:2px solid rgba(255,160,0,.4);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffb300" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <h2 style="font-size:19px;font-weight:700;">Connect to Firebase</h2>
+      <p style="font-size:12.5px;color:var(--text2);margin-top:4px;line-height:1.6;">Enter your Firebase project keys. These are stored only on this device — never in the code file — so GitHub will never flag them again.</p>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:12px 14px;margin-bottom:18px;font-size:12px;color:var(--text2);line-height:1.7;">
+      <strong style="color:var(--text1);">Where to find your keys:</strong><br>
+      Firebase Console → Your Project → ⚙️ Project Settings → scroll to <em>Your apps</em> → copy the <code style="background:var(--bg4);padding:1px 5px;border-radius:4px;color:var(--green2);">firebaseConfig</code> values
+    </div>
+    <div class="fg"><label>API Key</label><input type="text" id="fb-apikey" placeholder="AIzaSy..."></div>
+    <div class="fg"><label>Auth Domain</label><input type="text" id="fb-authdomain" placeholder="your-project.firebaseapp.com"></div>
+    <div class="fg"><label>Project ID</label><input type="text" id="fb-projectid" placeholder="your-project-id"></div>
+    <div class="fg"><label>Storage Bucket</label><input type="text" id="fb-bucket" placeholder="your-project.appspot.com"></div>
+    <div class="fg"><label>Messaging Sender ID</label><input type="text" id="fb-senderid" placeholder="123456789012"></div>
+    <div class="fg"><label>App ID</label><input type="text" id="fb-appid" placeholder="1:123456789:web:abc123..."></div>
+    <p id="fb-err" style="color:var(--red);font-size:12.5px;min-height:18px;margin-bottom:10px;"></p>
+    <button class="btn btn-green btn-full" onclick="saveFBConfig()">Save & Connect</button>
+    <button class="btn btn-outline btn-full" style="margin-top:8px;" onclick="showScreen('screen-welcome')">Back</button>
+  </div>
+</div>
 <div class="screen hidden" id="screen-owner-setup">
   <div class="glass setup-card" style="max-width:500px;max-height:92vh;overflow-y:auto;padding:28px;">
     <h2>Set Up Your Workspace</h2>
