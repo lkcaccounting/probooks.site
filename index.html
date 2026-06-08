@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LKC Accounting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f1ec;--bg2:#ebe7de;--card:#fff;--border:#ddd8cc;
+  --text:#1c1a16;--text2:#5c584f;--text3:#9a9690;
+  --green:#1b4332;--green2:#2d6a4f;--green-pale:#e8f0eb;
+  --gold:#b5650a;--gold-pale:#fdf3e1;
+  --red:#b91c1c;--red-pale:#fef2f2;
+  --blue:#1d4ed8;--blue-pale:#eff6ff;
+  --sw:242px;--th:56px;--r:10px;--r2:16px;
+  --sh:0 2px 12px rgba(0,0,0,.07);--sh2:0 8px 32px rgba(0,0,0,.14);
+  --fd:'Playfair Display',Georgia,serif;--fb:'Plus Jakarta Sans',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--fb);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+a{color:var(--gold)}a:hover{text-decoration:underline}
+
+/* SPLASH */
+.splash{position:fixed;inset:0;background:linear-gradient(135deg,#1b4332,#2d6a4f 55%,#b5650a);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;gap:16px}
+.splash-ico{font-size:54px;font-family:var(--fd)}.splash h1{font-family:var(--fd);font-size:28px}
+.splash p{opacity:.75;font-size:14px}
+.spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* CONNECT SCREEN */
+.conn-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1b4332,#2d6a4f 55%,#b5650a);padding:20px}
+.conn-card{background:var(--card);border-radius:20px;padding:36px;width:100%;max-width:520px;box-shadow:var(--sh2)}
+.conn-card h2{font-family:var(--fd);font-size:22px;color:var(--green);margin-bottom:6px}
+.conn-sub{color:var(--text2);font-size:13px;margin-bottom:20px;line-height:1.6}
+.steps-ol{counter-reset:s;list-style:none;margin-bottom:20px}
+.steps-ol li{counter-increment:s;padding:8px 0 8px 34px;position:relative;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border)}
+.steps-ol li:last-child{border-bottom:none}
+.steps-ol li::before{content:counter(s);position:absolute;left:0;top:8px;width:22px;height:22px;background:var(--green);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.steps-ol li code{background:var(--bg2);padding:1px 5px;border-radius:4px;font-size:11px}
+.steps-ol li a{color:var(--gold)}
+
+/* AUTH */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1b4332,#2d6a4f 55%,#b5650a);padding:20px}
+.auth-card{background:var(--card);border-radius:20px;padding:38px 34px;width:100%;max-width:400px;box-shadow:var(--sh2)}
+.brand-row{text-align:center;margin-bottom:26px}
+.brand-ico{width:54px;height:54px;background:var(--green);color:#fff;font-size:24px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;font-family:var(--fd)}
+.brand-row h1{font-family:var(--fd);font-size:23px;color:var(--green)}
+.brand-row p{color:var(--text2);font-size:13px;margin-top:3px}
+.step-ttl{font-family:var(--fd);font-size:16px;color:var(--green);margin-bottom:4px}
+.step-desc{color:var(--text2);font-size:13px;margin-bottom:14px}
+.vstep{animation:fadeIn .3s ease}.vstep.hidden{display:none!important}
+
+/* FORMS */
+.fg{margin-bottom:13px}
+label{display:block;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.lh{font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)}
+input,select,textarea{width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:var(--r);font-family:var(--fb);font-size:14px;color:var(--text);background:var(--card);outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-pale)}
+textarea{resize:vertical;min-height:70px}select{cursor:pointer}
+small{color:var(--text3);font-size:11px;display:block;margin-top:3px}small a{color:var(--gold)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 17px;border-radius:var(--r);font-family:var(--fb);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .18s}
+.btn-p{background:var(--green);color:#fff}.btn-p:hover{background:var(--green2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(27,67,50,.28)}
+.btn-g{background:transparent;color:var(--green);border:1.5px solid var(--green)}.btn-g:hover{background:var(--green-pale)}
+.btn-o{background:transparent;color:var(--text2);border:1.5px solid var(--border)}.btn-o:hover{background:var(--bg2)}
+.btn-d{background:var(--red);color:#fff}.btn-d:hover{background:#991b1b}
+.btn-sm{padding:5px 11px;font-size:12px}.btn-full{width:100%;justify-content:center;padding:11px}
+
+/* ALERTS */
+.alert{padding:10px 13px;border-radius:var(--r);font-size:13px;margin-bottom:14px}
+.a-err{background:var(--red-pale);color:var(--red);border:1px solid #fecaca}
+.a-ok{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+.a-info{background:var(--blue-pale);color:var(--blue);border:1px solid #bfdbfe}
+.a-warn{background:var(--gold-pale);color:var(--gold);border:1px solid #fed7aa}
+
+/* APP SHELL */
+.app-shell{display:flex;min-height:100vh}
+.sidebar{width:var(--sw);background:var(--green);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .28s cubic-bezier(.4,0,.2,1);overflow-y:auto}
+.sb-brand{padding:16px 14px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.12)}
+.sb-ico{width:32px;height:32px;background:rgba(255,255,255,.15);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:16px}
+.sb-brand span{font-family:var(--fd);font-size:18px}
+.sb-biz{font-size:10px;color:rgba(255,255,255,.5);padding:5px 14px 8px;text-transform:uppercase;letter-spacing:.07em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-nav{flex:1;padding:7px 7px}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.72);font-size:13px;font-weight:500;transition:all .18s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left}
+.ni:hover{background:rgba(255,255,255,.1);color:#fff}.ni.active{background:rgba(255,255,255,.18);color:#fff}
+.ni .ic{font-size:15px;width:18px;text-align:center}
+.sb-foot{padding:10px 9px;border-top:1px solid rgba(255,255,255,.12)}
+.user-pill{background:rgba(255,255,255,.12);border-radius:8px;padding:7px 10px;font-size:12px;margin-bottom:6px}
+.user-pill strong{display:block;color:#fff}.user-pill span{color:rgba(255,255,255,.55);font-size:10px;text-transform:capitalize}
+.btn-logout{background:rgba(255,255,255,.1);color:rgba(255,255,255,.72);border:none;border-radius:8px;padding:7px 12px;width:100%;cursor:pointer;font-size:13px;font-family:var(--fb);transition:all .18s}
+.btn-logout:hover{background:rgba(255,255,255,.18);color:#fff}
+
+/* TOPBAR */
+.topbar{position:fixed;top:0;left:var(--sw);right:0;height:var(--th);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;z-index:50;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.menu-tog{display:none;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);padding:4px}
+.tb-title{font-family:var(--fd);font-size:18px;color:var(--green);flex:1}
+.tb-right{display:flex;align-items:center;gap:12px}
+.tb-user{font-size:13px;color:var(--text2);font-weight:500}
+.sync-ind{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#15803d}
+.sync-dot.syncing{background:var(--gold);animation:pulse 1s infinite}
+.sync-dot.err{background:var(--red)}
+.notif-bell{cursor:pointer;font-size:17px;user-select:none;padding:4px;position:relative}
+.notif-bdg{background:var(--red);color:#fff;font-size:10px;padding:1px 5px;border-radius:99px;vertical-align:super}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* CONTENT */
+.main-content{margin-left:var(--sw);margin-top:var(--th);padding:24px;flex:1;animation:fadeIn .25s ease}
+.pg-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap}
+.pg-hd h2{font-family:var(--fd);font-size:21px;color:var(--green)}
+.pg-hd p{color:var(--text2);font-size:13px;margin-top:2px}
+.pg-act{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+
+/* CARDS */
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:17px;box-shadow:var(--sh)}
+.card-ttl{font-family:var(--fd);font-size:15px;color:var(--green);margin-bottom:13px;padding-bottom:9px;border-bottom:1px solid var(--border)}
+.mt{margin-top:14px}.mb{margin-bottom:14px}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px;margin-bottom:20px}
+.sc{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:15px 16px;position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--green)}
+.sc.acc::before{background:var(--gold)}.sc.red::before{background:var(--red)}.sc.ok::before{background:#15803d}.sc.bl::before{background:var(--blue)}
+.sc-ico{font-size:19px;margin-bottom:5px}.sc-val{font-family:var(--fd);font-size:21px;margin-bottom:1px}.sc-lbl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+
+/* TABLE */
+.tw{overflow-x:auto;border-radius:var(--r)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--bg2)}
+th{padding:8px 12px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}tbody tr:hover{background:var(--bg)}
+
+/* BADGES */
+.bdg{display:inline-flex;align-items:center;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.bdg-ok{background:#f0fdf4;color:#15803d}.bdg-red{background:var(--red-pale);color:var(--red)}
+.bdg-warn{background:var(--gold-pale);color:var(--gold)}.bdg-info{background:var(--blue-pale);color:var(--blue)}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;animation:fadeIn .2s ease}
+.modal-box{background:var(--card);border-radius:var(--r2);width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh2);animation:slideUp .25s ease}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--border)}
+.modal-hd h3{font-family:var(--fd);font-size:17px;color:var(--green)}
+.modal-x{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:4px}
+.modal-x:hover{background:var(--bg2)}
+.modal-body{padding:20px}.modal-ft{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.toast{background:var(--text);color:#fff;padding:10px 15px;border-radius:9px;font-size:13px;box-shadow:var(--sh2);animation:slideUp .25s ease;max-width:290px}
+.toast.ok{background:#15803d}.toast.err{background:var(--red)}.toast.info{background:var(--blue)}.toast.warn{background:var(--gold)}
+
+/* FILTER */
+.filter-bar{display:flex;gap:8px;margin-bottom:13px;flex-wrap:wrap;align-items:center}
+.si{flex:1;min-width:170px;max-width:270px;padding:7px 12px;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;font-family:var(--fb);outline:none}
+.si:focus{border-color:var(--green)}
+
+/* AI */
+.ai-wrap{display:flex;flex-direction:column;height:calc(100vh - var(--th) - 110px);max-height:620px}
+.ai-msgs{flex:1;overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:9px;background:var(--bg);border-radius:var(--r) var(--r) 0 0;border:1px solid var(--border);border-bottom:none}
+.ai-msg{max-width:82%;padding:9px 13px;border-radius:11px;font-size:13px;line-height:1.55}
+.ai-msg.user{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+.ai-msg.bot{background:var(--card);color:var(--text);align-self:flex-start;border-bottom-left-radius:3px;border:1px solid var(--border)}
+.ai-msg.typing{color:var(--text3);font-style:italic}
+.ai-in-row{display:flex;gap:8px;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:0 0 var(--r) var(--r)}
+.ai-in-row input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:var(--fb);font-size:13px}
+.ai-in-row input:focus{border-color:var(--green);outline:none}
+
+/* RECENT */
+.rl .ri{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);gap:9px;font-size:13px}
+.rl .ri:last-child{border-bottom:none}
+.rdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:var(--green)}
+.rdot.sale{background:#15803d}.rdot.low{background:var(--red)}
+.ri-meta{flex:1}.ri-meta strong{display:block}.ri-meta span{color:var(--text3);font-size:11px}
+.ri-amt{font-weight:600;color:var(--green);white-space:nowrap}
+
+/* GRID / UTIL */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px}
+.hidden{display:none!important}.fb{display:flex;justify-content:space-between;align-items:center}
+.muted{color:var(--text2)}.sm{font-size:12px}.bold{font-weight:600}
+.empty{text-align:center;padding:38px 18px;color:var(--text3)}
+.empty .ei{font-size:34px;margin-bottom:9px}
+.divider{height:1px;background:var(--border);margin:13px 0}
+.r-owner{color:var(--gold);font-weight:600}.r-manager{color:var(--blue);font-weight:600}.r-sales{color:#15803d;font-weight:600}
+.mono{font-family:monospace;font-size:12px}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}
+  .topbar{left:0}.main-content{margin-left:0;padding:13px}.menu-tog{display:block}
+  .g2,.g3{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){.stats-grid{grid-template-columns:1fr}}
+@media print{.sidebar,.topbar,.pg-act,.btn,.filter-bar{display:none!important}.main-content{margin:0;padding:0}body{background:#fff}}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash" class="splash">
+  <div class="splash-ico">₦</div>
+  <h1>LKC Accounting</h1>
+  <div class="spin"></div>
+  <p id="splashMsg">Starting up...</p>
+</div>
+
+<!-- CONNECT SCREEN -->
+<div id="connScreen" class="conn-wrap hidden">
+  <div class="conn-card">
+    <div style="text-align:center;margin-bottom:18px">
+      <div class="brand-ico" style="display:inline-flex">₦</div>
+      <h2 style="margin-top:10px">Connect to Google Sheets</h2>
+      <p class="conn-sub">Your free database. Follow these steps once — takes about 5 minutes.</p>
+    </div>
+    <ol class="steps-ol">
+      <li>Go to <a href="https://sheets.google.com" target="_blank">sheets.google.com</a> and create a <strong>new blank spreadsheet</strong>. Name it <code>LKC Accounting DB</code>.</li>
+      <li>In that spreadsheet, click <strong>Extensions → Apps Script</strong>.</li>
+      <li>Delete everything in the editor. Paste the <strong>Code.gs</strong> script you downloaded. Click <strong>Save 💾</strong>.</li>
+      <li>Click <strong>Deploy → New deployment</strong> → Type: <strong>Web app</strong> → Execute as: <strong>Me</strong> → Who has access: <strong>Anyone</strong> → Click <strong>Deploy</strong>.</li>
+      <li>Google will ask you to authorize — click <strong>Authorize access</strong> → choose your Google account → <strong>Allow</strong>.</li>
+      <li>Copy the <strong>Web app URL</strong> it gives you and paste it below.</li>
+    </ol>
+    <div id="connErr" class="alert a-err hidden"></div>
+    <div class="fg">
+      <label>Web App URL</label>
+      <input type="text" id="connUrl" placeholder="https://script.google.com/macros/s/AKfy.../exec"/>
+      <small>Starts with <code>https://script.google.com/macros/s/</code></small>
+    </div>
+    <button class="btn btn-p btn-full" onclick="CONN.save()">Connect →</button>
+  </div>
+</div>
+
+<!-- SETUP SCREEN -->
+<div id="setupScreen" class="auth-wrap hidden">
+  <div class="auth-card">
+    <div class="brand-row">
+      <div class="brand-ico">⚙</div>
+      <h1>First Time Setup</h1>
+      <p>Configure your business — runs once</p>
+    </div>
+    <div id="setupErr" class="alert a-err hidden"></div>
+    <div id="setupOk" class="alert a-ok hidden"></div>
+
+    <div id="sv1" class="vstep">
+      <div class="step-ttl">Step 1 of 3 — Admin Password</div>
+      <div class="step-desc">This password is required to link new devices. Keep it — only you need it.</div>
+      <div class="fg"><label>Admin Password</label><input type="password" id="sAP" placeholder="Min 4 characters"/></div>
+      <div class="fg"><label>Confirm</label><input type="password" id="sAPC" placeholder="Repeat password"/></div>
+      <button class="btn btn-p btn-full" onclick="Setup.s1()">Continue →</button>
+    </div>
+
+    <div id="sv2" class="vstep hidden">
+      <div class="step-ttl">Step 2 of 3 — Business Info</div>
+      <div class="fg"><label>Business Name *</label><input type="text" id="sBN" placeholder="e.g. Kamau General Store"/></div>
+      <div class="fg"><label>Address</label><input type="text" id="sBA" placeholder="e.g. Tom Mboya St, Nairobi"/></div>
+      <div class="fg"><label>Phone</label><input type="text" id="sBP" placeholder="e.g. 0712 345 678"/></div>
+      <div class="fg"><label>Currency</label><input type="text" id="sBC" value="KSh"/></div>
+      <div class="fg"><label>KRA PIN <span class="lh">(optional)</span></label><input type="text" id="sBK" placeholder="P051234567X"/></div>
+      <div class="fg">
+        <label>Hugging Face API Key <span class="lh">(free AI)</span></label>
+        <input type="text" id="sHF" placeholder="hf_xxxxxxxxxxxxxxxx"/>
+        <small>Free at <a href="https://huggingface.co/settings/tokens" target="_blank">huggingface.co</a> → New Token → Read</small>
+      </div>
+      <button class="btn btn-p btn-full" onclick="Setup.s2()">Continue →</button>
+    </div>
+
+    <div id="sv3" class="vstep hidden">
+      <div class="step-ttl">Step 3 of 3 — Owner Account</div>
+      <div class="step-desc">Full access including AI Accountant, reports and team management.</div>
+      <div class="fg"><label>Owner Full Name *</label><input type="text" id="sON" placeholder="e.g. John Kamau"/></div>
+      <div class="fg"><label>Owner Password *</label><input type="password" id="sOP" placeholder="Min 4 characters"/></div>
+      <button class="btn btn-p btn-full" onclick="Setup.s3()">Finish Setup →</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="auth-wrap hidden">
+  <div class="auth-card">
+    <div class="brand-row">
+      <div class="brand-ico">₦</div>
+      <h1>LKC Accounting</h1>
+      <p id="lgBizName">Business Management</p>
+    </div>
+    <div id="loginErr" class="alert a-err hidden"></div>
+    <div class="fg"><label>Full Name</label><input type="text" id="lgName" placeholder="Your name" autocomplete="off"/></div>
+    <div class="fg"><label>Password</label><input type="password" id="lgPass" placeholder="Your password"/></div>
+    <button class="btn btn-p btn-full" onclick="App.login()">Sign In</button>
+
+    <div id="newDevSec" class="hidden" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px;text-align:center">🔐 <strong>New device?</strong> Enter Admin password to link this device.</p>
+      <div class="fg"><label>Admin Password</label><input type="password" id="devAP" placeholder="Admin password"/></div>
+      <div id="devErr" class="alert a-err hidden"></div>
+      <button class="btn btn-g btn-full" onclick="App.authorizeDevice()">Link This Device</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="appShell" class="app-shell hidden">
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand"><div class="sb-ico">₦</div><span>LKC</span></div>
+    <div class="sb-biz" id="sbBiz"></div>
+    <nav class="sb-nav" id="sbNav"></nav>
+    <div class="sb-foot">
+      <div class="user-pill" id="userPill"></div>
+      <button class="btn-logout" onclick="App.logout()">Sign Out</button>
+    </div>
+  </aside>
+
+  <div class="topbar">
+    <button class="menu-tog" onclick="App.togSb()">☰</button>
+    <div class="tb-title" id="tbTitle">Dashboard</div>
+    <div class="tb-right">
+      <div class="sync-ind"><div class="sync-dot" id="syncDot"></div><span id="syncTxt">Ready</span></div>
+      <div id="nBell" class="notif-bell hidden" onclick="P.notifications()">🔔<span class="notif-bdg" id="nBdg">0</span></div>
+      <span class="tb-user" id="tbUser"></span>
+    </div>
+  </div>
+
+  <main class="main-content" id="mc"></main>
+</div>
+
+<!-- MODAL -->
+<div id="mOv" class="modal-ov hidden" onclick="M.ov(event)">
+  <div class="modal-box">
+    <div class="modal-hd"><h3 id="mTitle"></h3><button class="modal-x" onclick="M.close()">✕</button></div>
+    <div class="modal-body" id="mBody"></div>
+    <div class="modal-ft" id="mFt"></div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div id="toasts" class="toast-wrap"></div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════
+//  API — calls Google Apps Script web app
+// ══════════════════════════════════════════════════════
+const API = {
+  _url: null,
+  URL_KEY: 'lkc_gsurl',
+
+  getUrl() {
+    if (this._url) return this._url;
+    this._url = localStorage.getItem(this.URL_KEY);
+    return this._url;
+  },
+
+  setUrl(url) {
+    this._url = url;
+    localStorage.setItem(this.URL_KEY, url);
+  },
+
+  clearUrl() {
+    this._url = null;
+    localStorage.removeItem(this.URL_KEY);
+  },
+
+  async call(action, params = {}) {
+    const url = this.getUrl();
+    if (!url) throw new Error('No backend URL configured.');
+
+    setSyncing(true);
+    try {
+      // Apps Script requires GET with data param OR POST
+      // We use fetch with no-cors isn't ideal — use URL params approach
+      const body = JSON.stringify({ action, ...params });
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' }, // text/plain avoids CORS preflight
+        body,
+        redirect: 'follow'
+      });
+      const text = await res.text();
+      const data = JSON.parse(text);
+      setSyncing(false);
+      if (!data.ok) throw new Error(data.error || 'Server error');
+      return data;
+    } catch (e) {
+      setSyncing(false);
+      setSyncErr(true);
+      throw e;
+    }
+  }
+};
+
+// ══════════════════════════════════════════════════════
+//  CONN — Connect screen handler
+// ══════════════════════════════════════════════════════
+const CONN = {
+  async save() {
+    const url = document.getElementById('connUrl').value.trim();
+    const err = document.getElementById('connErr');
+    if (!url || !url.includes('script.google.com')) {
+      err.textContent = 'Please paste a valid Google Apps Script web app URL.';
+      err.classList.remove('hidden'); return;
+    }
+    err.classList.add('hidden');
+    const btn = document.querySelector('#connScreen .btn-p');
+    btn.textContent = 'Testing connection...'; btn.disabled = true;
+    try {
+      API.setUrl(url);
+      const res = await API.call('ping');
+      if (res.msg) {
+        btn.textContent = '✓ Connected! Loading...';
+        setTimeout(() => App.boot(), 800);
+      }
+    } catch (e) {
+      API.clearUrl();
+      err.textContent = 'Could not connect: ' + e.message + '. Check the URL and make sure you deployed as "Anyone" access.';
+      err.classList.remove('hidden');
+      btn.textContent = 'Connect →'; btn.disabled = false;
+    }
+  }
+};
+
+// ══════════════════════════════════════════════════════
+//  AUTH helpers
+// ══════════════════════════════════════════════════════
+const Auth = {
+  hash(s) {
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) { h = ((h << 5) + h) ^ s.charCodeAt(i); h = h >>> 0; }
+    return h.toString(36);
+  },
+  deviceToken() {
+    let t = localStorage.getItem('lkc_dt');
+    if (!t) { t = 'D-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,6); localStorage.setItem('lkc_dt', t); }
+    return t;
+  },
+  isDeviceAuthorized() { return !!localStorage.getItem('lkc_da'); },
+  markAuthorized() { localStorage.setItem('lkc_da', '1'); }
+};
+
+// ══════════════════════════════════════════════════════
+//  SETUP
+// ══════════════════════════════════════════════════════
+const Setup = {
+  _ap: '', _biz: {}, _hf: '',
+
+  async s1() {
+    const p = document.getElementById('sAP').value.trim(), c = document.getElementById('sAPC').value.trim();
+    if (p.length < 4) return Setup.err('Password must be at least 4 characters.');
+    if (p !== c) return Setup.err('Passwords do not match.');
+    try {
+      const cfg = await API.call('getAppConfig');
+      if (cfg.setupDone) return Setup.err('This business is already set up. Go back to login.');
+    } catch(e) { return Setup.err('Cannot reach backend: ' + e.message); }
+    Setup._ap = p;
+    Setup.go(1, 2);
+  },
+
+  s2() {
+    const name = document.getElementById('sBN').value.trim();
+    if (!name) return Setup.err('Business name is required.');
+    Setup._biz = { name, address: document.getElementById('sBA').value.trim(), phone: document.getElementById('sBP').value.trim(), currency: document.getElementById('sBC').value.trim() || 'KSh', kra: document.getElementById('sBK').value.trim() };
+    Setup._hf = document.getElementById('sHF').value.trim();
+    Setup.go(2, 3);
+  },
+
+  async s3() {
+    const name = document.getElementById('sON').value.trim(), pass = document.getElementById('sOP').value.trim();
+    if (!name) return Setup.err('Owner name is required.');
+    if (pass.length < 4) return Setup.err('Password must be at least 4 characters.');
+    const btn = document.querySelector('#sv3 .btn-p'); btn.disabled = true; btn.textContent = 'Setting up...';
+    try {
+      await API.call('setup', {
+        adminHash: Auth.hash(Setup._ap), business: Setup._biz, hfKey: Setup._hf,
+        ownerName: name, ownerHash: Auth.hash(pass)
+      });
+      Auth.markAuthorized();
+      // Cache config so reload doesn't re-run setup
+      const cfgToCache = { setupDone: true, adminHash: Auth.hash(Setup._ap), business: Setup._biz, hfKey: Setup._hf };
+      localStorage.setItem('lkc_cfg_cache', JSON.stringify(cfgToCache));
+      document.getElementById('sv3').classList.add('hidden');
+      document.getElementById('setupOk').textContent = '✓ Setup complete! Loading app...';
+      document.getElementById('setupOk').classList.remove('hidden');
+      // Don't reload — just boot directly
+      setTimeout(() => App.boot(), 1400);
+    } catch(e) {
+      Setup.err('Error: ' + e.message);
+      btn.disabled = false; btn.textContent = 'Finish Setup →';
+    }
+  },
+
+  go(f, t) {
+    document.getElementById('sv'+f).classList.add('hidden');
+    document.getElementById('sv'+t).classList.remove('hidden');
+    document.getElementById('setupErr').classList.add('hidden');
+  },
+  err(m) { const e = document.getElementById('setupErr'); e.textContent = m; e.classList.remove('hidden'); }
+};
+
+// ══════════════════════════════════════════════════════
+//  MODAL & TOAST
+// ══════════════════════════════════════════════════════
+const M = {
+  open(title, body, btns = []) {
+    document.getElementById('mTitle').textContent = title;
+    document.getElementById('mBody').innerHTML = body;
+    document.getElementById('mFt').innerHTML = btns.map(b => `<button class="btn ${b.cls||'btn-o'}" onclick="${b.fn}">${b.lbl}</button>`).join('');
+    document.getElementById('mOv').classList.remove('hidden');
+    setTimeout(() => { const i = document.querySelector('#mBody input,#mBody select'); if (i) i.focus(); }, 80);
+  },
+  close() { document.getElementById('mOv').classList.add('hidden'); },
+  ov(e) { if (e.target === document.getElementById('mOv')) this.close(); }
+};
+
+const T = {
+  show(msg, type='', ms=3200) {
+    const c = document.getElementById('toasts'), d = document.createElement('div');
+    d.className = `toast ${type}`; d.textContent = msg; c.appendChild(d);
+    setTimeout(() => d.remove(), ms);
+  },
+  ok(m){this.show(m,'ok')}, err(m){this.show(m,'err')},
+  info(m){this.show(m,'info')}, warn(m){this.show(m,'warn')}
+};
+
+// ══════════════════════════════════════════════════════
+//  POLLING — checks for new notifications every 15s
+// ══════════════════════════════════════════════════════
+const Poller = {
+  _timer: null,
+  _lastCount: 0,
+
+  start() {
+    this.poll();
+    this._timer = setInterval(() => this.poll(), 15000);
+  },
+
+  stop() {
+    if (this._timer) { clearInterval(this._timer); this._timer = null; }
+  },
+
+  async poll() {
+    if (!App.cu || App.cu.role !== 'owner') return;
+    try {
+      const res = await API.call('getNotifications');
+      const unread = (res.data || []).filter(n => {
+        const readers = n.readBy ? String(n.readBy).split(',') : [];
+        return !readers.includes(App.cu.id);
+      }).length;
+      document.getElementById('nBdg').textContent = unread;
+      document.getElementById('nBell').style.opacity = unread > 0 ? '1' : '0.6';
+
+      // Show toast for new notifications
+      if (unread > this._lastCount && this._lastCount >= 0) {
+        const diff = unread - this._lastCount;
+        if (diff > 0 && this._lastCount >= 0) T.info(`🔔 ${diff} new notification${diff>1?'s':''}`);
+      }
+      this._lastCount = unread;
+      setSyncing(false);
+      setSyncErr(false);
+    } catch(e) {
+      // silent fail on poll
+    }
+  }
+};
+
+// ══════════════════════════════════════════════════════
+//  APP
+// ══════════════════════════════════════════════════════
+const App = {
+  cu: null,
+  cfg: null,
+
+  async boot() {
+    splash('Starting up...');
+    const url = API.getUrl();
+    if (!url) { hideSplash(); show('connScreen'); return; }
+
+    splash('Connecting to your database...');
+    try {
+      await API.call('ping');
+    } catch(e) {
+      hideSplash(); show('connScreen');
+      document.getElementById('connErr').textContent = 'Could not reach backend. Check your URL. (' + e.message + ')';
+      document.getElementById('connErr').classList.remove('hidden');
+      return;
+    }
+
+    splash('Loading business data...');
+    try {
+      const res = await API.call('getAppConfig');
+      this.cfg = res;
+
+      // setupDone comes from Sheets as string "true" not boolean — handle both
+      const isSetup = res.setupDone === true || res.setupDone === 'true';
+      if (!isSetup) { hideSplash(); show('setupScreen'); return; }
+
+      // Cache config so page refresh doesn't lose it
+      localStorage.setItem('lkc_cfg_cache', JSON.stringify(res));
+      this._showLogin(res);
+
+    } catch(e) {
+      // Try cached config if network call fails on reload
+      const cached = localStorage.getItem('lkc_cfg_cache');
+      if (cached) {
+        try {
+          const c = JSON.parse(cached);
+          this.cfg = c;
+          const isSetup = c.setupDone === true || c.setupDone === 'true';
+          if (isSetup) { hideSplash(); this._showLogin(c); return; }
+        } catch(ce) {}
+      }
+      hideSplash(); show('connScreen');
+      document.getElementById('connErr').textContent = 'Error loading config: ' + e.message;
+      document.getElementById('connErr').classList.remove('hidden');
+    }
+  },
+
+  _showLogin(cfg) {
+    hideSplash();
+    document.getElementById('lgBizName').textContent = cfg?.business?.name || 'LKC Accounting';
+    show('loginScreen');
+    if (!Auth.isDeviceAuthorized()) {
+      document.getElementById('newDevSec').classList.remove('hidden');
+    }
+    document.getElementById('lgPass').addEventListener('keyup', e => { if(e.key==='Enter') App.login(); });
+    document.getElementById('lgName').addEventListener('keyup', e => { if(e.key==='Enter') document.getElementById('lgPass').focus(); });
+  },
+
+  async login() {
+    const name = document.getElementById('lgName').value.trim(), pass = document.getElementById('lgPass').value;
+    const err = document.getElementById('loginErr');
+    if (!name || !pass) { err.textContent = 'Enter your name and password.'; err.classList.remove('hidden'); return; }
+    try {
+      const res = await API.call('getUsers');
+      const user = (res.data||[]).find(u => u.name.toLowerCase()===name.toLowerCase() && u.password===Auth.hash(pass) && (u.active==='true'||u.active===true));
+      if (!user) { err.textContent = 'Name or password is incorrect.'; err.classList.remove('hidden'); document.getElementById('lgPass').value=''; return; }
+      this.cu = user;
+      sessionStorage.setItem('lkc_uid', user.id);
+      this.startApp();
+    } catch(e) { err.textContent = 'Connection error: ' + e.message; err.classList.remove('hidden'); }
+  },
+
+  async authorizeDevice() {
+    const pass = document.getElementById('devAP').value.trim();
+    const err = document.getElementById('devErr');
+    if (!pass) { err.textContent = 'Enter the admin password.'; err.classList.remove('hidden'); return; }
+    if (Auth.hash(pass) !== this.cfg.adminHash) { err.textContent = 'Incorrect admin password.'; err.classList.remove('hidden'); document.getElementById('devAP').value=''; return; }
+    Auth.markAuthorized();
+    await API.call('addDevice', { token: Auth.deviceToken(), ua: navigator.userAgent.slice(0,80) });
+    T.ok('Device linked! You can now sign in.');
+    document.getElementById('newDevSec').classList.add('hidden');
+    document.getElementById('loginErr').classList.add('hidden');
+  },
+
+  startApp() {
+    show('appShell');
+    const u = this.cu, biz = this.cfg?.business || {};
+    document.getElementById('tbUser').textContent = u.name;
+    document.getElementById('userPill').innerHTML = `<strong>${u.name}</strong><span>${u.role}</span>`;
+    document.getElementById('sbBiz').textContent = biz.name || '';
+    this.buildNav();
+    if (u.role === 'owner') {
+      document.getElementById('nBell').classList.remove('hidden');
+      Poller._lastCount = -1;
+      Poller.start();
+    }
+    if (u.role === 'owner') this.nav('dashboard');
+    else if (u.role === 'manager') this.nav('reports');
+    else this.nav('sales');
+  },
+
+  logout() {
+    Poller.stop();
+    this.cu = null;
+    sessionStorage.removeItem('lkc_uid');
+    show('loginScreen');
+    document.getElementById('lgName').value='';
+    document.getElementById('lgPass').value='';
+    document.getElementById('loginErr').classList.add('hidden');
+  },
+
+  buildNav() {
+    const u = this.cu, nav = document.getElementById('sbNav'); nav.innerHTML = '';
+    [
+      {id:'dashboard',ic:'📊',lbl:'Dashboard',show:u.role==='owner'},
+      {id:'sales',ic:'🛒',lbl:'Sales',show:true},
+      {id:'stock',ic:'📦',lbl:'Stock',show:true},
+      {id:'reports',ic:'📈',lbl:'Reports',show:u.role==='owner'||u.role==='manager'},
+      {id:'team',ic:'👥',lbl:'Team',show:u.role==='owner'},
+      {id:'ai',ic:'🤖',lbl:'AI Accountant',show:u.role==='owner'},
+      {id:'settings',ic:'⚙',lbl:'Settings',show:u.role==='owner'},
+    ].forEach(p => {
+      if (!p.show) return;
+      const btn = document.createElement('button');
+      btn.className='ni'; btn.id='nav_'+p.id;
+      btn.innerHTML=`<span class="ic">${p.ic}</span>${p.lbl}`;
+      btn.onclick=()=>this.nav(p.id);
+      nav.appendChild(btn);
+    });
+  },
+
+  nav(pg) {
+    document.querySelectorAll('.ni').forEach(e=>e.classList.remove('active'));
+    const b = document.getElementById('nav_'+pg); if(b) b.classList.add('active');
+    document.getElementById('tbTitle').textContent = {dashboard:'Dashboard',sales:'Sales',stock:'Stock',reports:'Reports',team:'Team',ai:'AI Accountant',settings:'Settings'}[pg]||pg;
+    document.getElementById('mc').innerHTML = '';
+    ({dashboard:P.dashboard,sales:P.sales,stock:P.stock,reports:P.reports,team:P.team,ai:P.ai,settings:P.settings}[pg]||P.dashboard)();
+    if(window.innerWidth<=768) document.getElementById('sidebar').classList.remove('open');
+  },
+
+  togSb() { document.getElementById('sidebar').classList.toggle('open'); },
+
+  fmt(v) { const c=this.cfg?.business?.currency||'KSh'; return `${c} ${Number(v||0).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2})}`; },
+  fmtD(iso) { return new Date(iso).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}); },
+  fmtDT(iso) { return new Date(iso).toLocaleString('en-KE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); },
+  ago(iso) {
+    const d=Date.now()-new Date(iso).getTime(),m=Math.floor(d/60000);
+    if(m<1) return'just now'; if(m<60) return m+'m ago';
+    const h=Math.floor(m/60); if(h<24) return h+'h ago';
+    return Math.floor(h/24)+'d ago';
+  },
+  payIco(m){return{Cash:'💵',Mpesa:'📱',Card:'💳',Cheque:'📝',Bank:'🏦',Credit:'⏳',Other:'💱'}[m]||'💱';}
+};
+
+// ══════════════════════════════════════════════════════
+//  PAGES
+// ══════════════════════════════════════════════════════
+const P = {
+
+// ─── DASHBOARD ───
+async dashboard() {
+  const mc = document.getElementById('mc');
+  mc.innerHTML = `
+    <div class="pg-hd"><div><h2>Dashboard</h2><p id="dashDate"></p></div>
+      <div class="pg-act"><button class="btn btn-g btn-sm" onclick="App.nav('sales')">+ Record Sale</button></div></div>
+    <div id="dashAlerts"></div>
+    <div class="stats-grid" id="dashStats">${[...Array(6)].map(()=>`<div class="sc"><div class="sc-val muted">—</div><div class="sc-lbl">Loading...</div></div>`).join('')}</div>
+    <div class="g2">
+      <div class="card"><div class="card-ttl">Recent Sales</div><div class="rl" id="dashRecent"><p class="muted sm">Loading...</p></div></div>
+      <div>
+        <div class="card mb"><div class="card-ttl">Payment Methods (Month)</div><div id="dashPay"><p class="muted sm">Loading...</p></div></div>
+        <div class="card"><div class="card-ttl">Low Stock</div><div id="dashLow"><p class="muted sm">Loading...</p></div></div>
+      </div>
+    </div>`;
+  document.getElementById('dashDate').textContent = new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  try {
+    const [salesRes, prodRes] = await Promise.all([API.call('getSales'), API.call('getProducts')]);
+    const sales = salesRes.data || [], prods = prodRes.data || [];
+    const now = new Date(), today = now.toDateString();
+    const tSales = sales.filter(s=>new Date(s.createdAt).toDateString()===today);
+    const mSales = sales.filter(s=>{const d=new Date(s.createdAt);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()});
+    const tRev=tSales.reduce((a,s)=>a+Number(s.total||0),0), mRev=mSales.reduce((a,s)=>a+Number(s.total||0),0);
+    const low=prods.filter(p=>Number(p.quantity||0)<=Number(p.lowAlert||5));
+    const payB=mSales.reduce((a,s)=>{a[s.paymentMethod]=(a[s.paymentMethod]||0)+Number(s.total||0);return a},{});
+
+    document.getElementById('dashStats').innerHTML=`
+      <div class="sc ok"><div class="sc-ico">💰</div><div class="sc-val">${App.fmt(tRev)}</div><div class="sc-lbl">Today's Revenue</div></div>
+      <div class="sc acc"><div class="sc-ico">📅</div><div class="sc-val">${App.fmt(mRev)}</div><div class="sc-lbl">This Month</div></div>
+      <div class="sc"><div class="sc-ico">🛒</div><div class="sc-val">${tSales.length}</div><div class="sc-lbl">Today's Sales</div></div>
+      <div class="sc bl"><div class="sc-ico">📦</div><div class="sc-val">${prods.length}</div><div class="sc-lbl">Products</div></div>
+      <div class="sc ${low.length?'red':''}"><div class="sc-ico">⚠</div><div class="sc-val">${low.length}</div><div class="sc-lbl">Low Stock</div></div>
+      <div class="sc"><div class="sc-ico">📊</div><div class="sc-val">${sales.length}</div><div class="sc-lbl">Total Sales</div></div>`;
+
+    if(low.length) document.getElementById('dashAlerts').innerHTML=`<div class="alert a-warn mb">⚠ <strong>Low Stock:</strong> ${low.map(p=>`${p.name}(${p.quantity})`).join(', ')}</div>`;
+
+    document.getElementById('dashRecent').innerHTML = !sales.length?'<div class="empty"><p>No sales yet.</p></div>'
+      :sales.slice(0,8).map(s=>`<div class="ri"><div class="rdot sale"></div><div class="ri-meta"><strong>${s.productName}</strong><span>${s.soldBy}·${App.ago(s.createdAt)}·${s.paymentMethod}</span></div><div class="ri-amt">${App.fmt(s.total)}</div></div>`).join('');
+
+    document.getElementById('dashPay').innerHTML = !Object.keys(payB).length?'<p class="muted sm">No data.</p>'
+      :Object.entries(payB).map(([m,v])=>`<div class="fb" style="padding:6px 0;border-bottom:1px solid var(--border)"><span>${App.payIco(m)} ${m}</span><strong>${App.fmt(v)}</strong></div>`).join('');
+
+    document.getElementById('dashLow').innerHTML = !low.length?'<div class="empty" style="padding:14px"><p>All stock OK ✓</p></div>'
+      :`<div class="rl">${low.map(p=>`<div class="ri"><div class="rdot low"></div><div class="ri-meta"><strong>${p.name}</strong><span>${p.quantity} left</span></div><span class="bdg bdg-red">${p.quantity}</span></div>`).join('')}</div>`;
+  } catch(e) { T.err('Error loading dashboard: '+e.message); }
+},
+
+// ─── SALES ───
+async sales() {
+  const mc=document.getElementById('mc'), u=App.cu, canEdit=u.role==='owner';
+  mc.innerHTML=`
+    <div class="pg-hd"><div><h2>Sales</h2><p>Record and view transactions</p></div>
+      <div class="pg-act">
+        <button class="btn btn-p" onclick="P.newSale()">+ Record Sale</button>
+        ${canEdit?`<button class="btn btn-g btn-sm" onclick="P.newRestock()">+ Restock</button>`:''}
+      </div></div>
+    ${u.role==='sales'?'<div class="alert a-info mb sm">You can see your own sales. Contact the owner to edit or delete.</div>':''}
+    <div class="filter-bar">
+      <input class="si" placeholder="Search product or name..." oninput="P.setSF('txt',this.value)"/>
+      <select style="max-width:150px" onchange="P.setSF('pm',this.value)"><option value="">All Payments</option><option>Cash</option><option>Mpesa</option><option>Card</option><option>Cheque</option><option>Bank</option><option>Credit</option><option>Other</option></select>
+      <select style="max-width:125px" onchange="P.setSF('dt',this.value)"><option value="">All Time</option><option value="today">Today</option><option value="week">This Week</option><option value="month">This Month</option></select>
+    </div>
+    <div class="card"><div class="tw" id="salesTbl"><div class="empty"><div class="spin" style="margin:0 auto"></div></div></div></div>`;
+
+  P._sf={txt:'',pm:'',dt:''};
+  try {
+    const res = await API.call('getSales');
+    P._sales = res.data||[];
+    P.renderSalesTbl();
+  } catch(e) { document.getElementById('salesTbl').innerHTML=`<div class="empty"><p>Error: ${e.message}</p></div>`; }
+},
+
+_sf:{txt:'',pm:'',dt:''}, _sales:[], _prods:[],
+setSF(k,v){P._sf[k]=v;P.renderSalesTbl();},
+
+renderSalesTbl() {
+  const u=App.cu, canEdit=u.role==='owner';
+  let s=[...(P._sales||[])];
+  if(u.role==='sales') s=s.filter(x=>x.soldById===u.id);
+  if(P._sf.txt){const t=P._sf.txt.toLowerCase();s=s.filter(x=>(x.productName||'').toLowerCase().includes(t)||(x.soldBy||'').toLowerCase().includes(t));}
+  if(P._sf.pm) s=s.filter(x=>x.paymentMethod===P._sf.pm);
+  if(P._sf.dt){const now=new Date();s=s.filter(x=>{const d=new Date(x.createdAt);if(P._sf.dt==='today')return d.toDateString()===now.toDateString();if(P._sf.dt==='week'){const w=new Date(now);w.setDate(now.getDate()-7);return d>=w;}if(P._sf.dt==='month')return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();return true;});}
+  const el=document.getElementById('salesTbl');if(!el)return;
+  if(!s.length){el.innerHTML='<div class="empty"><div class="ei">🛒</div><p>No sales found.</p></div>';return;}
+  el.innerHTML=`<table><thead><tr><th>ID</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Payment</th><th>Customer</th><th>Sold By</th><th>Date/Time</th><th>Actions</th></tr></thead><tbody>
+    ${s.map(x=>`<tr>
+      <td class="mono muted">${String(x.id).slice(-8)}</td>
+      <td><strong>${x.productName}</strong></td><td>${x.quantity}</td>
+      <td>${App.fmt(x.unitPrice)}</td><td><strong>${App.fmt(x.total)}</strong></td>
+      <td><span class="bdg bdg-info">${App.payIco(x.paymentMethod)} ${x.paymentMethod}</span></td>
+      <td>${x.customer||'Walk-in'}</td><td>${x.soldBy}</td><td>${App.fmtDT(x.createdAt)}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-o btn-sm" onclick="P.printInv('${x.id}')">🖨</button>
+        ${canEdit?`<button class="btn btn-d btn-sm" onclick="P.delSale('${x.id}')">Del</button>`:''}
+      </td></tr>`).join('')}
+  </tbody></table>`;
+},
+
+async newSale() {
+  let prods;
+  try {
+    const r = await API.call('getProducts');
+    prods = (r.data||[]).filter(p=>(p.active==='true'||p.active===true)&&Number(p.quantity||0)>0);
+  } catch(e){return T.err('Could not load products: '+e.message);}
+  if(!prods.length) return T.warn('No products in stock.');
+  P._prods = prods;
+  M.open('Record New Sale',`
+    <div class="fg"><label>Product</label>
+      <select id="sp" onchange="P._spChg()"><option value="">— Select product —</option>
+        ${prods.map(p=>`<option value="${p.id}" data-price="${p.sellingPrice}" data-stock="${p.quantity}">${p.name} (${p.quantity} in stock)</option>`).join('')}
+      </select></div>
+    <div id="spInfo" class="alert a-info hidden"></div>
+    <div class="g2">
+      <div class="fg"><label>Quantity</label><input type="number" id="sq" min="1" value="1" oninput="P._calcT()"/></div>
+      <div class="fg"><label>Unit Price</label><input type="number" id="sup" min="0" step="0.01" oninput="P._calcT()"/></div>
+    </div>
+    <div class="fg"><label>Payment Method</label>
+      <select id="spm"><option>Cash</option><option>Mpesa</option><option>Card</option><option>Cheque</option><option>Bank</option><option>Credit</option><option>Other</option></select></div>
+    <div class="fg"><label>Customer <span class="lh">(optional)</span></label><input type="text" id="scust" placeholder="Walk-in customer"/></div>
+    <div class="fg"><label>Notes <span class="lh">(optional)</span></label><input type="text" id="snotes"/></div>
+    <div class="card" style="background:var(--green-pale);border-color:var(--green)">
+      <div class="fb"><span class="bold">Total:</span><span id="stotal" style="font-family:var(--fd);font-size:18px;color:var(--green)">${App.cfg?.business?.currency||'KSh'} 0.00</span></div>
+    </div>`,
+    [{lbl:'Cancel',cls:'btn-o',fn:'M.close()'},{lbl:'Record Sale ✓',cls:'btn-p',fn:'P.saveSale()'}]);
+},
+
+_spChg(){const s=document.getElementById('sp'),o=s.options[s.selectedIndex];if(!o.value)return;document.getElementById('sup').value=o.dataset.price;document.getElementById('spInfo').textContent=`${o.dataset.stock} units available`;document.getElementById('spInfo').classList.remove('hidden');P._calcT();},
+_calcT(){const q=parseFloat(document.getElementById('sq')?.value)||0,p=parseFloat(document.getElementById('sup')?.value)||0;const el=document.getElementById('stotal');if(el)el.textContent=App.fmt(q*p);},
+
+async saveSale() {
+  const pid=document.getElementById('sp').value,qty=parseInt(document.getElementById('sq').value),up=parseFloat(document.getElementById('sup').value),pm=document.getElementById('spm').value;
+  if(!pid)return T.err('Select a product.');if(!qty||qty<1)return T.err('Qty must be at least 1.');if(!up||up<=0)return T.err('Enter a valid price.');
+  const prod=(P._prods||[]).find(p=>p.id===pid);if(!prod)return T.err('Product not found.');if(Number(prod.quantity)<qty)return T.err(`Only ${prod.quantity} in stock.`);
+  const btn=document.querySelector('#mFt .btn-p');if(btn){btn.disabled=true;btn.textContent='Saving...';}
+  try {
+    const sale={productId:pid,productName:prod.name,quantity:qty,unitPrice:up,total:qty*up,paymentMethod:pm,customer:document.getElementById('scust').value.trim()||'Walk-in',notes:document.getElementById('snotes').value.trim(),soldBy:App.cu.name,soldById:App.cu.id,createdAt:new Date().toISOString()};
+    await API.call('addSale',{sale});
+    await API.call('adjustStock',{id:pid,delta:-qty,soldDelta:qty});
+    await API.call('addNotification',{message:`🛒 ${App.cu.name} sold ${qty}× ${prod.name} for ${App.fmt(qty*up)} via ${pm}`,type:'sale'});
+    // Check low stock
+    const newQty=Number(prod.quantity)-qty;
+    if(newQty<=(Number(prod.lowAlert)||5)) await API.call('addNotification',{message:`⚠ Low stock: ${prod.name} now has only ${newQty} units.`,type:'alert'});
+    M.close();T.ok(`Sale recorded — ${App.fmt(qty*up)}`);P.sales();
+  } catch(e){T.err('Error: '+e.message);if(btn){btn.disabled=false;btn.textContent='Record Sale ✓';}}
+},
+
+async delSale(id) {
+  if(!confirm('Delete this sale?'))return;
+  await API.call('deleteSale',{id});T.ok('Sale deleted.');P.sales();
+},
+
+async newRestock() {
+  let prods;
+  try{const r=await API.call('getProducts');prods=(r.data||[]).filter(p=>p.active==='true'||p.active===true);}
+  catch(e){return T.err('Could not load products.');}
+  M.open('Record Restock',`
+    <div class="fg"><label>Product</label><select id="rp"><option value="">— Select —</option>${prods.map(p=>`<option value="${p.id}">${p.name} (${p.quantity} current)</option>`).join('')}</select></div>
+    <div class="g2">
+      <div class="fg"><label>Qty Added</label><input type="number" id="rq" min="1" value="1"/></div>
+      <div class="fg"><label>Cost/Unit</label><input type="number" id="rc" min="0" step="0.01" placeholder="0.00"/></div>
+    </div>
+    <div class="fg"><label>Supplier <span class="lh">(optional)</span></label><input type="text" id="rs"/></div>
+    <div class="fg"><label>Notes</label><input type="text" id="rn" placeholder="Invoice no., etc."/></div>`,
+    [{lbl:'Cancel',cls:'btn-o',fn:'M.close()'},{lbl:'Save Restock',cls:'btn-p',fn:'P.saveRestock()'}]);
+},
+
+async saveRestock() {
+  const pid=document.getElementById('rp').value,qty=parseInt(document.getElementById('rq').value),cost=parseFloat(document.getElementById('rc').value)||0;
+  if(!pid)return T.err('Select a product.');if(!qty||qty<1)return T.err('Qty must be at least 1.');
+  const prods=P._prods||[];const prod=prods.find(p=>p.id===pid)||{name:'Product'};
+  const btn=document.querySelector('#mFt .btn-p');if(btn){btn.disabled=true;btn.textContent='Saving...';}
+  try{
+    await API.call('addRestock',{restock:{productId:pid,productName:prod.name,quantity:qty,costPerUnit:cost,totalCost:qty*cost,supplier:document.getElementById('rs').value.trim(),notes:document.getElementById('rn').value.trim(),recordedBy:App.cu.name,createdAt:new Date().toISOString()}});
+    await API.call('adjustStock',{id:pid,delta:qty,soldDelta:0});
+    await API.call('addNotification',{message:`📦 ${App.cu.name} restocked ${qty}× ${prod.name}`,type:'restock'});
+    M.close();T.ok(`Restock saved — ${qty} units added.`);
+  }catch(e){T.err('Error: '+e.message);if(btn){btn.disabled=false;btn.textContent='Save Restock';}}
+},
+
+// ─── STOCK ───
+async stock() {
+  const mc=document.getElementById('mc'),canEdit=App.cu.role==='owner';
+  mc.innerHTML=`
+    <div class="pg-hd"><div><h2>Stock</h2><p>Product inventory</p></div>
+      <div class="pg-act">${canEdit?`<button class="btn btn-p" onclick="P.newProd()">+ Add Product</button>`:''}</div></div>
+    ${!canEdit?'<div class="alert a-info mb sm">View only. Contact the owner to make changes.</div>':''}
+    <div class="filter-bar">
+      <input class="si" placeholder="Search products..." oninput="P.setStF('txt',this.value)"/>
+      <select style="max-width:125px" onchange="P.setStF('st',this.value)"><option value="">All Status</option><option value="low">Low Stock</option><option value="out">Out of Stock</option></select>
+    </div>
+    <div class="card"><div class="tw" id="stockTbl"><div class="empty"><div class="spin" style="margin:0 auto"></div></div></div></div>`;
+
+  P._stf={txt:'',st:''};
+  try{const r=await API.call('getProducts');P._stProds=(r.data||[]).filter(p=>p.active==='true'||p.active===true);P.renderStockTbl();}
+  catch(e){document.getElementById('stockTbl').innerHTML=`<div class="empty"><p>Error: ${e.message}</p></div>`;}
+},
+
+_stf:{txt:'',st:''}, _stProds:[],
+setStF(k,v){P._stf[k]=v;P.renderStockTbl();},
+
+renderStockTbl(){
+  const canEdit=App.cu.role==='owner';
+  let prods=[...(P._stProds||[])];
+  if(P._stf.txt){const t=P._stf.txt.toLowerCase();prods=prods.filter(p=>(p.name||'').toLowerCase().includes(t)||(p.category||'').toLowerCase().includes(t));}
+  if(P._stf.st==='low') prods=prods.filter(p=>Number(p.quantity||0)>0&&Number(p.quantity||0)<=Number(p.lowAlert||5));
+  if(P._stf.st==='out') prods=prods.filter(p=>Number(p.quantity||0)<=0);
+  const el=document.getElementById('stockTbl');if(!el)return;
+  if(!prods.length){el.innerHTML=`<div class="empty"><div class="ei">📦</div><p>No products found.</p>${canEdit?'<br><button class="btn btn-p mt" onclick="P.newProd()">Add First Product</button>':''}</div>`;return;}
+  el.innerHTML=`<table><thead><tr><th>Product</th><th>SKU</th><th>Category</th><th>In Stock</th>${canEdit?'<th>Cost</th>':''}<th>Sell Price</th><th>Status</th><th>Total Sold</th>${canEdit?'<th>Actions</th>':''}</tr></thead><tbody>
+    ${prods.map(p=>{const st=Number(p.quantity||0)<=0?'out':Number(p.quantity||0)<=Number(p.lowAlert||5)?'low':'ok';return`<tr>
+      <td><strong>${p.name}</strong></td><td class="muted sm">${p.sku||'—'}</td><td>${p.category||'—'}</td>
+      <td><strong ${st!=='ok'?'style="color:var(--red)"':''}>${p.quantity}</strong></td>
+      ${canEdit?`<td>${App.fmt(p.costPrice||0)}</td>`:''}
+      <td>${App.fmt(p.sellingPrice||0)}</td>
+      <td>${st==='out'?'<span class="bdg bdg-red">Out</span>':st==='low'?'<span class="bdg bdg-warn">Low</span>':'<span class="bdg bdg-ok">OK</span>'}</td>
+      <td>${p.totalSold||0}</td>
+      ${canEdit?`<td><button class="btn btn-o btn-sm" onclick="P.editProd('${p.id}')">Edit</button> <button class="btn btn-d btn-sm" onclick="P.delProd('${p.id}','${p.name.replace(/'/g,"\\'")}')">Del</button></td>`:''}
+    </tr>`;}).join('')}
+  </tbody></table>`;
+},
+
+prodForm(p={}){return`
+  <div class="fg"><label>Product Name *</label><input type="text" id="pn" value="${p.name||''}"/></div>
+  <div class="g2">
+    <div class="fg"><label>SKU</label><input type="text" id="psku" value="${p.sku||''}"/></div>
+    <div class="fg"><label>Category</label><input type="text" id="pcat" value="${p.category||''}"/></div>
+  </div>
+  <div class="g2">
+    <div class="fg"><label>Cost Price</label><input type="number" id="pcp" value="${p.costPrice||''}" min="0" step="0.01"/></div>
+    <div class="fg"><label>Selling Price *</label><input type="number" id="psp" value="${p.sellingPrice||''}" min="0" step="0.01"/></div>
+  </div>
+  <div class="g2">
+    <div class="fg"><label>Stock Qty *</label><input type="number" id="pqty" value="${p.quantity||0}" min="0"/></div>
+    <div class="fg"><label>Low Stock Alert At</label><input type="number" id="plow" value="${p.lowAlert||5}" min="0"/></div>
+  </div>`;},
+
+newProd(){M.open('Add Product',P.prodForm(),[{lbl:'Cancel',cls:'btn-o',fn:'M.close()'},{lbl:'Add Product',cls:'btn-p',fn:'P.saveProd()'}]);},
+editProd(id){const p=(P._stProds||[]).find(x=>x.id===id);if(!p)return;M.open('Edit Product',P.prodForm(p),[{lbl:'Cancel',cls:'btn-o',fn:'M.close()'},{lbl:'Save',cls:'btn-p',fn:`P.saveProd('${id}')`}]);},
+
+async saveProd(eid=null){
+  const name=document.getElementById('pn').value.trim(),sp=parseFloat(document.getElementById('psp').value)||0;
+  if(!name)return T.err('Name required.');if(sp<=0)return T.err('Selling price must be > 0.');
+  const data={name,sku:document.getElementById('psku').value.trim(),category:document.getElementById('pcat').value.trim(),costPrice:parseFloat(document.getElementById('pcp').value)||0,sellingPrice:sp,quantity:parseInt(document.getElementById('pqty').value)||0,lowAlert:parseInt(document.getElementById('plow').value)||5};
+  const btn=document.querySelector('#mFt .btn-p');if(btn){btn.disabled=true;btn.textContent='Saving...';}
+  try{
+    if(eid){await API.call('updateProduct',{id:eid,updates:data});T.ok('Product updated.');}
+    else{await API.call('addProduct',{product:data});T.ok('Product added.');}
+    M.close();P.stock();
+  }catch(e){T.err('Error: '+e.message);if(btn){btn.disabled=false;btn.textContent='Save';}}
+},
+
+async delProd(id,name){
+  if(!confirm(`Delete "${name}"?`))return;
+  await API.call('deleteProduct',{id});T.ok('Product removed.');P.stock();
+},
+
+// ─── REPORTS ───
+async reports(){
+  const mc=document.getElementById('mc');
+  mc.innerHTML=`
+    <div class="pg-hd"><div><h2>Reports</h2><p>Financial & inventory summaries</p></div>
+      <div class="pg-act"><button class="btn btn-o btn-sm" onclick="window.print()">🖨 Print</button></div></div>
+    <div style="display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-p btn-sm" id="rtab_s" onclick="P.rTab('s')">Sales</button>
+      <button class="btn btn-o btn-sm" id="rtab_st" onclick="P.rTab('st')">Stock</button>
+      <button class="btn btn-o btn-sm" id="rtab_inv" onclick="P.rTab('inv')">Invoices</button>
+      ${App.cu.role==='owner'?`<button class="btn btn-o btn-sm" id="rtab_vat" onclick="P.rTab('vat')">VAT/PAYE</button>`:''}
+    </div>
+    <div id="rBody"><div class="empty"><div class="spin" style="margin:0 auto"></div></div></div>`;
+  P._rt='s';P.rRender();
+},
+_rt:'s',
+rTab(t){['s','st','inv','vat'].forEach(x=>{const b=document.getElementById('rtab_'+x);if(b)b.className='btn btn-o btn-sm';});const b=document.getElementById('rtab_'+t);if(b)b.className='btn btn-p btn-sm';P._rt=t;P.rRender();},
+
+async rRender(){
+  const el=document.getElementById('rBody');if(!el)return;
+  el.innerHTML='<div class="empty"><div class="spin" style="margin:0 auto"></div></div>';
+  const rangeSel=`<div class="filter-bar mb"><select id="rRange" onchange="P.rRender()" style="max-width:145px"><option value="month">This Month</option><option value="week">This Week</option><option value="today">Today</option><option value="all">All Time</option></select></div>`;
+  try{
+    if(P._rt==='st'){
+      const r=await API.call('getProducts');
+      const prods=(r.data||[]).filter(p=>p.active==='true'||p.active===true);
+      const cv=prods.reduce((s,p)=>s+Number(p.quantity||0)*Number(p.costPrice||0),0),sv=prods.reduce((s,p)=>s+Number(p.quantity||0)*Number(p.sellingPrice||0),0);
+      const low=prods.filter(p=>Number(p.quantity||0)<=Number(p.lowAlert||5));
+      el.innerHTML=`<div class="stats-grid"><div class="sc"><div class="sc-ico">📦</div><div class="sc-val">${prods.length}</div><div class="sc-lbl">Products</div></div><div class="sc bl"><div class="sc-ico">💰</div><div class="sc-val">${App.fmt(cv)}</div><div class="sc-lbl">Cost Value</div></div><div class="sc ok"><div class="sc-ico">📈</div><div class="sc-val">${App.fmt(sv)}</div><div class="sc-lbl">Sell Value</div></div><div class="sc red"><div class="sc-ico">⚠</div><div class="sc-val">${low.length}</div><div class="sc-lbl">Low Stock</div></div></div>
+      <div class="card"><div class="card-ttl">Full Stock List</div><div class="tw"><table><thead><tr><th>Product</th><th>Qty</th><th>Cost</th><th>Sell</th><th>Stock Value</th><th>Status</th></tr></thead><tbody>${prods.map(p=>{const st=Number(p.quantity||0)<=0?'out':Number(p.quantity||0)<=Number(p.lowAlert||5)?'low':'ok';return`<tr><td><strong>${p.name}</strong></td><td ${st!=='ok'?'style="color:var(--red);font-weight:600"':''}>${p.quantity}</td><td>${App.fmt(p.costPrice||0)}</td><td>${App.fmt(p.sellingPrice||0)}</td><td>${App.fmt(Number(p.quantity||0)*Number(p.costPrice||0))}</td><td>${st==='out'?'<span class="bdg bdg-red">Out</span>':st==='low'?'<span class="bdg bdg-warn">Low</span>':'<span class="bdg bdg-ok">OK</span>'}</td></tr>`}).join('')}</tbody></table></div></div>`;
+      return;
+    }
+    el.innerHTML=rangeSel+'<div id="rContent"><div class="empty"><div class="spin" style="margin:0 auto"></div></div></div>';
+    const range=document.getElementById('rRange')?.value||'month';
+    const allSales=(await API.call('getSales')).data||[];
+    const now=new Date();
+    const sales=allSales.filter(s=>{const d=new Date(s.createdAt);if(range==='today')return d.toDateString()===now.toDateString();if(range==='week'){const w=new Date(now);w.setDate(now.getDate()-7);return d>=w;}if(range==='month')return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();return true;});
+    const rc=document.getElementById('rContent');if(!rc)return;
+    const rev=sales.reduce((s,x)=>s+Number(x.total||0),0);
+
+    if(P._rt==='vat'){
+      const biz=App.cfg?.business||{},vatAmt=rev*0.16/(1+0.16),net=rev-vatAmt;
+      rc.innerHTML=`<div class="card"><div class="card-ttl">VAT/PAYE — ${now.toLocaleDateString('en-KE',{month:'long',year:'numeric'})}</div><div class="alert a-warn">⚠ Estimate only. Consult a certified accountant for official filings.</div><div class="g2"><div><h4 style="color:var(--green);margin-bottom:9px">VAT (16%)</h4><div class="fb" style="padding:6px 0;border-bottom:1px solid var(--border)"><span>Gross Revenue</span><strong>${App.fmt(rev)}</strong></div><div class="fb" style="padding:6px 0;border-bottom:1px solid var(--border)"><span>VAT Collected</span><strong style="color:var(--red)">${App.fmt(vatAmt)}</strong></div><div class="fb" style="padding:6px 0"><span>Net Revenue</span><strong style="color:#15803d">${App.fmt(net)}</strong></div></div><div><h4 style="color:var(--green);margin-bottom:9px">KRA Info</h4><p class="muted sm">PIN: ${biz.kra||'Not set (add in Settings)'}</p><p class="muted sm" style="margin-top:6px">VAT Return due: 20th of following month</p><p class="muted sm" style="margin-top:6px">File at: <a href="https://itax.kra.go.ke" target="_blank">iTax Portal</a></p></div></div></div>`;
+      return;
+    }
+    if(P._rt==='inv'){
+      rc.innerHTML=`<div class="card"><div class="card-ttl">Invoice List</div><div class="tw"><table><thead><tr><th>ID</th><th>Product</th><th>Qty</th><th>Total</th><th>Payment</th><th>Customer</th><th>By</th><th>Date</th><th>PDF</th></tr></thead><tbody>${sales.length?sales.map(s=>`<tr><td class="mono muted">${String(s.id).slice(-8)}</td><td>${s.productName}</td><td>${s.quantity}</td><td><strong>${App.fmt(s.total)}</strong></td><td>${s.paymentMethod}</td><td>${s.customer||'Walk-in'}</td><td>${s.soldBy}</td><td>${App.fmtD(s.createdAt)}</td><td><button class="btn btn-o btn-sm" onclick="P.printInv('${s.id}')">🖨 PDF</button></td></tr>`).join(''):'<tr><td colspan="9" class="muted" style="text-align:center;padding:18px">No sales in this period.</td></tr>'}</tbody></table></div></div>`;
+      return;
+    }
+    const byPay=sales.reduce((a,s)=>{a[s.paymentMethod]=(a[s.paymentMethod]||0)+Number(s.total||0);return a;},{});
+    const bySel=sales.reduce((a,s)=>{a[s.soldBy]=(a[s.soldBy]||0)+Number(s.total||0);return a;},{});
+    const byProd=sales.reduce((a,s)=>{if(!a[s.productName])a[s.productName]={q:0,r:0};a[s.productName].q+=Number(s.quantity||0);a[s.productName].r+=Number(s.total||0);return a;},{});
+    rc.innerHTML=`<div class="stats-grid"><div class="sc ok"><div class="sc-ico">💰</div><div class="sc-val">${App.fmt(rev)}</div><div class="sc-lbl">Revenue</div></div><div class="sc"><div class="sc-ico">🛒</div><div class="sc-val">${sales.length}</div><div class="sc-lbl">Transactions</div></div><div class="sc acc"><div class="sc-ico">📊</div><div class="sc-val">${App.fmt(sales.length?rev/sales.length:0)}</div><div class="sc-lbl">Avg Sale</div></div></div>
+    <div class="g2">
+      <div class="card"><div class="card-ttl">By Payment Method</div>${Object.entries(byPay).map(([m,v])=>`<div class="fb" style="padding:6px 0;border-bottom:1px solid var(--border)"><span>${m}</span><strong>${App.fmt(v)}</strong></div>`).join('')||'<p class="muted sm">No data.</p>'}</div>
+      <div class="card"><div class="card-ttl">By Team Member</div>${Object.entries(bySel).map(([n,v])=>`<div class="fb" style="padding:6px 0;border-bottom:1px solid var(--border)"><span>${n}</span><strong>${App.fmt(v)}</strong></div>`).join('')||'<p class="muted sm">No data.</p>'}</div>
+    </div>
+    <div class="card mt"><div class="card-ttl">Top Products</div><div class="tw"><table><thead><tr><th>Product</th><th>Units</th><th>Revenue</th></tr></thead><tbody>${Object.entries(byProd).sort((a,b)=>b[1].r-a[1].r).slice(0,15).map(([n,d])=>`<tr><td>${n}</td><td>${d.q}</td><td>${App.fmt(d.r)}</td></tr>`).join('')||'<tr><td colspan="3" class="muted" style="text-align:center">No data.</td></tr>'}</tbody></table></div></div>`;
+  }catch(e){el.innerHTML=`<div class="empty"><p>Error: ${e.message}</p></div>`;}
+},
+
+// ─── TEAM ───
+async team(){
+  const mc=document.getElementById('mc');
+  mc.innerHTML=`
+    <div class="pg-hd"><div><h2>Team</h2><p>Manage access and roles</p></div>
+      <div class="pg-act"><button class="btn btn-p" onclick="P.newUser()">+ Add Member</button></div></div>
+    <div class="alert a-info mb sm">👑 <strong>Owner</strong> — full access &nbsp;|&nbsp; 📋 <strong>Manager</strong> — reports & stock view &nbsp;|&nbsp; 🛒 <strong>Sales</strong> — record sales & stock</div>
+    <div class="card" id="teamCard"><div class="empty"><div class="spin" style="margin:0 auto"></div></div></div>
+    <div class="card mt"><div class="card-ttl">Permissions</div><div class="tw"><table><thead><tr><th>Feature</th><th style="text-align:center">Owner</th><th style="text-align:center">Manager</th><th style="text-align:center">Sales</th></tr></thead><tbody>${[['Dashboard','✅','❌','❌'],['Record Sales','✅','❌','✅'],['Record Restocks','✅','❌','✅'],['View Stock','✅','✅','✅'],['Edit/Delete','✅','❌','❌'],['Reports','✅','✅','❌'],['AI Accountant','✅','❌','❌'],['Team','✅','❌','❌'],['Settings','✅','❌','❌'],['Notifications','✅','❌','❌']].map(r=>`<tr>${r.map((c,i)=>`<td ${i>0?'style="text-align:center"':''}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+  try{
+    const r=await API.call('getUsers');
+    const users=(r.data||[]).filter(u=>u.active==='true'||u.active===true);
+    P._teamUsers=users;
+    const el=document.getElementById('teamCard');if(!el)return;
+    el.innerHTML=!users.length?'<div class="empty"><p>No team members.</p></div>'
+      :`<div class="tw"><table><thead><tr><th>Name</th><th>Role</th><th>Added</th><th>Actions</th></tr></thead><tbody>
+        ${users.map(u=>`<tr><td><strong>${u.name}</strong></td><td><span class="r-${u.role}">${{owner:'👑 Owner',manager:'📋 Manager',sales:'🛒 Sales'}[u.role]||u.role}</span></td><td>${u.createdAt?App.fmtD(u.createdAt):'—'}</td><td>${u.id===App.cu.id?'<span class="muted sm">You</span>':`<button class="btn btn-o btn-sm" onclick="P.editUser('${u.id}')">Edit</button> <button class="btn btn-d btn-sm" onclick="P.delUser('${u.id}','${u.name.replace(/'/g,"\\'")}')">Remove</button>`}</td></tr>`).join('')}
+      </tbody></table></div>`;
+  }catch(e){document.getElementById('teamCard').innerHTML=`<div class="empty"><p>Error: ${e.message}</p></div>`;}
+},
+
+_teamUsers:[],
+userForm(u={}){return`<div class="fg"><label>Full Name *</label><input type="text" id="un" value="${u.name||''}"/></div><div class="fg"><label>Role *</label><select id="ur"><option value="sales" ${u.role==='sales'?'selected':''}>🛒 Sales Person</option><option value="manager" ${u.role==='manager'?'selected':''}>📋 Manager</option><option value="owner" ${u.role==='owner'?'selected':''}>👑 Owner</option></select></div><div class="fg"><label>Password ${u.id?'<span class="lh">(blank = keep)</span>':' *'}</label><input type="password" id="up" placeholder="${u.id?'Leave blank to keep':'Min 4 characters'}"/></div>`;},
+newUser(){M.open('Add Team Member',P.userForm(),[{lbl:'Cancel',cls:'btn-o',fn:'M.close()'},{lbl:'Add Member',cls:'btn-p',fn:'P.saveUser()'}]);},
+editUser(id){const u=(P._teamUsers||[]).find(x=>x.id===id);if(!u)return;M.open('Edit Member',P.userForm(u),[{lbl:'Cancel',cls:'btn-o',fn:'M.close()'},{lbl:'Save',cls:'btn-p',fn:`P.saveUser('${id}')`}]);},
+
+async saveUser(eid=null){
+  const name=document.getElementById('un').value.trim(),role=document.getElementById('ur').value,pass=document.getElementById('up').value;
+  if(!name)return T.err('Name required.');if(!eid&&pass.length<4)return T.err('Password must be at least 4 characters.');
+  const btn=document.querySelector('#mFt .btn-p');if(btn){btn.disabled=true;btn.textContent='Saving...';}
+  try{
+    if(eid){const upd={name,role};if(pass&&pass.length>=4)upd.password=Auth.hash(pass);await API.call('updateUser',{id:eid,updates:upd});T.ok('Updated.');}
+    else{
+      const existing=(P._teamUsers||[]);
+      if(existing.find(u=>u.name.toLowerCase()===name.toLowerCase())){T.err('A user with this name already exists.');if(btn){btn.disabled=false;btn.textContent='Add Member';}return;}
+      await API.call('addUser',{name,role,password:Auth.hash(pass)});T.ok('Member added.');
+    }
+    M.close();P.team();
+  }catch(e){T.err('Error: '+e.message);if(btn){btn.disabled=false;btn.textContent='Save';}}
+},
+
+async delUser(id,name){
+  if(!confirm(`Remove ${name}?`))return;
+  await API.call('deleteUser',{id});T.ok('Removed.');P.team();
+},
+
+// ─── NOTIFICATIONS ───
+async notifications(){
+  try{
+    const r=await API.call('getNotifications');
+    const notifs=r.data||[],u=App.cu;
+    const html=!notifs.length?'<div class="empty"><p>No notifications yet.</p></div>'
+      :`<div style="max-height:380px;overflow-y:auto">${notifs.map(n=>{const readers=n.readBy?String(n.readBy).split(','):[];const unread=!readers.includes(String(u.id));return`<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;${unread?'background:var(--green-pale);padding:9px 11px;border-radius:7px;margin-bottom:3px':''}"><div>${n.message}</div><div class="sm muted">${App.ago(n.createdAt)}</div></div>`;}).join('')}</div>
+         <div class="mt" style="text-align:right"><button class="btn btn-o btn-sm" onclick="P.markRead()">Mark all read</button></div>`;
+    M.open('Notifications',html,[]);
+  }catch(e){T.err('Error: '+e.message);}
+},
+
+async markRead(){
+  await API.call('markNotifsRead',{userId:String(App.cu.id)});
+  Poller._lastCount=0;document.getElementById('nBdg').textContent='0';
+  M.close();T.ok('All marked as read.');
+},
+
+// ─── AI ───
+async ai(){
+  const mc=document.getElementById('mc'),hfKey=App.cfg?.hfKey;
+  P._aiMsgs=[];
+  mc.innerHTML=`
+    <div class="pg-hd"><div><h2>🤖 AI Accountant</h2><p>Reads your live business data — ask anything</p></div>
+      <div class="pg-act"><button class="btn btn-o btn-sm" onclick="P.aiClear()">Clear</button><button class="btn btn-o btn-sm" onclick="P.aiSetup()">⚙ API Key</button></div></div>
+    ${!hfKey?'<div class="alert a-warn">No API key set. Click ⚙ API Key to add your free Hugging Face token.</div>':''}
+    <div class="ai-wrap card" style="padding:0">
+      <div class="ai-msgs" id="aiMsgs">
+        <div class="ai-msg bot">👋 Hello! I'm your AI Accountant. I read your live business data from Google Sheets. Ask me anything about sales, stock, revenue, VAT, or fraud!</div>
+      </div>
+      <div class="ai-in-row">
+        <input type="text" id="aiIn" placeholder="Ask about your business finances..." onkeyup="if(event.key==='Enter')P.aiSend()"/>
+        <button class="btn btn-p" id="aiBtn" onclick="P.aiSend()">Send</button>
+      </div>
+    </div>`;
+},
+_aiMsgs:[],_aiLoading:false,
+
+async aiSysProm(){
+  const biz=App.cfg?.business||{};
+  let sales=[],prods=[];
+  try{sales=(await API.call('getSales')).data||[];prods=(await API.call('getProducts')).data||[];}catch(e){}
+  const now=new Date(),ms=sales.filter(s=>{const d=new Date(s.createdAt);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()});
+  const rev=ms.reduce((a,s)=>a+Number(s.total||0),0);
+  const low=prods.filter(p=>Number(p.quantity||0)<=Number(p.lowAlert||5));
+  const payB=ms.reduce((a,s)=>{a[s.paymentMethod]=(a[s.paymentMethod]||0)+Number(s.total||0);return a;},{});
+  return`You are a professional AI accountant for ${biz.name}. Be concise and practical. Currency: ${biz.currency||'KSh'}.
+LIVE DATA (Google Sheets backend): Business: ${biz.name}|${biz.address||''}|${biz.phone||''}|KRA:${biz.kra||'N/A'}
+Products:${prods.length}|Total Sales:${sales.length}|Month Revenue:${biz.currency} ${rev.toFixed(2)}
+Low Stock(${low.length}):${low.map(p=>`${p.name}(${p.quantity})`).join(',')||'None'}
+Payments:${JSON.stringify(payB)}
+Recent sales:${JSON.stringify(sales.slice(0,20).map(s=>({p:s.productName,q:s.quantity,t:s.total,m:s.paymentMethod,by:s.soldBy,d:(s.createdAt||'').slice(0,10)})))}
+KENYA TAX: VAT 16%(due 20th next month,iTax). PAYE:10% up to KSh 24k,25% next 8333,30% above.`;
+},
+
+async aiSend(){
+  const inp=document.getElementById('aiIn'),text=inp?.value.trim();
+  if(!text||P._aiLoading)return;
+  const hfKey=App.cfg?.hfKey;if(!hfKey)return T.err('Add your Hugging Face API key (⚙ API Key).');
+  inp.value='';P._aiLoading=true;
+  const btn=document.getElementById('aiBtn');if(btn){btn.disabled=true;btn.textContent='...';}
+  P._aiMsgs.push({r:'user',c:text});P.aiAppend('user',text);
+  const tid=P.aiAppend('bot','⏳ Thinking...',true);
+  try{
+    const sysProm=await P.aiSysProm();
+    const conv=P._aiMsgs.slice(-6).map(m=>`${m.r==='user'?'User':'Assistant'}: ${m.c}`).join('\n')+'\nAssistant:';
+    const prompt=`<s>[INST] <<SYS>>\n${sysProm}\n<</SYS>>\n\n${conv} [/INST]`;
+    const res=await fetch('https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2',{method:'POST',headers:{'Authorization':`Bearer ${hfKey}`,'Content-Type':'application/json'},body:JSON.stringify({inputs:prompt,parameters:{max_new_tokens:600,temperature:0.7,top_p:0.9,do_sample:true,return_full_text:false}})});
+    const data=await res.json();
+    document.getElementById(tid)?.remove();
+    if(data.error){P.aiAppend('bot',data.error.includes('loading')?'⏳ Model warming up, try again in ~20s.':data.error.includes('token')?'❌ Invalid API key.':'❌ '+data.error);}
+    else{let reply=(data[0]?.generated_text||'').trim();if(reply.includes('[/INST]'))reply=reply.split('[/INST]').pop().trim();if(reply.includes('Assistant:'))reply=reply.split('Assistant:').pop().trim();if(!reply)reply='Could not generate response.';P._aiMsgs.push({r:'bot',c:reply});P.aiAppend('bot',reply);}
+  }catch(e){document.getElementById(tid)?.remove();P.aiAppend('bot','❌ Connection error.');}
+  P._aiLoading=false;const b2=document.getElementById('aiBtn');if(b2){b2.disabled=false;b2.textContent='Send';}
+},
+aiAppend(role,text,isTyping=false){const c=document.getElementById('aiMsgs');if(!c)return null;const id='am_'+Date.now()+Math.random().toString(36).slice(2);const d=document.createElement('div');d.className=`ai-msg ${role}${isTyping?' typing':''}`;d.id=id;d.innerHTML=text.replace(/\n/g,'<br>');c.appendChild(d);c.scrollTop=c.scrollHeight;return id;},
+aiClear(){P._aiMsgs=[];const c=document.getElementById('aiMsgs');if(c)c.innerHTML='<div class="ai-msg bot">Chat cleared. How can I help?</div>';},
+async aiSetup(){const cur=App.cfg?.hfKey||'';M.open('AI Accountant — API Key',`<p class="muted" style="margin-bottom:13px">Uses <strong>Mistral-7B</strong> via Hugging Face. Free, no billing.</p><div class="fg"><label>Hugging Face API Key</label><input type="text" id="hfIn" value="${cur}" placeholder="hf_xxxxxxxxxxxxxxxx"/><small>Get free at <a href="https://huggingface.co/settings/tokens" target="_blank">huggingface.co/settings/tokens</a> → New Token → Read.</small></div>`,[{lbl:'Cancel',cls:'btn-o',fn:'M.close()'},{lbl:'Save Key',cls:'btn-p',fn:'P.aiSaveKey()'}]);},
+async aiSaveKey(){const k=document.getElementById('hfIn').value.trim();if(!k)return T.err('Enter your API key.');await API.call('updateConfig',{hfKey:k});App.cfg.hfKey=k;M.close();T.ok('API key saved!');P.ai();},
+
+// ─── SETTINGS ───
+async settings(){
+  const mc=document.getElementById('mc'),biz=App.cfg?.business||{};
+  mc.innerHTML=`
+    <div class="pg-hd"><div><h2>Settings</h2><p>Business & account configuration</p></div></div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-ttl">Business Information</div>
+        <div class="fg"><label>Business Name</label><input type="text" id="sbn" value="${biz.name||''}"/></div>
+        <div class="fg"><label>Address</label><input type="text" id="sba" value="${biz.address||''}"/></div>
+        <div class="fg"><label>Phone</label><input type="text" id="sbp" value="${biz.phone||''}"/></div>
+        <div class="fg"><label>Currency</label><input type="text" id="sbc" value="${biz.currency||'KSh'}"/></div>
+        <div class="fg"><label>KRA PIN</label><input type="text" id="sbk" value="${biz.kra||''}"/></div>
+        <button class="btn btn-p" onclick="P.saveBiz()">Save</button>
+      </div>
+      <div>
+        <div class="card mb">
+          <div class="card-ttl">Change My Password</div>
+          <div class="fg"><label>Current Password</label><input type="password" id="sop"/></div>
+          <div class="fg"><label>New Password</label><input type="password" id="snp" placeholder="Min 4 characters"/></div>
+          <div class="fg"><label>Confirm New</label><input type="password" id="snpc"/></div>
+          <button class="btn btn-p" onclick="P.changePass()">Update Password</button>
+        </div>
+        <div class="card mb">
+          <div class="card-ttl">🔐 Device Linking</div>
+          <p class="muted sm" style="margin-bottom:9px">Any device opening this app URL sees a lock screen. They enter the <strong>Admin password</strong> to link their device. Once linked, staff sign in normally.</p>
+          <p class="muted sm">This device token: <span class="mono">${Auth.deviceToken()}</span></p>
+          <div class="divider"></div>
+          <button class="btn btn-o btn-sm" onclick="P.loadDevices()">View All Linked Devices</button>
+          <div id="devList" class="mt"></div>
+        </div>
+        <div class="card">
+          <div class="card-ttl">Backend</div>
+          <div class="fb" style="padding:5px 0;border-bottom:1px solid var(--border)"><span class="muted">Type</span><span>Google Sheets via Apps Script</span></div>
+          <div class="fb" style="padding:5px 0;border-bottom:1px solid var(--border)"><span class="muted">URL</span><span class="mono sm" style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${API.getUrl()?.slice(0,40)}...</span></div>
+          <div class="fb" style="padding:5px 0"><span class="muted">Status</span><span style="color:#15803d">● Connected</span></div>
+          <div class="divider"></div>
+          <button class="btn btn-d btn-sm" onclick="P.changeBackend()">Change Backend URL</button>
+        </div>
+      </div>
+    </div>`;
+},
+
+async loadDevices(){
+  const el=document.getElementById('devList');el.innerHTML='<p class="muted sm">Loading...</p>';
+  try{const r=await API.call('getDevices');const devs=r.data||[];el.innerHTML=!devs.length?'<p class="muted sm">No devices logged.</p>':`<div class="tw mt"><table><thead><tr><th>Token</th><th>Authorized</th></tr></thead><tbody>${devs.map(d=>`<tr><td class="mono sm">${d.token}</td><td>${App.fmtD(d.authorizedAt)}</td></tr>`).join('')}</tbody></table></div>`;}
+  catch(e){el.innerHTML=`<p class="muted sm">Error: ${e.message}</p>`;}
+},
+
+changeBackend(){
+  M.open('Change Backend URL',`<div class="fg"><label>New Web App URL</label><input type="text" id="newUrl" placeholder="https://script.google.com/macros/s/.../exec"/></div>`,[{lbl:'Cancel',cls:'btn-o',fn:'M.close()'},{lbl:'Save & Reconnect',cls:'btn-p',fn:'P.saveBackend()'}]);
+},
+async saveBackend(){
+  const url=document.getElementById('newUrl').value.trim();if(!url)return T.err('Enter a URL.');
+  API.setUrl(url);M.close();T.ok('URL saved. Reloading...');setTimeout(()=>location.reload(),1000);
+},
+
+async saveBiz(){
+  const name=document.getElementById('sbn').value.trim();if(!name)return T.err('Name required.');
+  const biz={name,address:document.getElementById('sba').value.trim(),phone:document.getElementById('sbp').value.trim(),currency:document.getElementById('sbc').value.trim()||'KSh',kra:document.getElementById('sbk').value.trim()};
+  await API.call('updateConfig',{business:biz});App.cfg.business=biz;document.getElementById('sbBiz').textContent=biz.name;T.ok('Saved!');
+},
+
+async changePass(){
+  const old=document.getElementById('sop').value,np=document.getElementById('snp').value,npc=document.getElementById('snpc').value;
+  const u=App.cu;if(Auth.hash(old)!==u.password)return T.err('Current password incorrect.');
+  if(np.length<4)return T.err('Min 4 characters.');if(np!==npc)return T.err("Passwords don't match.");
+  await API.call('updateUser',{id:u.id,updates:{password:Auth.hash(np)}});App.cu.password=Auth.hash(np);T.ok('Password updated!');
+  document.getElementById('sop').value='';document.getElementById('snp').value='';document.getElementById('snpc').value='';
+},
+
+// ─── INVOICE PDF ───
+printInv(saleId){
+  const s=(P._sales||[]).find(x=>x.id===saleId)||(P._stProds||[]).find(x=>x.id===saleId);
+  const doP=sale=>{
+    const b=App.cfg?.business||{};
+    const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#1c1a16;padding:40px;max-width:660px;margin:0 auto}.hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:34px;padding-bottom:16px;border-bottom:3px solid #1b4332}.bn{font-size:24px;font-weight:700;color:#1b4332}.bd{font-size:11px;color:#5c584f;margin-top:5px;line-height:1.8}.il h2{font-size:26px;color:#b5650a;letter-spacing:2px;text-transform:uppercase;text-align:right}.il p{font-size:12px;color:#5c584f;text-align:right;margin-top:3px}.sec{margin-bottom:22px}.sl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#8c8880;margin-bottom:6px;font-weight:600}.cb{background:#f4f1ec;border-radius:7px;padding:12px 15px;font-size:13px}table{width:100%;border-collapse:collapse}thead tr{background:#1b4332;color:#fff}th{padding:9px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em}td{padding:10px 12px;border-bottom:1px solid #ebe7de;font-size:13px}tr:last-child td{border-bottom:none}.tot{float:right;width:230px;margin-top:14px}.tot td{padding:5px 0;border:none;font-size:13px}.tf{font-size:17px;font-weight:700;color:#1b4332;border-top:2px solid #1b4332;padding-top:7px!important}.pb{display:inline-block;background:#e8f0eb;color:#1b4332;padding:3px 11px;border-radius:99px;font-size:11px;font-weight:600}.ft{margin-top:42px;padding-top:14px;border-top:1px solid #ebe7de;text-align:center;font-size:11px;color:#8c8880}.cf::after{content:'';display:table;clear:both}@media print{body{padding:16px}@page{margin:1cm;size:A4}}</style></head><body>
+    <div class="hd"><div><div class="bn">${b.name||'Business'}</div><div class="bd">${b.address?b.address+'<br>':''}${b.phone?'Tel: '+b.phone+'<br>':''}${b.kra?'KRA: '+b.kra:''}</div></div><div class="il"><h2>Invoice</h2><p>${String(sale.id).slice(-10)}</p><p>${new Date(sale.createdAt).toLocaleDateString('en-KE',{day:'numeric',month:'long',year:'numeric'})}</p><p>${new Date(sale.createdAt).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})}</p></div></div>
+    <div class="sec"><div class="sl">Bill To</div><div class="cb"><strong>${sale.customer||'Walk-in Customer'}</strong></div></div>
+    <table><thead><tr><th>Description</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Amount</th></tr></thead><tbody><tr><td>${sale.productName}${sale.notes?'<br><small style="color:#8c8880">'+sale.notes+'</small>':''}</td><td style="text-align:center">${sale.quantity}</td><td style="text-align:right">${b.currency||'KSh'} ${Number(sale.unitPrice).toFixed(2)}</td><td style="text-align:right"><strong>${b.currency||'KSh'} ${Number(sale.total).toFixed(2)}</strong></td></tr></tbody></table>
+    <div class="cf"><table class="tot"><tr><td>Subtotal</td><td style="text-align:right">${b.currency||'KSh'} ${Number(sale.total).toFixed(2)}</td></tr><tr><td colspan="2" style="border-top:1px solid #ebe7de;padding:4px 0!important"></td></tr><tr><td class="tf">TOTAL</td><td class="tf" style="text-align:right">${b.currency||'KSh'} ${Number(sale.total).toFixed(2)}</td></tr></table></div>
+    <div style="margin-top:28px"><div class="sl">Payment</div><div>Method: <span class="pb">${sale.paymentMethod}</span></div><div style="margin-top:6px;font-size:12px;color:#5c584f">Served by: ${sale.soldBy}</div></div>
+    <div class="ft">Thank you for your business!<br>${b.name||''}${b.phone?' — '+b.phone:''}${b.address?' — '+b.address:''}</div>
+    <script>window.onload=()=>window.print()<\/script></body></html>`;
+    const w=window.open('','_blank','width=700,height=880');w.document.write(html);w.document.close();
+  };
+  if(s){doP(s);}else{API.call('getSales').then(r=>{const found=(r.data||[]).find(x=>x.id===saleId);if(found)doP(found);else T.err('Sale not found.');});}
+}
+
+}; // end P
+
+// ══════════════════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════════════════
+function splash(msg){document.getElementById('splashMsg').textContent=msg||'Loading...';document.getElementById('splash').classList.remove('hidden');}
+function hideSplash(){document.getElementById('splash').classList.add('hidden');}
+function show(id){['splash','connScreen','setupScreen','loginScreen','appShell'].forEach(s=>document.getElementById(s).classList.add('hidden'));document.getElementById(id).classList.remove('hidden');}
+function setSyncing(on){const d=document.getElementById('syncDot'),t=document.getElementById('syncTxt');if(!d)return;if(on){d.className='sync-dot syncing';if(t)t.textContent='Syncing...';}else{d.className='sync-dot';if(t)t.textContent='Ready';}}
+function setSyncErr(on){const d=document.getElementById('syncDot'),t=document.getElementById('syncTxt');if(!d)return;if(on){d.className='sync-dot err';if(t)t.textContent='Error';}else{d.className='sync-dot';if(t)t.textContent='Ready';}}
+
+window.addEventListener('DOMContentLoaded',()=>App.boot());
+</script>
+</body>
+</html>
