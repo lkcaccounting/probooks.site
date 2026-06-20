@@ -2075,43 +2075,53 @@ STAFF: ${STAFF.length} | BRANCHES: ${BRANCHES.map(b=>b.name).join(',')||'1'}`;
     addAIMsg('bot','Please add your <strong>OpenRouter API key</strong> in Settings → AI Accountant.<br><br>Get a free key at <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--green2);">openrouter.ai/keys</a> — sign up free, no credit card needed.');
     return;
   }
-  // Use OpenRouter — works with free models, no Google Cloud setup required
-  try{
-    const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'Authorization':'Bearer '+apiKey,
-        'HTTP-Referer':'https://lkcaccounting.github.io/probooks.site/',
-        'X-Title':'ProBooks AI Accountant'
-      },
-      body:JSON.stringify({
-        model:'google/gemini-2.0-flash-lite:free',
-        messages:[
-          {role:'system',content:systemPrompt},
-          {role:'user',content:'BUSINESS DATA:\n'+businessData+'\n\nQUESTION: '+q}
-        ],
-        max_tokens:900
-      })
-    });
-    typing.remove();
-    if(!res.ok){
-      const ej=await res.json().catch(()=>({}));
-      const msg=ej.error?.message||res.statusText||'Unknown error';
-      if(res.status===401){
+  // Use OpenRouter — try multiple confirmed-working free models in order
+  const FREE_MODELS=[
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'deepseek/deepseek-chat:free',
+    'deepseek/deepseek-r1:free',
+    'mistralai/mistral-small-3.1-24b-instruct:free',
+    'google/gemini-2.0-flash-exp:free'
+  ];
+  let res=null;let lastErr='';
+  for(const model of FREE_MODELS){
+    try{
+      const r=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization':'Bearer '+apiKey,
+          'HTTP-Referer':'https://lkcaccounting.github.io/probooks.site/',
+          'X-Title':'ProBooks AI Accountant'
+        },
+        body:JSON.stringify({
+          model,
+          messages:[
+            {role:'system',content:systemPrompt},
+            {role:'user',content:'BUSINESS DATA:\n'+businessData+'\n\nQUESTION: '+q}
+          ],
+          max_tokens:900
+        })
+      });
+      if(r.ok){res=r;break;}
+      const ej=await r.clone().json().catch(()=>({}));
+      const msg=ej.error?.message||r.statusText||'';
+      if(r.status===401){
+        typing.remove();
         addAIMsg('bot','Invalid API key. Go to <strong>Settings → AI Accountant</strong> and paste your OpenRouter key from <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--green2);">openrouter.ai/keys</a>.');
-      } else {
-        addAIMsg('bot','AI error: '+msg);
+        return;
       }
-      return;
-    }
-    const data=await res.json();
-    const text=data.choices?.[0]?.message?.content||'No response received.';
-    addAIMsg('bot',text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<span class="mono">$1</span>').replace(/#{1,3} (.+)/g,'<h4>$1</h4>'));
-  }catch(e){
-    typing.remove();
-    addAIMsg('bot','Connection error: '+e.message+'. Check your internet connection.');
+      lastErr=msg||`${model} unavailable`;
+    }catch(netErr){lastErr=netErr.message;}
   }
+  typing.remove();
+  if(!res){
+    addAIMsg('bot','Could not reach any AI model right now. Last error: <em>'+lastErr+'</em><br><br>Free models occasionally hit rate limits — wait a moment and try again.');
+    return;
+  }
+  const data=await res.json();
+  const text=data.choices?.[0]?.message?.content||'No response received.';
+  addAIMsg('bot',text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<span class="mono">$1</span>').replace(/#{1,3} (.+)/g,'<h4>$1</h4>'));
 }
 // ═══════════════════════════════════════════════
 // REPORTS
