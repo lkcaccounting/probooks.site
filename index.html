@@ -469,6 +469,7 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
     </div>
     <p id="sj-err" style="color:var(--red);font-size:12.5px;min-height:18px;margin-bottom:10px;"></p>
     <button class="btn btn-green btn-full" onclick="joinWorkspace()">Join Workspace</button>
+    <button class="btn btn-outline btn-full" style="margin-top:8px;font-size:12px;" onclick="openStaffFB()">Reconnect to Database (if code not found)</button>
     <button class="btn btn-outline btn-full" style="margin-top:8px;" onclick="showScreen('screen-welcome')">Back</button>
   </div>
 </div>
@@ -1119,11 +1120,13 @@ async function joinWorkspace(){
     const db=window._db;
     err.textContent='Looking up invite code...';
     // Query only by token field (no compound index needed)
+    // Normalize: trim whitespace, uppercase, in case of copy-paste artifacts
+    const cleanCode=inviteCode.replace(/\s+/g,'').toUpperCase();
     let wsId=null;
     let tokenRef=null;
     try{
       const tokenSnap=await window._getDocs(
-        window._query(window._col(db,'inviteTokens'),window._where('token','==',inviteCode))
+        window._query(window._col(db,'inviteTokens'),window._where('token','==',cleanCode))
       );
       if(!tokenSnap.empty){
         const td=tokenSnap.docs[0].data();
@@ -1152,12 +1155,14 @@ async function joinWorkspace(){
       }
     }
     // If no token found, try code as direct workspace ID
-    if(!wsId) wsId=inviteCode;
+    if(!wsId) wsId=cleanCode;
     err.textContent='Fetching workspace...';
     const wsSnap=await window._getDoc(window._doc(db,'workspaces',wsId));
     if(!wsSnap.exists()){
+      let myProjectId='unknown';
+      try{const cfg=JSON.parse(localStorage.getItem('pb_fbconfig')||'{}');myProjectId=cfg.projectId||'unknown';}catch(e){}
       err.style.color='var(--red)';
-      err.textContent='Invite code not found. Make sure you copied it correctly. Ask your owner for a new code.';
+      err.innerHTML=`Invite code not found.<br><br><strong>This device is connected to Firebase project:</strong> <span style="font-family:var(--mono);color:var(--amber);">${myProjectId}</span><br><br>Make sure this matches EXACTLY the Project ID your business owner gave you (check Settings → Share with Staff on their device).<br><br><button onclick="reconnectFirebase()" style="background:var(--amber-dim);color:var(--amber);border:1.5px solid var(--amber);border-radius:8px;padding:6px 14px;font-family:var(--font);font-size:12.5px;font-weight:600;cursor:pointer;margin-top:6px;">Reconnect to a Different Project</button>`;
       return;
     }
     WS={...wsSnap.data()};
@@ -1313,6 +1318,18 @@ async function ensureFirebase(){
 }
 function openStaffFB(){document.getElementById('staff-fbconfig-modal').style.display='flex';}
 function closeStaffFB(){document.getElementById('staff-fbconfig-modal').style.display='none';}
+function reconnectFirebase(){
+  // Save current join form values, clear the firebase config, and let user re-enter
+  const inviteCode=document.getElementById('sj-code')?.value?.trim()||'';
+  const name=document.getElementById('sj-name')?.value?.trim()||'';
+  const pw=document.getElementById('sj-password')?.value||'';
+  if(inviteCode&&name&&pw){
+    window._pendingJoin={inviteCode,name,pw};
+  }
+  document.getElementById('sfc-apikey').value='';
+  document.getElementById('sfc-projectid').value='';
+  openStaffFB();
+}
 
 // ═══════════════════════════════════════════════
 // PASSWORD / LOCK LOGIC
@@ -2075,13 +2092,13 @@ STAFF: ${STAFF.length} | BRANCHES: ${BRANCHES.map(b=>b.name).join(',')||'1'}`;
     addAIMsg('bot','Please add your <strong>OpenRouter API key</strong> in Settings → AI Accountant.<br><br>Get a free key at <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--green2);">openrouter.ai/keys</a> — sign up free, no credit card needed.');
     return;
   }
-  // Use OpenRouter — try multiple confirmed-working free models in order
+  // Use OpenRouter's Free Models Router — automatically picks a working free model
+  // for every request, so we never hit "model not found" or deprecated slugs again.
   const FREE_MODELS=[
+    'openrouter/free',
     'meta-llama/llama-3.3-70b-instruct:free',
-    'deepseek/deepseek-chat:free',
-    'deepseek/deepseek-r1:free',
-    'mistralai/mistral-small-3.1-24b-instruct:free',
-    'google/gemini-2.0-flash-exp:free'
+    'deepseek/deepseek-chat-v3-0324:free',
+    'mistralai/mistral-small-3.1-24b-instruct:free'
   ];
   let res=null;let lastErr='';
   for(const model of FREE_MODELS){
