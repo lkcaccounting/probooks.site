@@ -410,6 +410,7 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
       </div>
     </div>
     <div class="sb-bottom">
+      <div class="nav-item" onclick="openM('install-modal')" style="color:var(--blue);font-size:12.5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Install App</div>
       <div class="nav-item" onclick="lockApp()" style="color:var(--red);font-size:12.5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Lock App</div>
     </div>
   </div>
@@ -704,6 +705,33 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
 <div class="modal-bg" id="inv-preview-modal">
   <div class="modal modal-lg"><div class="modal-head"><h3>Invoice Preview</h3><div style="display:flex;gap:8px;"><button class="btn btn-gold btn-sm" onclick="dlInvoice()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button><button class="modal-x" onclick="closeM('inv-preview-modal')">&times;</button></div></div>
     <div class="modal-body" id="inv-preview-body"></div>
+  </div>
+</div>
+
+<!-- Install Guide Modal -->
+<div class="modal-bg" id="install-modal">
+  <div class="modal" style="max-width:500px;"><div class="modal-head"><h3>Install ProBooks on Your Device</h3><button class="modal-x" onclick="closeM('install-modal')">&times;</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.6;">Install ProBooks as a native app on any device — works offline once installed.</p>
+      <div id="install-prompt-btn-wrap" style="margin-bottom:18px;display:none;">
+        <button class="btn btn-green btn-full" id="install-prompt-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Install Now (Chrome/Edge detected)</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:14px;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">🤖</span> Android (Chrome)</div>
+          <ol style="font-size:12.5px;color:var(--text2);line-height:2;padding-left:18px;"><li>Tap the <strong style="color:var(--text1);">3-dot menu</strong> (top right)</li><li>Tap <strong style="color:var(--text1);">"Add to Home screen"</strong> or <strong style="color:var(--text1);">"Install app"</strong></li><li>Tap <strong style="color:var(--text1);">Add</strong> — done</li></ol>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:14px;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">🍎</span> iPhone / iPad (Safari)</div>
+          <ol style="font-size:12.5px;color:var(--text2);line-height:2;padding-left:18px;"><li>Tap the <strong style="color:var(--text1);">Share button</strong> (box with arrow at bottom)</li><li>Scroll and tap <strong style="color:var(--text1);">"Add to Home Screen"</strong></li><li>Tap <strong style="color:var(--text1);">Add</strong> — done</li></ol>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:14px;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">💻</span> Windows / Mac / Linux (Chrome or Edge)</div>
+          <ol style="font-size:12.5px;color:var(--text2);line-height:2;padding-left:18px;"><li>Click the <strong style="color:var(--text1);">install icon</strong> in the address bar (looks like a screen with down arrow)</li><li>Or: 3-dot menu → <strong style="color:var(--text1);">"Install ProBooks Accounting"</strong></li><li>Click <strong style="color:var(--text1);">Install</strong> — it opens like a native app</li></ol>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin-top:14px;line-height:1.6;">Once installed, ProBooks works completely offline. Internet is only needed for syncing data between devices and downloading PDF reports.</p>
+    </div>
   </div>
 </div>
 
@@ -1276,11 +1304,28 @@ async function saveStock(){
   const name=document.getElementById('st-name').value.trim();
   if(!name){toast('Please enter item name.','err');return;}
   const id=document.getElementById('st-eid').value;
-  const row={ws_id:WS.id,name,sku:document.getElementById('st-sku').value.trim(),category:document.getElementById('st-cat').value.trim(),unit:document.getElementById('st-unit').value,qty:parseInt(document.getElementById('st-qty').value)||0,reorder:parseInt(document.getElementById('st-reorder').value)||0,cost_price:parseFloat(document.getElementById('st-cost').value)||0,selling_price:parseFloat(document.getElementById('st-price').value)||0,notes:document.getElementById('st-notes').value};
+  const qty=parseInt(document.getElementById('st-qty').value)||0;
+  const row={ws_id:WS.id,name,sku:document.getElementById('st-sku').value.trim(),category:document.getElementById('st-cat').value.trim(),unit:document.getElementById('st-unit').value,qty,reorder:parseInt(document.getElementById('st-reorder').value)||0,cost_price:parseFloat(document.getElementById('st-cost').value)||0,selling_price:parseFloat(document.getElementById('st-price').value)||0,notes:document.getElementById('st-notes').value};
   try{
-    if(id){await db.update('stock',id,row);const i=STOCK.findIndex(s=>s.id===id);if(i!==-1)STOCK[i]={...STOCK[i],...row};}
-    else{row.id=uid();await db.upsert('stock',row);STOCK.push(row);}
-    closeM('stock-modal');renderStock();toast('Stock item saved.','ok');
+    if(id){
+      // Editing existing item
+      await db.update('stock',id,row);const i=STOCK.findIndex(s=>s.id===id);if(i!==-1)STOCK[i]={...STOCK[i],...row};
+      closeM('stock-modal');renderStock();toast('Stock item updated.','ok');
+    } else {
+      // Check if item with same name already exists in this workspace
+      const existing=STOCK.find(s=>s.name.trim().toLowerCase()===name.toLowerCase()&&s.ws_id===WS.id);
+      if(existing){
+        // Auto-restock — add to existing quantity instead of creating duplicate
+        const newQty=parseInt(existing.qty||0)+qty;
+        await db.update('stock',existing.id,{qty:newQty,selling_price:row.selling_price||existing.selling_price,cost_price:row.cost_price||existing.cost_price,reorder:row.reorder||existing.reorder});
+        const si=STOCK.findIndex(s=>s.id===existing.id);if(si!==-1){STOCK[si].qty=newQty;if(row.selling_price)STOCK[si].selling_price=row.selling_price;if(row.cost_price)STOCK[si].cost_price=row.cost_price;}
+        closeM('stock-modal');renderStock();
+        toast(`"${name}" already exists — added ${qty} units. New total: ${newQty} ${existing.unit}`,'ok');
+      } else {
+        row.id=uid();await db.upsert('stock',row);STOCK.push(row);
+        closeM('stock-modal');renderStock();toast('Stock item added.','ok');
+      }
+    }
   }catch(e){toast('Error: '+e.message,'err');}
 }
 function editStock(id){if(!isOwner()){toast('Only the owner can edit stock.','err');return;}const s=STOCK.find(s=>s.id===id);if(!s)return;document.getElementById('st-eid').value=s.id;document.getElementById('st-mtitle').textContent='Edit Stock Item';document.getElementById('st-name').value=s.name||'';document.getElementById('st-sku').value=s.sku||'';document.getElementById('st-cat').value=s.category||'';document.getElementById('st-unit').value=s.unit||'pcs';document.getElementById('st-qty').value=s.qty||0;document.getElementById('st-reorder').value=s.reorder||0;document.getElementById('st-cost').value=s.cost_price||0;document.getElementById('st-price').value=s.selling_price||0;document.getElementById('st-notes').value=s.notes||'';openM('stock-modal');}
@@ -1517,7 +1562,23 @@ document.addEventListener('DOMContentLoaded',()=>{
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
   // Desktop install prompt
   let dip=null;
-  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;if(window.matchMedia('(display-mode: standalone)').matches)return;const b=document.createElement('div');b.style.cssText='position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1.5px solid var(--green);border-radius:12px;padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:9998;box-shadow:0 8px 32px rgba(0,0,0,.6);font-size:13px;white-space:nowrap;';b.innerHTML=`<span style="color:var(--text1);">Install ProBooks as a desktop app</span><button id="do-install" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;font-family:var(--font);font-size:12.5px;font-weight:600;">Install</button><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:2px 6px;">&times;</button>`;document.body.appendChild(b);document.getElementById('do-install').onclick=async()=>{if(!dip)return;dip.prompt();const{outcome}=await dip.userChoice;if(outcome==='accepted')b.remove();dip=null;};});
+  window.addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault();dip=e;
+    // Show the Install Now button inside the install modal
+    const wrap=document.getElementById('install-prompt-btn-wrap');
+    const btn=document.getElementById('install-prompt-btn');
+    if(wrap)wrap.style.display='block';
+    if(btn)btn.onclick=async()=>{if(!dip)return;dip.prompt();const{outcome}=await dip.userChoice;if(outcome==='accepted'){wrap.style.display='none';toast('ProBooks installed!','ok');}dip=null;};
+    // Also show floating banner if not in standalone
+    if(window.matchMedia('(display-mode: standalone)').matches)return;
+    const b=document.createElement('div');
+    b.id='install-banner';
+    b.style.cssText='position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1.5px solid var(--green);border-radius:12px;padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:9998;box-shadow:0 8px 32px rgba(0,0,0,.6);font-size:13px;white-space:nowrap;';
+    b.innerHTML=`<span style="color:var(--text1);">Install ProBooks as a desktop app</span><button id="do-install" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;font-family:var(--font);font-size:12.5px;font-weight:600;">Install</button><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:2px 6px;">&times;</button>`;
+    document.body.appendChild(b);
+    document.getElementById('do-install').onclick=async()=>{if(!dip)return;dip.prompt();const{outcome}=await dip.userChoice;if(outcome==='accepted')b.remove();dip=null;};
+  });
+  window.addEventListener('appinstalled',()=>{document.getElementById('install-banner')?.remove();toast('ProBooks installed successfully!','ok');});
   // Restore session
   const savedMe=LS.get('pb_me');const savedWs=LS.get('pb_ws');
   if(savedMe&&savedWs&&getSavedSupabase()){ME=savedMe;WS=savedWs;showPinScreen();return;}
