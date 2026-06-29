@@ -8,8 +8,10 @@
 <meta name="apple-mobile-web-app-title" content="ProBooks">
 <meta name="theme-color" content="#080f17">
 <title>ProBooks Accounting</title>
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="/probooks.site/manifest.json">
+<link rel="apple-touch-icon" href="/probooks.site/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/probooks.site/icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="/probooks.site/icon-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
@@ -1559,7 +1561,7 @@ function toast(msg,type='ok'){const el=document.createElement('div');el.classNam
 // INIT
 // ═══════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded',()=>{
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('/probooks.site/sw.js',{scope:'/probooks.site/'});
   // Desktop install prompt
   let dip=null;
   window.addEventListener('beforeinstallprompt',e=>{
