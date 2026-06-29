@@ -1039,7 +1039,13 @@ function handleRT(table,payload){
   const map={income:INCOME,expenses:EXPENSES,stock:STOCK,invoices:INVOICES,notifications:NOTIFS};
   const arr=map[table];if(!arr)return;
   const {eventType,new:nw,old}=payload;
-  if(eventType==='INSERT'){arr.unshift(nw);if(table==='notifications'&&isOwner()){toast(nw.title+': '+nw.body,'info');renderNotifs();}}
+  if(eventType==='INSERT'){
+    // Only add if not already in array (prevents duplicate when we also push locally)
+    if(!arr.find(r=>r.id===nw.id)){
+      arr.unshift(nw);
+    }
+    if(table==='notifications'&&isOwner()){toast(nw.title+': '+nw.body,'info');renderNotifs();}
+  }
   else if(eventType==='UPDATE'){const i=arr.findIndex(r=>r.id===nw.id);if(i!==-1)arr[i]=nw;}
   else if(eventType==='DELETE'){const i=arr.findIndex(r=>r.id===(old.id||payload.old?.id));if(i!==-1)arr.splice(i,1);}
   checkLowStock();
@@ -1127,7 +1133,7 @@ async function saveIncome(){
   const row={ws_id:WS.id,date,amount,category:document.getElementById('inc-cat').value,payment_method:document.getElementById('inc-method').value,description:document.getElementById('inc-desc').value.trim(),reference:document.getElementById('inc-ref').value.trim(),branch_id:BRANCHES[0]?.id||null,staff_id:ME.id,staff_name:ME.name};
   try{
     if(id){await db.update('income',id,row);const i=INCOME.findIndex(x=>x.id===id);if(i!==-1)INCOME[i]={...INCOME[i],...row};}
-    else{row.id=uid();await db.upsert('income',row);INCOME.unshift(row);}
+    else{row.id=uid();await db.upsert('income',row);if(!INCOME.find(i=>i.id===row.id))INCOME.unshift(row);}
     closeM('income-modal');renderIncome();toast('Income saved.','ok');
   }catch(e){toast('Error: '+e.message,'err');}
 }
@@ -1159,7 +1165,7 @@ async function saveExpense(){
   const row={ws_id:WS.id,date,amount,category:document.getElementById('exp-cat').value,payment_method:document.getElementById('exp-method').value,description:document.getElementById('exp-desc').value.trim(),vendor:document.getElementById('exp-vendor').value.trim(),branch_id:BRANCHES[0]?.id||null,staff_id:ME.id};
   try{
     if(id){await db.update('expenses',id,row);const i=EXPENSES.findIndex(x=>x.id===id);if(i!==-1)EXPENSES[i]={...EXPENSES[i],...row};}
-    else{row.id=uid();await db.upsert('expenses',row);EXPENSES.unshift(row);}
+    else{row.id=uid();await db.upsert('expenses',row);if(!EXPENSES.find(e=>e.id===row.id))EXPENSES.unshift(row);}
     closeM('expense-modal');renderExpenses();toast('Expense saved.','ok');
   }catch(e){toast('Error: '+e.message,'err');}
 }
@@ -1236,7 +1242,7 @@ async function saveInvoice(){
   const row={ws_id:WS.id,inv_number:num,client,email:document.getElementById('inv-email').value,client_addr:document.getElementById('inv-caddr').value,date:document.getElementById('inv-date').value,due_date:document.getElementById('inv-due').value,lines:invLines,tax:parseFloat(document.getElementById('inv-tax').value||0),discount:parseFloat(document.getElementById('inv-disc').value||0),subtotal:tots.sub,discount_amount:tots.dAmt,tax_amount:tots.tAmt,total:tots.tot,notes:document.getElementById('inv-notes').value,status:document.getElementById('inv-status').value};
   try{
     if(id){await db.update('invoices',id,row);const i=INVOICES.findIndex(x=>x.id===id);if(i!==-1)INVOICES[i]={...INVOICES[i],...row};}
-    else{row.id=uid();await db.upsert('invoices',row);INVOICES.unshift(row);}
+    else{row.id=uid();await db.upsert('invoices',row);if(!INVOICES.find(i=>i.id===row.id))INVOICES.unshift(row);}
     closeM('invoice-modal');renderInvoices();toast('Invoice saved.','ok');
   }catch(e){toast('Error: '+e.message,'err');}
 }
@@ -1310,22 +1316,37 @@ async function saveStock(){
   const row={ws_id:WS.id,name,sku:document.getElementById('st-sku').value.trim(),category:document.getElementById('st-cat').value.trim(),unit:document.getElementById('st-unit').value,qty,reorder:parseInt(document.getElementById('st-reorder').value)||0,cost_price:parseFloat(document.getElementById('st-cost').value)||0,selling_price:parseFloat(document.getElementById('st-price').value)||0,notes:document.getElementById('st-notes').value};
   try{
     if(id){
-      // Editing existing item
-      await db.update('stock',id,row);const i=STOCK.findIndex(s=>s.id===id);if(i!==-1)STOCK[i]={...STOCK[i],...row};
+      // Editing existing item — update DB and local array
+      await db.update('stock',id,row);
+      const i=STOCK.findIndex(s=>s.id===id);
+      if(i!==-1)STOCK[i]={...STOCK[i],...row};
       closeM('stock-modal');renderStock();toast('Stock item updated.','ok');
     } else {
-      // Check if item with same name already exists in this workspace
-      const existing=STOCK.find(s=>s.name.trim().toLowerCase()===name.toLowerCase()&&s.ws_id===WS.id);
-      if(existing){
-        // Auto-restock — add to existing quantity instead of creating duplicate
-        const newQty=parseInt(existing.qty||0)+qty;
-        await db.update('stock',existing.id,{qty:newQty,selling_price:row.selling_price||existing.selling_price,cost_price:row.cost_price||existing.cost_price,reorder:row.reorder||existing.reorder});
-        const si=STOCK.findIndex(s=>s.id===existing.id);if(si!==-1){STOCK[si].qty=newQty;if(row.selling_price)STOCK[si].selling_price=row.selling_price;if(row.cost_price)STOCK[si].cost_price=row.cost_price;}
+      // Check if same name exists — query Supabase directly to be sure (not just local array)
+      const existing=await SB.from('stock').select('*').eq('ws_id',WS.id).ilike('name',name).single();
+      if(existing.data){
+        // Auto-restock existing item
+        const newQty=parseInt(existing.data.qty||0)+qty;
+        await db.update('stock',existing.data.id,{
+          qty:newQty,
+          selling_price:row.selling_price||existing.data.selling_price,
+          cost_price:row.cost_price||existing.data.cost_price,
+          reorder:row.reorder||existing.data.reorder
+        });
+        // Update local array — Realtime UPDATE event will also fire but that's fine
+        const si=STOCK.findIndex(s=>s.id===existing.data.id);
+        if(si!==-1){STOCK[si]={...STOCK[si],qty:newQty};}
         closeM('stock-modal');renderStock();
-        toast(`"${name}" already exists — added ${qty} units. New total: ${newQty} ${existing.unit}`,'ok');
+        toast(`"${name}" already exists — added ${qty} units. New total: ${newQty} ${existing.data.unit}`,'ok');
       } else {
-        row.id=uid();await db.upsert('stock',row);STOCK.push(row);
-        closeM('stock-modal');renderStock();toast('Stock item added.','ok');
+        // Brand new item — insert to DB, also push locally for instant UI feedback
+        // handleRT will fire too but deduplication check prevents double-add
+        row.id=uid();
+        await db.upsert('stock',row);
+        if(!STOCK.find(s=>s.id===row.id)) STOCK.push(row);
+        closeM('stock-modal');
+        renderStock();
+        toast('Stock item added.','ok');
       }
     }
   }catch(e){toast('Error: '+e.message,'err');}
@@ -1345,7 +1366,7 @@ async function recordSale(){
     await db.update('stock',id,{qty:newQty});
     const si=STOCK.findIndex(st=>st.id===id);if(si!==-1)STOCK[si].qty=newQty;
     const incRow={id:uid(),ws_id:WS.id,date:today(),amount:total,category:'Sales',payment_method:method,description:`Sale: ${s.name} x${qty}`,reference:'',branch_id:BRANCHES[0]?.id||null,staff_id:ME.id,staff_name:ME.name};
-    await db.upsert('income',incRow);INCOME.unshift(incRow);
+    await db.upsert('income',incRow);if(!INCOME.find(i=>i.id===incRow.id))INCOME.unshift(incRow);
     // Notify owner if staff
     if(!isOwner()){await db.upsert('notifications',{id:uid(),ws_id:WS.id,title:`Sale by ${ME.name}`,body:`${ME.name} sold ${qty}x ${s.name} via ${method} — ${fmt(total)}`,read:false,created_at:new Date().toISOString()});}
     closeM('sale-modal');renderStock();checkLowStock();toast(`Sale recorded. Revenue: ${fmt(total)}`,'ok');
@@ -1363,7 +1384,7 @@ async function recordRestock(){
   try{
     await db.update('stock',id,{qty:newQty});
     const si=STOCK.findIndex(st=>st.id===id);if(si!==-1)STOCK[si].qty=newQty;
-    if(cost>0){const expRow={id:uid(),ws_id:WS.id,date:today(),amount:cost*qty,category:'Stock Purchase',payment_method:method,description:`Restock: ${s.name} x${qty}`,vendor:'',branch_id:BRANCHES[0]?.id||null,staff_id:ME.id};await db.upsert('expenses',expRow);EXPENSES.unshift(expRow);}
+    if(cost>0){const expRow={id:uid(),ws_id:WS.id,date:today(),amount:cost*qty,category:'Stock Purchase',payment_method:method,description:`Restock: ${s.name} x${qty}`,vendor:'',branch_id:BRANCHES[0]?.id||null,staff_id:ME.id};await db.upsert('expenses',expRow);if(!EXPENSES.find(e=>e.id===expRow.id))EXPENSES.unshift(expRow);}
     if(!isOwner()){await db.upsert('notifications',{id:uid(),ws_id:WS.id,title:`Restock by ${ME.name}`,body:`${ME.name} restocked ${qty}x ${s.name}`,read:false,created_at:new Date().toISOString()});}
     closeM('restock-modal');renderStock();toast(`Restocked ${qty} ${s.unit} of ${s.name}.`,'ok');
   }catch(e){toast('Error: '+e.message,'err');}
