@@ -2,14 +2,19 @@
   "name": "ProBooks Accounting",
   "short_name": "ProBooks",
   "description": "Multi-user professional accounting software by LKC Accounting",
-  "start_url": "/index.html",
-  "scope": "/",
+  "start_url": "/probooks.site/index.html",
+  "scope": "/probooks.site/",
   "display": "standalone",
   "background_color": "#080f17",
   "theme_color": "#0e9e63",
   "orientation": "any",
   "icons": [
-    {"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
-    {"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
-  ]
+    {"src":"/probooks.site/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"/probooks.site/icon-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"},
+    {"src":"/probooks.site/apple-touch-icon.png","sizes":"180x180","type":"image/png","purpose":"any"}
+  ],
+  "screenshots": [
+    {"src":"/probooks.site/icon-512.png","sizes":"512x512","type":"image/png","form_factor":"narrow"}
+  ],
+  "categories": ["finance","business","productivity"]
 }
