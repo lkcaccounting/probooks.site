@@ -644,20 +644,65 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
 
 <!-- Sale Modal -->
 <div class="modal-bg" id="sale-modal">
-  <div class="modal" style="max-width:400px;"><div class="modal-head"><h3>Record Sale</h3><button class="modal-x" onclick="closeM('sale-modal')">&times;</button></div>
+  <div class="modal" style="max-width:440px;"><div class="modal-head"><h3>Record Sale</h3><button class="modal-x" onclick="closeM('sale-modal')">&times;</button></div>
     <div class="modal-body">
       <input type="hidden" id="sale-stid">
-      <p id="sale-item-nm" style="font-weight:700;font-size:15px;color:var(--green2);margin-bottom:6px;"></p>
+      <p id="sale-item-nm" style="font-weight:700;font-size:15px;color:var(--green2);margin-bottom:4px;"></p>
       <p id="sale-qty-info" style="font-size:12.5px;color:var(--text2);margin-bottom:16px;"></p>
-      <div class="fg"><label>Quantity Sold</label><input type="number" id="sale-qty" min="1" placeholder="1"></div>
-      <div class="fg"><label>Payment Method</label><select id="sale-method"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option><option>Card</option><option>Cheque</option><option>Airtel Money</option></select></div>
-      <div class="fg"><label>Override Sale Price (optional)</label><input type="number" id="sale-price" step="0.01" placeholder="Leave blank to use set price"></div>
+      <div class="frow">
+        <div class="fg"><label>Quantity Sold</label><input type="number" id="sale-qty" min="1" placeholder="1" oninput="calcSaleTotal()"></div>
+        <div class="fg"><label>Override Price (optional)</label><input type="number" id="sale-price" step="0.01" placeholder="Set price" oninput="calcSaleTotal()"></div>
+      </div>
+      <div class="fg"><label>Payment Method</label>
+        <select id="sale-method" onchange="toggleStkField()">
+          <option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option><option>Card</option><option>Cheque</option><option>Airtel Money</option>
+        </select>
+      </div>
+      <!-- STK Push — shown when M-Pesa selected -->
+      <div id="stk-wrap" style="display:none;background:var(--green-dim);border:1.5px solid var(--green);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--green2);margin-bottom:8px;">M-Pesa STK Push</div>
+        <div class="fg" style="margin-bottom:8px;"><label>Customer M-Pesa Number</label><input type="tel" id="stk-phone" placeholder="e.g. 0712345678" style="font-family:var(--mono);"></div>
+        <button class="btn btn-green btn-full btn-sm" onclick="sendSTKPush()" id="stk-btn">Send Payment Request to Customer</button>
+        <p id="stk-status" style="font-size:12px;margin-top:8px;min-height:16px;"></p>
+      </div>
+      <!-- Sale total preview -->
+      <div style="background:var(--bg0);border-radius:var(--r);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:12.5px;color:var(--text2);">Sale Total</span>
+        <span style="font-size:20px;font-weight:700;color:var(--green2);font-family:var(--mono);" id="sale-total-disp">KES 0.00</span>
+      </div>
     </div>
     <div class="modal-foot"><button class="btn btn-outline" onclick="closeM('sale-modal')">Cancel</button><button class="btn btn-green" onclick="recordSale()">Record Sale</button></div>
   </div>
 </div>
 
-<!-- Restock Modal -->
+<!-- Receipt Modal — shown after sale is recorded -->
+<div class="modal-bg" id="receipt-modal">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-head"><h3>Sale Complete — Send Receipt?</h3><button class="modal-x" onclick="closeM('receipt-modal')">&times;</button></div>
+    <div class="modal-body">
+      <!-- Receipt preview -->
+      <div style="background:var(--bg0);border:1px solid var(--border2);border-radius:var(--r);padding:14px;margin-bottom:16px;font-size:13px;line-height:1.8;" id="receipt-preview"></div>
+      <p style="font-size:12.5px;color:var(--text2);margin-bottom:12px;">Ask the customer: <strong style="color:var(--text1);">"Would you like a receipt?"</strong></p>
+      <div class="fg"><label>Customer Phone or Email</label><input type="text" id="receipt-contact" placeholder="0712345678 or email@example.com"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px;">
+        <button class="btn btn-green btn-full" onclick="sendReceiptWhatsApp()" style="flex-direction:column;gap:4px;padding:10px 8px;font-size:12px;">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          WhatsApp
+        </button>
+        <button class="btn btn-outline btn-full" onclick="sendReceiptEmail()" style="flex-direction:column;gap:4px;padding:10px 8px;font-size:12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Email
+        </button>
+        <button class="btn btn-outline btn-full" onclick="sendReceiptSMS()" style="flex-direction:column;gap:4px;padding:10px 8px;font-size:12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          SMS
+        </button>
+      </div>
+      <p id="receipt-send-status" style="font-size:12px;color:var(--green2);min-height:18px;margin-top:10px;text-align:center;"></p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline btn-full" onclick="closeM('receipt-modal')">Skip — No Receipt Needed</button></div>
+  </div>
+</div>
 <div class="modal-bg" id="restock-modal">
   <div class="modal" style="max-width:400px;"><div class="modal-head"><h3>Restock Item</h3><button class="modal-x" onclick="closeM('restock-modal')">&times;</button></div>
     <div class="modal-body">
@@ -1353,9 +1398,42 @@ async function saveStock(){
 }
 function editStock(id){if(!isOwner()){toast('Only the owner can edit stock.','err');return;}const s=STOCK.find(s=>s.id===id);if(!s)return;document.getElementById('st-eid').value=s.id;document.getElementById('st-mtitle').textContent='Edit Stock Item';document.getElementById('st-name').value=s.name||'';document.getElementById('st-sku').value=s.sku||'';document.getElementById('st-cat').value=s.category||'';document.getElementById('st-unit').value=s.unit||'pcs';document.getElementById('st-qty').value=s.qty||0;document.getElementById('st-reorder').value=s.reorder||0;document.getElementById('st-cost').value=s.cost_price||0;document.getElementById('st-price').value=s.selling_price||0;document.getElementById('st-notes').value=s.notes||'';openM('stock-modal');}
 
-function openSaleM(id){const s=STOCK.find(s=>s.id===id);if(!s)return;document.getElementById('sale-stid').value=id;document.getElementById('sale-item-nm').textContent=s.name;document.getElementById('sale-qty-info').textContent=`Available: ${s.qty} ${s.unit} | Selling Price: ${fmt(s.selling_price)}`;document.getElementById('sale-qty').value=1;document.getElementById('sale-price').value='';openM('sale-modal');}
+function openSaleM(id){
+  const s=STOCK.find(s=>s.id===id);if(!s)return;
+  document.getElementById('sale-stid').value=id;
+  document.getElementById('sale-item-nm').textContent=s.name;
+  document.getElementById('sale-qty-info').textContent=`Available: ${s.qty} ${s.unit} | Price: ${fmt(s.selling_price)}`;
+  document.getElementById('sale-qty').value=1;
+  document.getElementById('sale-price').value='';
+  document.getElementById('sale-method').value='Cash';
+  document.getElementById('stk-status').textContent='';
+  document.getElementById('stk-wrap').style.display='none';
+  calcSaleTotal();
+  openM('sale-modal');
+}
+
+function calcSaleTotal(){
+  const id=document.getElementById('sale-stid').value;
+  const s=STOCK.find(s=>s.id===id);if(!s)return;
+  const qty=parseInt(document.getElementById('sale-qty').value)||0;
+  const price=parseFloat(document.getElementById('sale-price').value)||parseFloat(s.selling_price)||0;
+  const total=qty*price;
+  const disp=document.getElementById('sale-total-disp');
+  if(disp)disp.textContent=fmt(total);
+}
+
+function toggleStkField(){
+  const method=document.getElementById('sale-method').value;
+  const wrap=document.getElementById('stk-wrap');
+  if(wrap)wrap.style.display=(method==='M-Pesa')?'block':'none';
+}
+
+// Last sale data — used by receipt modal
+let lastSaleData=null;
+
 async function recordSale(){
-  const id=document.getElementById('sale-stid').value;const s=STOCK.find(s=>s.id===id);if(!s)return;
+  const id=document.getElementById('sale-stid').value;
+  const s=STOCK.find(s=>s.id===id);if(!s)return;
   const qty=parseInt(document.getElementById('sale-qty').value)||0;
   if(qty<=0){toast('Quantity must be at least 1.','err');return;}
   if(qty>parseInt(s.qty||0)){toast(`Only ${s.qty} ${s.unit} available.`,'err');return;}
@@ -1367,10 +1445,174 @@ async function recordSale(){
     const si=STOCK.findIndex(st=>st.id===id);if(si!==-1)STOCK[si].qty=newQty;
     const incRow={id:uid(),ws_id:WS.id,date:today(),amount:total,category:'Sales',payment_method:method,description:`Sale: ${s.name} x${qty}`,reference:'',branch_id:BRANCHES[0]?.id||null,staff_id:ME.id,staff_name:ME.name};
     await db.upsert('income',incRow);if(!INCOME.find(i=>i.id===incRow.id))INCOME.unshift(incRow);
-    // Notify owner if staff
     if(!isOwner()){await db.upsert('notifications',{id:uid(),ws_id:WS.id,title:`Sale by ${ME.name}`,body:`${ME.name} sold ${qty}x ${s.name} via ${method} — ${fmt(total)}`,read:false,created_at:new Date().toISOString()});}
-    closeM('sale-modal');renderStock();checkLowStock();toast(`Sale recorded. Revenue: ${fmt(total)}`,'ok');
+    // Store sale data for receipt
+    lastSaleData={item:s.name,qty,unit:s.unit,price,total,method,date:today(),cashier:ME.name,branch:BRANCHES[0]?.name||'Main Branch'};
+    closeM('sale-modal');renderStock();checkLowStock();
+    // Show receipt modal
+    showReceiptModal();
   }catch(e){toast('Error: '+e.message,'err');}
+}
+
+// ═══════════════════════════════════════════════
+// RECEIPT SYSTEM
+// ═══════════════════════════════════════════════
+function buildReceiptText(){
+  if(!lastSaleData)return'';
+  const d=lastSaleData;
+  const line='─'.repeat(32);
+  return `*${WS.biz_name}*\n${WS.address||''}\n${WS.contact||''}\n${line}\n📋 *RECEIPT*\nDate: ${fmtDate(d.date)}\nCashier: ${d.cashier}\nBranch: ${d.branch}\n${line}\n${d.item}\n${d.qty} ${d.unit} × ${fmt(d.price)}\n${line}\n*TOTAL: ${fmt(d.total)}*\nPayment: ${d.method}\n${line}\nThank you for shopping with us! 🙏\n_Powered by ProBooks_`;
+}
+
+function buildReceiptHTML(){
+  if(!lastSaleData)return'';
+  const d=lastSaleData;
+  return `<div style="font-family:var(--mono);font-size:12.5px;line-height:1.9;">
+    <div style="font-size:14px;font-weight:700;color:var(--green2);">${WS.biz_name}</div>
+    <div style="color:var(--text3);font-size:11px;">${WS.address||''} ${WS.contact?'• '+WS.contact:''}</div>
+    <div style="border-top:1px dashed var(--border2);margin:8px 0;"></div>
+    <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2);">Date</span><span>${fmtDate(d.date)}</span></div>
+    <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2);">Cashier</span><span>${d.cashier}</span></div>
+    <div style="border-top:1px dashed var(--border2);margin:8px 0;"></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:2px;"><span>${d.item}</span></div>
+    <div style="display:flex;justify-content:space-between;color:var(--text2);font-size:11.5px;"><span>${d.qty} ${d.unit} × ${fmt(d.price)}</span><span style="color:var(--text1);font-weight:600;">${fmt(d.total)}</span></div>
+    <div style="border-top:1px dashed var(--border2);margin:8px 0;"></div>
+    <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;"><span>TOTAL</span><span style="color:var(--green2);">${fmt(d.total)}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-top:4px;color:var(--text2);font-size:11.5px;"><span>Payment</span><span>${d.method}</span></div>
+    <div style="border-top:1px dashed var(--border2);margin:8px 0;"></div>
+    <div style="text-align:center;color:var(--text3);font-size:11px;">Thank you for your business!</div>
+  </div>`;
+}
+
+function showReceiptModal(){
+  document.getElementById('receipt-preview').innerHTML=buildReceiptHTML();
+  document.getElementById('receipt-contact').value='';
+  document.getElementById('receipt-send-status').textContent='';
+  openM('receipt-modal');
+}
+
+function getReceiptContact(){
+  return document.getElementById('receipt-contact').value.trim();
+}
+
+function sendReceiptWhatsApp(){
+  const contact=getReceiptContact();
+  const status=document.getElementById('receipt-send-status');
+  if(!contact){status.style.color='var(--red)';status.textContent='Please enter a phone number first.';return;}
+  // Clean phone number — remove spaces, dashes, ensure country code
+  let phone=contact.replace(/[\s\-\(\)]/g,'');
+  if(phone.startsWith('0'))phone='254'+phone.slice(1);
+  if(!phone.startsWith('254')&&!phone.startsWith('+'))phone='254'+phone;
+  phone=phone.replace('+','');
+  const text=encodeURIComponent(buildReceiptText());
+  const url=`https://wa.me/${phone}?text=${text}`;
+  window.open(url,'_blank');
+  status.style.color='var(--green2)';status.textContent='WhatsApp opened — hit Send to deliver receipt.';
+}
+
+function sendReceiptEmail(){
+  const contact=getReceiptContact();
+  const status=document.getElementById('receipt-send-status');
+  if(!contact||!contact.includes('@')){status.style.color='var(--red)';status.textContent='Please enter a valid email address.';return;}
+  const d=lastSaleData;
+  const subject=encodeURIComponent(`Receipt from ${WS.biz_name} — ${fmt(d.total)}`);
+  const body=encodeURIComponent(buildReceiptText().replace(/\*/g,'').replace(/_/g,''));
+  window.open(`mailto:${contact}?subject=${subject}&body=${body}`,'_blank');
+  status.style.color='var(--green2)';status.textContent='Email client opened — click Send to deliver.';
+}
+
+function sendReceiptSMS(){
+  const contact=getReceiptContact();
+  const status=document.getElementById('receipt-send-status');
+  if(!contact){status.style.color='var(--red)';status.textContent='Please enter a phone number first.';return;}
+  // SMS via sms: URI — opens default SMS app on phone
+  const d=lastSaleData;
+  const msg=encodeURIComponent(`Receipt from ${WS.biz_name}: ${d.qty}x ${d.item} = ${fmt(d.total)} via ${d.method}. Thank you!`);
+  let phone=contact.replace(/[\s\-\(\)]/g,'');
+  if(phone.startsWith('0'))phone='+254'+phone.slice(1);
+  window.open(`sms:${phone}?body=${msg}`,'_blank');
+  status.style.color='var(--green2)';status.textContent='SMS app opened — tap Send to deliver.';
+}
+
+// ═══════════════════════════════════════════════
+// STK PUSH (M-Pesa Daraja API)
+// ═══════════════════════════════════════════════
+// SETUP: Replace these with your actual Daraja credentials
+// Get them from: developer.safaricom.co.ke → My Apps → Create App
+const MPESA_CONFIG={
+  consumerKey:'REPLACE_WITH_YOUR_CONSUMER_KEY',
+  consumerSecret:'REPLACE_WITH_YOUR_CONSUMER_SECRET',
+  shortcode:'REPLACE_WITH_YOUR_SHORTCODE',          // Your Paybill or Till number
+  passkey:'REPLACE_WITH_YOUR_LIPA_NA_MPESA_PASSKEY',// From Daraja portal
+  callbackUrl:'https://lkcaccounting.github.io/probooks.site/',// Any valid URL
+  environment:'sandbox' // Change to 'production' when going live
+};
+
+async function sendSTKPush(){
+  const phone=document.getElementById('stk-phone').value.trim();
+  const status=document.getElementById('stk-status');
+  const btn=document.getElementById('stk-btn');
+  if(!phone){status.style.color='var(--red)';status.textContent='Enter customer M-Pesa number.';return;}
+  // Check if credentials are configured
+  if(MPESA_CONFIG.consumerKey.includes('REPLACE')){
+    status.style.color='var(--amber)';
+    status.textContent='STK Push not configured yet. Add your Daraja API credentials in Settings → M-Pesa.';
+    return;
+  }
+  const id=document.getElementById('sale-stid').value;
+  const s=STOCK.find(s=>s.id===id);
+  const qty=parseInt(document.getElementById('sale-qty').value)||1;
+  const price=parseFloat(document.getElementById('sale-price').value)||parseFloat(s?.selling_price)||0;
+  const amount=Math.ceil(qty*price); // M-Pesa requires whole numbers
+  // Clean phone number
+  let cleanPhone=phone.replace(/[\s\-\(\)]/g,'');
+  if(cleanPhone.startsWith('0'))cleanPhone='254'+cleanPhone.slice(1);
+  if(cleanPhone.startsWith('+'))cleanPhone=cleanPhone.slice(1);
+  btn.disabled=true;btn.textContent='Sending...';
+  status.style.color='var(--text2)';status.textContent='Requesting payment...';
+  try{
+    const baseUrl=MPESA_CONFIG.environment==='sandbox'?'https://sandbox.safaricom.co.ke':'https://api.safaricom.co.ke';
+    // Step 1: Get access token
+    const tokenRes=await fetch(`${baseUrl}/oauth/v1/generate?grant_type=client_credentials`,{
+      headers:{'Authorization':'Basic '+btoa(MPESA_CONFIG.consumerKey+':'+MPESA_CONFIG.consumerSecret)}
+    });
+    if(!tokenRes.ok)throw new Error('Could not get M-Pesa token. Check your Consumer Key and Secret.');
+    const tokenData=await tokenRes.json();
+    const token=tokenData.access_token;
+    // Step 2: Generate password
+    const timestamp=new Date().toISOString().replace(/[^0-9]/g,'').slice(0,14);
+    const password=btoa(MPESA_CONFIG.shortcode+MPESA_CONFIG.passkey+timestamp);
+    // Step 3: Initiate STK Push
+    const stkRes=await fetch(`${baseUrl}/mpesa/stkpush/v1/processrequest`,{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        BusinessShortCode:MPESA_CONFIG.shortcode,
+        Password:password,
+        Timestamp:timestamp,
+        TransactionType:'CustomerPayBillOnline',
+        Amount:amount,
+        PartyA:cleanPhone,
+        PartyB:MPESA_CONFIG.shortcode,
+        PhoneNumber:cleanPhone,
+        CallBackURL:MPESA_CONFIG.callbackUrl,
+        AccountReference:WS.biz_name,
+        TransactionDesc:`Payment for ${s?.name||'goods'}`
+      })
+    });
+    const stkData=await stkRes.json();
+    if(stkData.ResponseCode==='0'){
+      status.style.color='var(--green2)';
+      status.textContent=`✓ STK prompt sent to ${phone}. Ask customer to enter their M-Pesa PIN.`;
+      btn.textContent='Sent!';
+    } else {
+      throw new Error(stkData.errorMessage||stkData.ResponseDescription||'STK Push failed');
+    }
+  }catch(e){
+    status.style.color='var(--red)';
+    status.textContent='Error: '+e.message;
+    btn.disabled=false;btn.textContent='Send Payment Request to Customer';
+  }
 }
 
 function openRestockM(id){const s=STOCK.find(s=>s.id===id);if(!s)return;document.getElementById('restock-stid').value=id;document.getElementById('restock-item-nm').textContent=s.name;document.getElementById('restock-qty').value='';document.getElementById('restock-cost').value='';openM('restock-modal');}
