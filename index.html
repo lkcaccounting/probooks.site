@@ -648,78 +648,138 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
     <div class="modal-body">
       <input type="hidden" id="sale-stid">
       <p id="sale-item-nm" style="font-weight:700;font-size:15px;color:var(--green2);margin-bottom:4px;"></p>
-      <p id="sale-qty-info" style="font-size:12.5px;color:var(--text2);margin-bottom:16px;"></p>
-      <div class="fg"><label>Quantity Sold</label><input type="number" id="sale-qty" min="1" placeholder="1" oninput="updateSaleTotal()"></div>
-      <div class="fg"><label>Override Sale Price (optional)</label><input type="number" id="sale-price" step="0.01" placeholder="Leave blank to use set price" oninput="updateSaleTotal()"></div>
+      <p id="sale-qty-info" style="font-size:12.5px;color:var(--text2);margin-bottom:14px;"></p>
+      <div class="frow">
+        <div class="fg"><label>Quantity Sold</label><input type="number" id="sale-qty" min="1" placeholder="1" oninput="updateSaleTotal()"></div>
+        <div class="fg"><label>Override Price (optional)</label><input type="number" id="sale-price" step="0.01" placeholder="Leave blank" oninput="updateSaleTotal()"></div>
+      </div>
       <div style="background:var(--bg0);border-radius:var(--r);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <span style="font-size:12.5px;color:var(--text2);">Total</span>
-        <span style="font-size:20px;font-weight:700;color:var(--green2);font-family:var(--mono);" id="sale-total-disp">KES 0.00</span>
+        <span style="font-size:12.5px;color:var(--text2);">Sale Total</span>
+        <span style="font-size:20px;font-weight:700;color:var(--green2);font-family:var(--mono);" id="sale-tot-disp">0.00</span>
       </div>
       <div class="fg"><label>Payment Method</label>
-        <select id="sale-method" onchange="toggleSTK()">
-          <option>Cash</option>
-          <option value="M-Pesa STK Push">M-Pesa STK Push</option>
-          <option>M-Pesa (Manual)</option>
-          <option>Bank Transfer</option>
-          <option>Card</option>
-          <option>Cheque</option>
-          <option>Airtel Money</option>
+        <select id="sale-method" onchange="toggleSTKSection()">
+          <option value="Cash">Cash</option>
+          <option value="M-Pesa STK Push">M-Pesa STK Push (prompt customer phone)</option>
+          <option value="M-Pesa Manual">M-Pesa (customer pays manually)</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="Card">Card</option>
+          <option value="Airtel Money">Airtel Money</option>
         </select>
       </div>
-      <!-- STK Push section -->
-      <div id="stk-section" style="display:none;background:rgba(0,164,75,.08);border:1px solid rgba(0,164,75,.3);border-radius:var(--r);padding:14px;margin-bottom:12px;">
-        <div style="font-size:12.5px;font-weight:700;color:var(--green2);margin-bottom:10px;">M-Pesa STK Push — Customer pays on phone</div>
-        <div class="fg" style="margin-bottom:8px;"><label>Customer M-Pesa Number</label><input type="tel" id="stk-phone" placeholder="e.g. 0712345678" style="font-size:15px;letter-spacing:1px;"></div>
-        <button class="btn btn-green btn-full" onclick="sendSTK()" id="stk-btn">
+      <!-- STK Push panel -->
+      <div id="stk-panel" style="display:none;background:rgba(14,158,99,.07);border:1.5px solid rgba(14,158,99,.3);border-radius:var(--r);padding:14px;margin-bottom:12px;">
+        <div style="font-size:12.5px;font-weight:700;color:var(--green2);margin-bottom:10px;">Send M-Pesa payment request to customer</div>
+        <div class="fg" style="margin-bottom:10px;"><label>Customer M-Pesa Number</label>
+          <input type="tel" id="stk-phone" placeholder="e.g. 0712345678" style="font-size:15px;letter-spacing:1px;">
+        </div>
+        <button class="btn btn-green btn-full" onclick="sendSTKPush()" id="stk-btn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.37 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          Send STK Push to Customer
+          Send STK Push
         </button>
         <p id="stk-status" style="font-size:12px;color:var(--text2);margin-top:8px;min-height:16px;text-align:center;"></p>
+        <p style="font-size:11px;color:var(--text3);margin-top:4px;text-align:center;">Customer will get a prompt on their phone to enter M-Pesa PIN</p>
       </div>
     </div>
-    <div class="modal-foot"><button class="btn btn-outline" onclick="closeM('sale-modal')">Cancel</button><button class="btn btn-green" onclick="recordSale()">Record Sale</button></div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeM('sale-modal')">Cancel</button>
+      <button class="btn btn-green" onclick="recordSale()">Record Sale & Get Receipt Options</button>
+    </div>
   </div>
 </div>
 
-<!-- Receipt Modal — shown AFTER sale is recorded -->
+<!-- Receipt Modal — shown after every sale -->
 <div class="modal-bg" id="receipt-modal">
-  <div class="modal" style="max-width:420px;">
-    <div class="modal-head"><h3>Sale Complete!</h3><button class="modal-x" onclick="closeM('receipt-modal')">&times;</button></div>
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-head">
+      <div>
+        <h3>Sale Recorded!</h3>
+        <p style="font-size:11.5px;color:var(--green2);margin-top:2px;" id="rcpt-sale-summary"></p>
+      </div>
+      <button class="modal-x" onclick="closeM('receipt-modal')">&times;</button>
+    </div>
     <div class="modal-body">
-      <!-- Receipt preview -->
-      <div style="background:#fff;color:#111;border-radius:var(--r);padding:16px;margin-bottom:16px;font-size:13px;" id="receipt-preview"></div>
-      <p style="font-size:13px;font-weight:600;color:var(--text1);margin-bottom:12px;">Send receipt to customer? <span style="font-weight:400;color:var(--text2);">(optional)</span></p>
+      <!-- Mini receipt preview -->
+      <div id="rcpt-preview" style="background:#f8fafc;border-radius:var(--r);padding:14px;margin-bottom:16px;font-size:12.5px;color:#111;line-height:1.8;border:1px solid #e2e8f0;"></div>
+      <p style="font-size:13px;font-weight:600;margin-bottom:14px;">Does the customer want a receipt?</p>
       <!-- WhatsApp -->
-      <div style="margin-bottom:10px;">
-        <div style="font-size:11.5px;font-weight:700;color:var(--text2);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">WhatsApp</div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:10px;">
+        <div style="font-size:11.5px;font-weight:700;color:#25D366;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+          <svg viewBox="0 0 24 24" fill="#25D366" style="width:16px;height:16px;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.996 0C5.373 0 0 5.373 0 11.996c0 2.122.558 4.109 1.533 5.836L.061 23.934l6.242-1.635A11.94 11.94 0 0 0 11.996 24C18.623 24 24 18.627 24 12.004 24 5.373 18.619 0 11.996 0zm0 21.818a9.814 9.814 0 0 1-5.012-1.374l-.36-.214-3.714.974.992-3.62-.235-.374a9.816 9.816 0 0 1-1.505-5.214c0-5.418 4.41-9.828 9.83-9.828 5.42 0 9.833 4.41 9.833 9.828 0 5.418-4.41 9.822-9.829 9.822z"/></svg>
+          WhatsApp (recommended — free)
+        </div>
         <div style="display:flex;gap:8px;">
-          <input type="tel" id="rcpt-wa-num" placeholder="Customer WhatsApp number e.g. 0712345678" style="flex:1;background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--r);padding:9px 12px;color:var(--text1);font-family:var(--font);font-size:13.5px;outline:none;">
-          <button class="btn btn-green btn-sm" onclick="sendWhatsAppReceipt()" style="background:#25D366;white-space:nowrap;">
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.996 0C5.373 0 0 5.373 0 11.996c0 2.122.558 4.109 1.533 5.836L.061 23.934l6.242-1.635A11.94 11.94 0 0 0 11.996 24C18.623 24 24 18.627 24 12.004 24 5.373 18.619 0 11.996 0zm0 21.818a9.814 9.814 0 0 1-5.012-1.374l-.36-.214-3.714.974.992-3.62-.235-.374a9.816 9.816 0 0 1-1.505-5.214c0-5.418 4.41-9.828 9.83-9.828 5.42 0 9.833 4.41 9.833 9.828 0 5.418-4.41 9.822-9.829 9.822z"/></svg>
-            Send
-          </button>
+          <input type="tel" id="rcpt-wa" placeholder="Customer WhatsApp e.g. 0712345678" style="flex:1;background:var(--bg4);border:1.5px solid var(--border2);border-radius:var(--r);padding:9px 12px;color:var(--text1);font-family:var(--font);font-size:13.5px;outline:none;">
+          <button onclick="sendWhatsAppReceipt()" style="background:#25D366;color:#fff;border:none;border-radius:var(--r);padding:9px 16px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Send</button>
         </div>
       </div>
       <!-- Email -->
-      <div style="margin-bottom:10px;">
-        <div style="font-size:11.5px;font-weight:700;color:var(--text2);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Email</div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:10px;">
+        <div style="font-size:11.5px;font-weight:700;color:#7ab8ff;margin-bottom:8px;">Email</div>
         <div style="display:flex;gap:8px;">
-          <input type="email" id="rcpt-email" placeholder="Customer email address" style="flex:1;background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--r);padding:9px 12px;color:var(--text1);font-family:var(--font);font-size:13.5px;outline:none;">
-          <button class="btn btn-blue btn-sm" onclick="sendEmailReceipt()" style="white-space:nowrap;">Send</button>
+          <input type="email" id="rcpt-email" placeholder="Customer email address" style="flex:1;background:var(--bg4);border:1.5px solid var(--border2);border-radius:var(--r);padding:9px 12px;color:var(--text1);font-family:var(--font);font-size:13.5px;outline:none;">
+          <button onclick="sendEmailReceipt()" class="btn btn-blue btn-sm" style="white-space:nowrap;">Send</button>
         </div>
-        <p id="email-status" style="font-size:11.5px;color:var(--text2);margin-top:4px;min-height:16px;"></p>
+        <p id="email-rcpt-status" style="font-size:11.5px;color:var(--text2);margin-top:4px;min-height:14px;"></p>
       </div>
       <!-- SMS -->
-      <div>
-        <div style="font-size:11.5px;font-weight:700;color:var(--text2);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">SMS</div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:12px;">
+        <div style="font-size:11.5px;font-weight:700;color:var(--amber);margin-bottom:8px;">SMS (requires Africa's Talking key in Settings)</div>
         <div style="display:flex;gap:8px;">
-          <input type="tel" id="rcpt-sms-num" placeholder="Customer phone e.g. 0712345678" style="flex:1;background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--r);padding:9px 12px;color:var(--text1);font-family:var(--font);font-size:13.5px;outline:none;">
-          <button class="btn btn-outline btn-sm" onclick="sendSMSReceipt()" style="white-space:nowrap;">Send</button>
+          <input type="tel" id="rcpt-sms" placeholder="Customer phone e.g. 0712345678" style="flex:1;background:var(--bg4);border:1.5px solid var(--border2);border-radius:var(--r);padding:9px 12px;color:var(--text1);font-family:var(--font);font-size:13.5px;outline:none;">
+          <button onclick="sendSMSReceipt()" class="btn btn-outline btn-sm" style="white-space:nowrap;">Send</button>
         </div>
-        <p id="sms-status" style="font-size:11.5px;color:var(--text2);margin-top:4px;min-height:16px;"></p>
+        <p id="sms-rcpt-status" style="font-size:11.5px;color:var(--text2);margin-top:4px;min-height:14px;"></p>
       </div>
     </div>
-    <div class="modal-foot"><button class="btn btn-green btn-full" onclick="closeM('receipt-modal')">Done — No Receipt Needed</button></div>
+    <div class="modal-foot">
+      <button class="btn btn-green btn-full" onclick="closeM('receipt-modal')">Done — No Receipt</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supplier Modal -->
+<div class="modal-bg" id="supplier-modal">
+  <div class="modal"><div class="modal-head"><h3 id="sup-mtitle">Add Supplier</h3><button class="modal-x" onclick="closeM('supplier-modal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="sup-eid">
+      <div class="frow">
+        <div class="fg"><label>Supplier Name</label><input type="text" id="sup-name" placeholder="e.g. Nairobi Wholesale Ltd"></div>
+        <div class="fg"><label>Contact Person</label><input type="text" id="sup-contact" placeholder="e.g. John Kamau"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>Phone</label><input type="tel" id="sup-phone" placeholder="e.g. 0712345678"></div>
+        <div class="fg"><label>Email</label><input type="email" id="sup-email" placeholder="supplier@email.com"></div>
+      </div>
+      <div class="fg"><label>Address / Location</label><input type="text" id="sup-address" placeholder="e.g. Nairobi CBD, River Road"></div>
+      <div class="frow">
+        <div class="fg"><label>Category / Products Supplied</label><input type="text" id="sup-category" placeholder="e.g. Clothing, Electronics"></div>
+        <div class="fg"><label>Payment Terms</label>
+          <select id="sup-terms"><option>Cash on Delivery</option><option>Net 7 days</option><option>Net 14 days</option><option>Net 30 days</option><option>Net 60 days</option><option>Prepaid</option></select>
+        </div>
+      </div>
+      <div class="fg"><label>Credit Limit (KES)</label><input type="number" id="sup-credit" placeholder="0 = no credit" min="0"></div>
+      <div class="fg"><label>Notes</label><textarea id="sup-notes" style="min-height:55px;" placeholder="Any notes about this supplier"></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeM('supplier-modal')">Cancel</button><button class="btn btn-green" onclick="saveSupplier()">Save Supplier</button></div>
+  </div>
+</div>
+
+<!-- Supplier Payment Modal -->
+<div class="modal-bg" id="sup-payment-modal">
+  <div class="modal" style="max-width:400px;"><div class="modal-head"><h3>Record Payment to Supplier</h3><button class="modal-x" onclick="closeM('sup-payment-modal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="sup-pay-id">
+      <p id="sup-pay-name" style="font-weight:700;font-size:14px;color:var(--green2);margin-bottom:14px;"></p>
+      <div class="frow">
+        <div class="fg"><label>Amount Paid</label><input type="number" id="sup-pay-amount" step="0.01" placeholder="0.00"></div>
+        <div class="fg"><label>Date</label><input type="date" id="sup-pay-date"></div>
+      </div>
+      <div class="fg"><label>Payment Method</label><select id="sup-pay-method"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option><option>Cheque</option></select></div>
+      <div class="fg"><label>Reference / Invoice No</label><input type="text" id="sup-pay-ref" placeholder="e.g. INV-001 or M-Pesa ref"></div>
+      <div class="fg"><label>Notes</label><input type="text" id="sup-pay-notes" placeholder="Optional"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeM('sup-payment-modal')">Cancel</button><button class="btn btn-green" onclick="saveSupplierPayment()">Record Payment</button></div>
   </div>
 </div>
 
