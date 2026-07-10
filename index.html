@@ -397,6 +397,8 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
         <div class="nav-sec">Operations</div>
         <div class="nav-item" onclick="nav('invoices')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Invoices</div>
         <div class="nav-item" onclick="nav('stock')" id="nav-stock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Stock<span class="nav-badge" id="stock-badge" style="display:none">0</span></div>
+        <div class="nav-item" onclick="nav('suppliers')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Suppliers</div>
+        <div class="nav-item" onclick="nav('payroll')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Payroll</div>
         <div class="nav-sec">Team</div>
         <div class="nav-item" onclick="nav('staff')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Staff & Access</div>
         <div class="nav-item" onclick="nav('branches')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>Branches</div>
@@ -560,6 +562,31 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
             <button class="btn btn-green" onclick="saveAIKey()">Save API Key</button>
           </div>
         </div>
+        <div class="card" style="margin-bottom:14px;"><div class="card-head"><h3>M-Pesa STK Push (Daraja API)</h3></div>
+          <div class="card-body">
+            <p style="font-size:12.5px;color:var(--text2);margin-bottom:12px;">Get Daraja credentials from <a href="https://developer.safaricom.co.ke" target="_blank" style="color:var(--green2);">developer.safaricom.co.ke</a>. Requires a registered Paybill or Till number.</p>
+            <div class="frow"><div class="fg"><label>Consumer Key</label><input id="set-daraja-key" type="text" placeholder="From Daraja app"></div><div class="fg"><label>Consumer Secret</label><input id="set-daraja-secret" type="password" placeholder="From Daraja app"></div></div>
+            <div class="frow"><div class="fg"><label>Shortcode (Paybill/Till)</label><input id="set-daraja-sc" type="text" placeholder="e.g. 174379"></div><div class="fg"><label>Passkey</label><input id="set-daraja-pk" type="password" placeholder="From Daraja portal"></div></div>
+            <div class="fg"><label>Transaction Type</label><select id="set-daraja-type"><option value="CustomerPayBillOnline">Paybill (CustomerPayBillOnline)</option><option value="CustomerBuyGoodsOnline">Till (CustomerBuyGoodsOnline)</option></select></div>
+            <button class="btn btn-green" onclick="saveDarajaConfig()">Save M-Pesa Config</button>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;"><div class="card-head"><h3>Email Receipts (EmailJS — Free)</h3></div>
+          <div class="card-body">
+            <p style="font-size:12.5px;color:var(--text2);margin-bottom:12px;">Get free credentials at <a href="https://emailjs.com" target="_blank" style="color:var(--green2);">emailjs.com</a> — up to 200 emails/month free.</p>
+            <div class="frow"><div class="fg"><label>Service ID</label><input id="set-ejs-svc" type="text" placeholder="service_xxxxxxx"></div><div class="fg"><label>Template ID</label><input id="set-ejs-tpl" type="text" placeholder="template_xxxxxxx"></div></div>
+            <div class="fg"><label>Public Key</label><input id="set-ejs-key" type="text" placeholder="Your EmailJS public key"></div>
+            <button class="btn btn-green" onclick="saveEmailJSConfig()">Save Email Config</button>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;"><div class="card-head"><h3>SMS Receipts (Africa's Talking)</h3></div>
+          <div class="card-body">
+            <p style="font-size:12.5px;color:var(--text2);margin-bottom:12px;">Get credentials at <a href="https://africastalking.com" target="_blank" style="color:var(--green2);">africastalking.com</a> — KES ~1 per SMS.</p>
+            <div class="frow"><div class="fg"><label>Username</label><input id="set-at-user" type="text" placeholder="Your AT username"></div><div class="fg"><label>API Key</label><input id="set-at-key" type="password" placeholder="Your AT API key"></div></div>
+            <div class="fg"><label>Sender ID (optional)</label><input id="set-at-sender" type="text" placeholder="e.g. ProBooks"></div>
+            <button class="btn btn-green" onclick="saveATConfig()">Save SMS Config</button>
+          </div>
+        </div>
         <div class="card"><div class="card-head"><h3>Change My Password</h3></div>
           <div class="card-body">
             <div class="fg"><label>Current Password</label><input id="pw-old" type="password"></div>
@@ -568,9 +595,61 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
           </div>
         </div>
       </div>
-    </div>
-  </div><!-- /main -->
-</div><!-- /app -->
+
+      <!-- SUPPLIERS PAGE -->
+      <div class="page" id="page-suppliers">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <h2 style="font-size:17px;font-weight:700;">Suppliers</h2>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="syncOfflineQueue()" id="sync-btn" style="display:none;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Sync Offline Sales
+            </button>
+            <button class="btn btn-green" onclick="openM('supplier-modal');resetSupplierForm()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Supplier
+            </button>
+          </div>
+        </div>
+        <div class="fbar"><input type="text" placeholder="Search suppliers..." id="sup-search" oninput="renderSuppliers()"><select id="sup-cat-f" onchange="renderSuppliers()"><option value="">All Categories</option></select></div>
+        <div id="supplier-cards"></div>
+      </div>
+
+      <!-- PAYROLL PAGE -->
+      <div class="page" id="page-payroll">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <h2 style="font-size:17px;font-weight:700;">Payroll</h2>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline" onclick="runPayroll()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Run This Month's Payroll
+            </button>
+            <button class="btn btn-green" onclick="openM('employee-modal');resetEmployeeForm()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Employee
+            </button>
+          </div>
+        </div>
+        <!-- Payroll Summary -->
+        <div id="payroll-summary" class="stat-grid" style="margin-bottom:18px;"></div>
+        <!-- Employees Table -->
+        <div class="card" style="margin-bottom:18px;">
+          <div class="card-head"><h3>Employees</h3><span style="font-size:12px;color:var(--text3);" id="payroll-month"></span></div>
+          <div class="card-body np"><table class="tbl" id="employee-tbl"></table></div>
+        </div>
+        <!-- Payroll History -->
+        <div class="card">
+          <div class="card-head"><h3>Payroll History</h3><button class="btn btn-gold btn-sm" onclick="dlPayrollReport()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export PDF</button></div>
+          <div class="card-body np"><table class="tbl" id="payroll-history-tbl"></table></div>
+        </div>
+      </div>
+
+    </div><!-- /main -->
+  </div><!-- /app -->
+
+<!-- Sync offline button shown on stock page too -->
+<div id="offline-sync-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--amber-dim);border-top:1.5px solid var(--amber);padding:10px 20px;display:none;align-items:center;justify-content:space-between;z-index:400;">
+  <span style="font-size:13px;color:var(--amber);" id="offline-sync-msg">Offline sales pending sync</span>
+  <button class="btn btn-outline btn-sm" onclick="syncOfflineQueue()" style="border-color:var(--amber);color:var(--amber);">Sync Now</button>
+</div>
 
 <!-- ══════════ MODALS ══════════ -->
 
@@ -642,7 +721,7 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
   </div>
 </div>
 
-<!-- Sale Modal -->
+<!-- Sale Modal with STK Push -->
 <div class="modal-bg" id="sale-modal">
   <div class="modal" style="max-width:440px;"><div class="modal-head"><h3>Record Sale</h3><button class="modal-x" onclick="closeM('sale-modal')">&times;</button></div>
     <div class="modal-body">
@@ -650,40 +729,39 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
       <p id="sale-item-nm" style="font-weight:700;font-size:15px;color:var(--green2);margin-bottom:4px;"></p>
       <p id="sale-qty-info" style="font-size:12.5px;color:var(--text2);margin-bottom:14px;"></p>
       <div class="frow">
-        <div class="fg"><label>Quantity Sold</label><input type="number" id="sale-qty" min="1" placeholder="1" oninput="updateSaleTotal()"></div>
-        <div class="fg"><label>Override Price (optional)</label><input type="number" id="sale-price" step="0.01" placeholder="Leave blank" oninput="updateSaleTotal()"></div>
+        <div class="fg"><label>Quantity Sold</label><input type="number" id="sale-qty" min="1" placeholder="1" oninput="calcSaleTotal()"></div>
+        <div class="fg"><label>Override Price (optional)</label><input type="number" id="sale-price" step="0.01" placeholder="Leave blank" oninput="calcSaleTotal()"></div>
       </div>
       <div style="background:var(--bg0);border-radius:var(--r);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <span style="font-size:12.5px;color:var(--text2);">Sale Total</span>
-        <span style="font-size:20px;font-weight:700;color:var(--green2);font-family:var(--mono);" id="sale-tot-disp">0.00</span>
+        <span id="sale-tot-disp" style="font-size:20px;font-weight:700;color:var(--green2);font-family:var(--mono);">0.00</span>
       </div>
       <div class="fg"><label>Payment Method</label>
-        <select id="sale-method" onchange="toggleSTKSection()">
+        <select id="sale-method" onchange="toggleSTKPanel()">
           <option value="Cash">Cash</option>
-          <option value="M-Pesa STK Push">M-Pesa STK Push (prompt customer phone)</option>
+          <option value="M-Pesa STK Push">M-Pesa STK Push</option>
           <option value="M-Pesa Manual">M-Pesa (customer pays manually)</option>
           <option value="Bank Transfer">Bank Transfer</option>
           <option value="Card">Card</option>
           <option value="Airtel Money">Airtel Money</option>
         </select>
       </div>
-      <!-- STK Push panel -->
-      <div id="stk-panel" style="display:none;background:rgba(14,158,99,.07);border:1.5px solid rgba(14,158,99,.3);border-radius:var(--r);padding:14px;margin-bottom:12px;">
-        <div style="font-size:12.5px;font-weight:700;color:var(--green2);margin-bottom:10px;">Send M-Pesa payment request to customer</div>
-        <div class="fg" style="margin-bottom:10px;"><label>Customer M-Pesa Number</label>
+      <div id="stk-panel" style="display:none;background:rgba(14,158,99,.08);border:1.5px solid rgba(14,158,99,.35);border-radius:var(--r);padding:14px;margin-top:4px;">
+        <div style="font-size:12.5px;font-weight:700;color:var(--green2);margin-bottom:10px;">Send payment prompt to customer's phone</div>
+        <div class="fg" style="margin-bottom:10px;"><label>Customer M-Pesa Phone Number</label>
           <input type="tel" id="stk-phone" placeholder="e.g. 0712345678" style="font-size:15px;letter-spacing:1px;">
         </div>
-        <button class="btn btn-green btn-full" onclick="sendSTKPush()" id="stk-btn">
+        <button class="btn btn-green btn-full" onclick="sendSTKPush()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.37 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          Send STK Push
+          Send STK Push Now
         </button>
         <p id="stk-status" style="font-size:12px;color:var(--text2);margin-top:8px;min-height:16px;text-align:center;"></p>
-        <p style="font-size:11px;color:var(--text3);margin-top:4px;text-align:center;">Customer will get a prompt on their phone to enter M-Pesa PIN</p>
+        <p style="font-size:11px;color:var(--text3);margin-top:2px;text-align:center;">Customer receives a prompt on their phone → enters M-Pesa PIN → payment confirmed</p>
       </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-outline" onclick="closeM('sale-modal')">Cancel</button>
-      <button class="btn btn-green" onclick="recordSale()">Record Sale & Get Receipt Options</button>
+      <button class="btn btn-green" onclick="recordSale()">Record Sale →</button>
     </div>
   </div>
 </div>
@@ -692,94 +770,40 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
 <div class="modal-bg" id="receipt-modal">
   <div class="modal" style="max-width:440px;">
     <div class="modal-head">
-      <div>
-        <h3>Sale Recorded!</h3>
-        <p style="font-size:11.5px;color:var(--green2);margin-top:2px;" id="rcpt-sale-summary"></p>
-      </div>
+      <div><h3 style="color:var(--green2);">✓ Sale Recorded!</h3><p id="rcpt-summary" style="font-size:12px;color:var(--text2);margin-top:2px;"></p></div>
       <button class="modal-x" onclick="closeM('receipt-modal')">&times;</button>
     </div>
     <div class="modal-body">
-      <!-- Mini receipt preview -->
-      <div id="rcpt-preview" style="background:#f8fafc;border-radius:var(--r);padding:14px;margin-bottom:16px;font-size:12.5px;color:#111;line-height:1.8;border:1px solid #e2e8f0;"></div>
-      <p style="font-size:13px;font-weight:600;margin-bottom:14px;">Does the customer want a receipt?</p>
+      <div id="rcpt-preview" style="background:#f8fafc;border-radius:var(--r);padding:14px;margin-bottom:16px;font-size:12.5px;color:#111;line-height:1.9;border:1px solid #e2e8f0;font-family:monospace;"></div>
+      <p style="font-size:13px;font-weight:600;color:var(--text1);margin-bottom:12px;">Send receipt to customer? <span style="color:var(--text3);font-weight:400;">(ask them first)</span></p>
       <!-- WhatsApp -->
-      <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:10px;">
-        <div style="font-size:11.5px;font-weight:700;color:#25D366;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-          <svg viewBox="0 0 24 24" fill="#25D366" style="width:16px;height:16px;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.996 0C5.373 0 0 5.373 0 11.996c0 2.122.558 4.109 1.533 5.836L.061 23.934l6.242-1.635A11.94 11.94 0 0 0 11.996 24C18.623 24 24 18.627 24 12.004 24 5.373 18.619 0 11.996 0zm0 21.818a9.814 9.814 0 0 1-5.012-1.374l-.36-.214-3.714.974.992-3.62-.235-.374a9.816 9.816 0 0 1-1.505-5.214c0-5.418 4.41-9.828 9.83-9.828 5.42 0 9.833 4.41 9.833 9.828 0 5.418-4.41 9.822-9.829 9.822z"/></svg>
-          WhatsApp (recommended — free)
-        </div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:700;color:#25D366;margin-bottom:8px;">📱 WhatsApp — Free, no cost, opens on phone</div>
         <div style="display:flex;gap:8px;">
-          <input type="tel" id="rcpt-wa" placeholder="Customer WhatsApp e.g. 0712345678" style="flex:1;background:var(--bg4);border:1.5px solid var(--border2);border-radius:var(--r);padding:9px 12px;color:var(--text1);font-family:var(--font);font-size:13.5px;outline:none;">
-          <button onclick="sendWhatsAppReceipt()" style="background:#25D366;color:#fff;border:none;border-radius:var(--r);padding:9px 16px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Send</button>
+          <input type="tel" id="rcpt-wa" placeholder="Customer number e.g. 0712345678" style="flex:1;background:var(--bg4);border:1.5px solid var(--border2);border-radius:var(--r);padding:9px 12px;color:var(--text1);font-family:var(--font);font-size:13px;outline:none;">
+          <button onclick="sendWhatsAppReceipt()" style="background:#25D366;color:#fff;border:none;border-radius:var(--r);padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Send</button>
         </div>
       </div>
       <!-- Email -->
-      <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:10px;">
-        <div style="font-size:11.5px;font-weight:700;color:#7ab8ff;margin-bottom:8px;">Email</div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:700;color:#7ab8ff;margin-bottom:8px;">📧 Email — Requires EmailJS key in Settings</div>
         <div style="display:flex;gap:8px;">
-          <input type="email" id="rcpt-email" placeholder="Customer email address" style="flex:1;background:var(--bg4);border:1.5px solid var(--border2);border-radius:var(--r);padding:9px 12px;color:var(--text1);font-family:var(--font);font-size:13.5px;outline:none;">
-          <button onclick="sendEmailReceipt()" class="btn btn-blue btn-sm" style="white-space:nowrap;">Send</button>
+          <input type="email" id="rcpt-email" placeholder="Customer email address" style="flex:1;background:var(--bg4);border:1.5px solid var(--border2);border-radius:var(--r);padding:9px 12px;color:var(--text1);font-family:var(--font);font-size:13px;outline:none;">
+          <button onclick="sendEmailReceipt()" style="background:var(--blue);color:#fff;border:none;border-radius:var(--r);padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;">Send</button>
         </div>
-        <p id="email-rcpt-status" style="font-size:11.5px;color:var(--text2);margin-top:4px;min-height:14px;"></p>
+        <p id="email-rcpt-st" style="font-size:11.5px;color:var(--text2);margin-top:4px;min-height:14px;"></p>
       </div>
       <!-- SMS -->
       <div style="background:var(--bg3);border-radius:var(--r);padding:12px;">
-        <div style="font-size:11.5px;font-weight:700;color:var(--amber);margin-bottom:8px;">SMS (requires Africa's Talking key in Settings)</div>
+        <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px;">💬 SMS — Requires Africa's Talking key in Settings</div>
         <div style="display:flex;gap:8px;">
-          <input type="tel" id="rcpt-sms" placeholder="Customer phone e.g. 0712345678" style="flex:1;background:var(--bg4);border:1.5px solid var(--border2);border-radius:var(--r);padding:9px 12px;color:var(--text1);font-family:var(--font);font-size:13.5px;outline:none;">
-          <button onclick="sendSMSReceipt()" class="btn btn-outline btn-sm" style="white-space:nowrap;">Send</button>
+          <input type="tel" id="rcpt-sms" placeholder="Customer phone e.g. 0712345678" style="flex:1;background:var(--bg4);border:1.5px solid var(--border2);border-radius:var(--r);padding:9px 12px;color:var(--text1);font-family:var(--font);font-size:13px;outline:none;">
+          <button onclick="sendSMSReceipt()" style="background:var(--amber-dim);color:var(--amber);border:1.5px solid var(--amber);border-radius:var(--r);padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;">Send</button>
         </div>
-        <p id="sms-rcpt-status" style="font-size:11.5px;color:var(--text2);margin-top:4px;min-height:14px;"></p>
+        <p id="sms-rcpt-st" style="font-size:11.5px;color:var(--text2);margin-top:4px;min-height:14px;"></p>
       </div>
     </div>
-    <div class="modal-foot">
-      <button class="btn btn-green btn-full" onclick="closeM('receipt-modal')">Done — No Receipt</button>
-    </div>
-  </div>
-</div>
-
-<!-- Supplier Modal -->
-<div class="modal-bg" id="supplier-modal">
-  <div class="modal"><div class="modal-head"><h3 id="sup-mtitle">Add Supplier</h3><button class="modal-x" onclick="closeM('supplier-modal')">&times;</button></div>
-    <div class="modal-body">
-      <input type="hidden" id="sup-eid">
-      <div class="frow">
-        <div class="fg"><label>Supplier Name</label><input type="text" id="sup-name" placeholder="e.g. Nairobi Wholesale Ltd"></div>
-        <div class="fg"><label>Contact Person</label><input type="text" id="sup-contact" placeholder="e.g. John Kamau"></div>
-      </div>
-      <div class="frow">
-        <div class="fg"><label>Phone</label><input type="tel" id="sup-phone" placeholder="e.g. 0712345678"></div>
-        <div class="fg"><label>Email</label><input type="email" id="sup-email" placeholder="supplier@email.com"></div>
-      </div>
-      <div class="fg"><label>Address / Location</label><input type="text" id="sup-address" placeholder="e.g. Nairobi CBD, River Road"></div>
-      <div class="frow">
-        <div class="fg"><label>Category / Products Supplied</label><input type="text" id="sup-category" placeholder="e.g. Clothing, Electronics"></div>
-        <div class="fg"><label>Payment Terms</label>
-          <select id="sup-terms"><option>Cash on Delivery</option><option>Net 7 days</option><option>Net 14 days</option><option>Net 30 days</option><option>Net 60 days</option><option>Prepaid</option></select>
-        </div>
-      </div>
-      <div class="fg"><label>Credit Limit (KES)</label><input type="number" id="sup-credit" placeholder="0 = no credit" min="0"></div>
-      <div class="fg"><label>Notes</label><textarea id="sup-notes" style="min-height:55px;" placeholder="Any notes about this supplier"></textarea></div>
-    </div>
-    <div class="modal-foot"><button class="btn btn-outline" onclick="closeM('supplier-modal')">Cancel</button><button class="btn btn-green" onclick="saveSupplier()">Save Supplier</button></div>
-  </div>
-</div>
-
-<!-- Supplier Payment Modal -->
-<div class="modal-bg" id="sup-payment-modal">
-  <div class="modal" style="max-width:400px;"><div class="modal-head"><h3>Record Payment to Supplier</h3><button class="modal-x" onclick="closeM('sup-payment-modal')">&times;</button></div>
-    <div class="modal-body">
-      <input type="hidden" id="sup-pay-id">
-      <p id="sup-pay-name" style="font-weight:700;font-size:14px;color:var(--green2);margin-bottom:14px;"></p>
-      <div class="frow">
-        <div class="fg"><label>Amount Paid</label><input type="number" id="sup-pay-amount" step="0.01" placeholder="0.00"></div>
-        <div class="fg"><label>Date</label><input type="date" id="sup-pay-date"></div>
-      </div>
-      <div class="fg"><label>Payment Method</label><select id="sup-pay-method"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option><option>Cheque</option></select></div>
-      <div class="fg"><label>Reference / Invoice No</label><input type="text" id="sup-pay-ref" placeholder="e.g. INV-001 or M-Pesa ref"></div>
-      <div class="fg"><label>Notes</label><input type="text" id="sup-pay-notes" placeholder="Optional"></div>
-    </div>
-    <div class="modal-foot"><button class="btn btn-outline" onclick="closeM('sup-payment-modal')">Cancel</button><button class="btn btn-green" onclick="saveSupplierPayment()">Record Payment</button></div>
+    <div class="modal-foot"><button class="btn btn-green btn-full" onclick="closeM('receipt-modal')">Done — No Receipt Needed</button></div>
   </div>
 </div>
 
@@ -1218,19 +1242,34 @@ function renderDashboard(){
     <div class="stat"><div class="stat-label">This Month Expenses</div><div class="stat-val r">${fmt(mE)}</div><div class="stat-sub">Total: ${fmt(tE)}</div></div>
     <div class="stat"><div class="stat-label">Net ${prof>=0?'Profit':'Loss'}</div><div class="stat-val ${prof>=0?'g':'r'}">${fmt(Math.abs(prof))}</div><div class="stat-sub">${prof>=0?'Profit':'Loss'}</div></div>
     <div class="stat"><div class="stat-label">Stock Items</div><div class="stat-val" style="color:var(--text1)">${STOCK.length}</div><div class="stat-sub">${low.length} low stock alert${low.length!==1?'s':''}</div></div>`;
-  // Chart
+  // Chart — fixed to always show bars even with small amounts
   const months=[];for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:d.toISOString().slice(0,7),label:d.toLocaleString('default',{month:'short'})});}
-  const maxV=Math.max(...months.map(m=>{const mi=INCOME.filter(t=>t.date?.startsWith(m.key)).reduce((s,t)=>s+parseFloat(t.amount||0),0);const me=EXPENSES.filter(t=>t.date?.startsWith(m.key)).reduce((s,t)=>s+parseFloat(t.amount||0),0);return Math.max(mi,me);}),1);
-  document.getElementById('dash-chart').innerHTML=months.map(m=>{const mi=INCOME.filter(t=>t.date?.startsWith(m.key)).reduce((s,t)=>s+parseFloat(t.amount||0),0);const me=EXPENSES.filter(t=>t.date?.startsWith(m.key)).reduce((s,t)=>s+parseFloat(t.amount||0),0);return`<div class="chart-col"><div class="chart-bar inc" style="height:${Math.round(mi/maxV*100)}%;"></div><div class="chart-bar exp" style="height:${Math.round(me/maxV*100)}%;"></div></div>`;}).join('');
-  document.getElementById('dash-chart-lbl').innerHTML=months.map(m=>`<span style="font-size:10px;color:var(--text3);flex:1;text-align:center;">${m.label}</span>`).join('');
+  const monthTotals=months.map(m=>({
+    key:m.key,label:m.label,
+    mi:INCOME.filter(t=>t.date&&t.date.startsWith(m.key)).reduce((s,t)=>s+parseFloat(t.amount||0),0),
+    me:EXPENSES.filter(t=>t.date&&t.date.startsWith(m.key)).reduce((s,t)=>s+parseFloat(t.amount||0),0)
+  }));
+  const maxV=Math.max(...monthTotals.map(m=>Math.max(m.mi,m.me)),100);
+  document.getElementById('dash-chart').innerHTML=monthTotals.map(m=>{
+    const iH=Math.max(4,Math.round(m.mi/maxV*100));
+    const eH=Math.max(4,Math.round(m.me/maxV*100));
+    return`<div class="chart-col" title="${m.label}: Income ${fmt(m.mi)}, Expenses ${fmt(m.me)}">
+      <div class="chart-bar inc" style="height:${m.mi>0?iH:0}%;min-height:${m.mi>0?'4px':'0'};"></div>
+      <div class="chart-bar exp" style="height:${m.me>0?eH:0}%;min-height:${m.me>0?'4px':'0'};"></div>
+    </div>`;
+  }).join('');
+  document.getElementById('dash-chart-lbl').innerHTML=monthTotals.map(m=>`<span style="font-size:10px;color:var(--text3);flex:1;text-align:center;">${m.label}</span>`).join('');
   // Low stock
   const lsEl=document.getElementById('dash-low-stock');
   lsEl.innerHTML=low.length?`<table class="tbl"><thead><tr><th>Item</th><th>Qty</th><th>Reorder</th></tr></thead><tbody>${low.slice(0,6).map(s=>`<tr><td>${s.name}</td><td style="color:var(--red);font-weight:700;">${s.qty} ${s.unit}</td><td>${s.reorder||'-'}</td></tr>`).join('')}</tbody></table>`:`<p style="padding:18px;text-align:center;font-size:13px;color:var(--text3);">All items well stocked.</p>`;
-  // Recent
+  // Recent transactions with staff and time
   const all=[...INCOME.map(i=>({...i,type:'income'})),...EXPENSES.map(e=>({...e,type:'expense'}))].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,12);
-  let h='<thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="hm">Method</th><th style="text-align:right;">Amount</th></tr></thead><tbody>';
-  if(!all.length)h+='<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:22px;">No transactions yet.</td></tr>';
-  all.forEach(t=>{h+=`<tr><td>${fmtDate(t.date)}</td><td>${t.description||'-'}</td><td><span class="badge b-${t.type==='income'?'green':'red'}">${t.category||''}</span></td><td class="hm">${t.payment_method||'-'}</td><td style="text-align:right;" class="mono ${t.type==='income'?'g':'r'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</td></tr>`;});
+  let h='<thead><tr><th>Date & Time</th><th>Description</th><th>Category</th><th class="hm">Method</th><th class="hm">By</th><th style="text-align:right;">Amount</th></tr></thead><tbody>';
+  if(!all.length)h+='<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:22px;">No transactions yet.</td></tr>';
+  all.forEach(t=>{
+    const timeStr=t.sale_time||fmtDate(t.date);
+    h+=`<tr><td style="font-size:12px;">${timeStr}</td><td>${t.description||'-'}</td><td><span class="badge b-${t.type==='income'?'green':'red'}">${t.category||''}</span></td><td class="hm">${t.payment_method||'-'}</td><td class="hm" style="font-size:12px;color:var(--text3);">${t.staff_name||ME.name}</td><td style="text-align:right;" class="mono ${t.type==='income'?'g':'r'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</td></tr>`;
+  });
   h+='</tbody>';document.getElementById('dash-recent').innerHTML=h;
 }
 
@@ -1479,25 +1518,258 @@ async function saveStock(){
 }
 function editStock(id){if(!isOwner()){toast('Only the owner can edit stock.','err');return;}const s=STOCK.find(s=>s.id===id);if(!s)return;document.getElementById('st-eid').value=s.id;document.getElementById('st-mtitle').textContent='Edit Stock Item';document.getElementById('st-name').value=s.name||'';document.getElementById('st-sku').value=s.sku||'';document.getElementById('st-cat').value=s.category||'';document.getElementById('st-unit').value=s.unit||'pcs';document.getElementById('st-qty').value=s.qty||0;document.getElementById('st-reorder').value=s.reorder||0;document.getElementById('st-cost').value=s.cost_price||0;document.getElementById('st-price').value=s.selling_price||0;document.getElementById('st-notes').value=s.notes||'';openM('stock-modal');}
 
-function openSaleM(id){const s=STOCK.find(s=>s.id===id);if(!s)return;document.getElementById('sale-stid').value=id;document.getElementById('sale-item-nm').textContent=s.name;document.getElementById('sale-qty-info').textContent=`Available: ${s.qty} ${s.unit} | Selling Price: ${fmt(s.selling_price)}`;document.getElementById('sale-qty').value=1;document.getElementById('sale-price').value='';openM('sale-modal');}
+function openSaleM(id){
+  const s=STOCK.find(s=>s.id===id);if(!s)return;
+  document.getElementById('sale-stid').value=id;
+  document.getElementById('sale-item-nm').textContent=s.name;
+  document.getElementById('sale-qty-info').textContent=`Available: ${s.qty} ${s.unit} | Selling Price: ${fmt(s.selling_price)}`;
+  document.getElementById('sale-qty').value=1;
+  document.getElementById('sale-price').value='';
+  document.getElementById('sale-method').value='Cash';
+  document.getElementById('stk-panel').style.display='none';
+  document.getElementById('stk-status').textContent='';
+  // Calc initial total
+  const el=document.getElementById('sale-tot-disp');
+  if(el)el.textContent=fmt(s.selling_price);
+  window._saleItem=s;
+  openM('sale-modal');
+}
+function calcSaleTotal(){
+  const s=window._saleItem;if(!s)return;
+  const qty=parseInt(document.getElementById('sale-qty').value)||0;
+  const price=parseFloat(document.getElementById('sale-price').value)||parseFloat(s.selling_price)||0;
+  document.getElementById('sale-tot-disp').textContent=fmt(qty*price);
+}
+function toggleSTKPanel(){
+  const method=document.getElementById('sale-method').value;
+  document.getElementById('stk-panel').style.display=method==='M-Pesa STK Push'?'block':'none';
+}
+async function sendSTKPush(){
+  const phone=document.getElementById('stk-phone').value.trim();
+  const s=window._saleItem;if(!s){toast('No item selected.','err');return;}
+  const qty=parseInt(document.getElementById('sale-qty').value)||1;
+  const price=parseFloat(document.getElementById('sale-price').value)||parseFloat(s.selling_price)||0;
+  const total=qty*price;
+  const status=document.getElementById('stk-status');
+  if(!phone){status.style.color='var(--red)';status.textContent='Please enter customer phone number.';return;}
+  const cfg=LS.get('pb_daraja')||{};
+  if(!cfg.consumerKey||!cfg.shortcode){
+    status.style.color='var(--amber)';
+    status.textContent='Daraja API not configured. Go to Settings → M-Pesa STK Push to add your credentials.';
+    return;
+  }
+  status.style.color='var(--text2)';status.textContent='Sending STK push...';
+  document.getElementById('stk-panel').querySelector('button').disabled=true;
+  try{
+    // Get OAuth token via proxy (Daraja needs server-side for CORS)
+    // Using a simple proxy approach — the actual STK is triggered via Daraja
+    const formattedPhone=phone.replace(/^0/,'254').replace(/^\+/,'');
+    const timestamp=new Date().toISOString().replace(/[-T:.Z]/g,'').slice(0,14);
+    const password=btoa(cfg.shortcode+cfg.passkey+timestamp);
+    // Try direct Daraja (works when CORS is allowed, otherwise show manual prompt)
+    const tokenRes=await fetch(`https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials`,{
+      headers:{Authorization:'Basic '+btoa(cfg.consumerKey+':'+cfg.consumerSecret)}
+    }).catch(()=>null);
+    if(!tokenRes||!tokenRes.ok){
+      // CORS blocked — show manual M-Pesa prompt alternative
+      status.style.color='var(--amber)';
+      status.textContent=`STK Push needs a backend server for production. For now, ask customer to send ${fmt(total)} to Till/Paybill: ${cfg.shortcode}`;
+      document.getElementById('stk-panel').querySelector('button').disabled=false;
+      return;
+    }
+    const tokenData=await tokenRes.json();
+    const stkRes=await fetch('https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',{
+      method:'POST',headers:{'Authorization':'Bearer '+tokenData.access_token,'Content-Type':'application/json'},
+      body:JSON.stringify({BusinessShortCode:cfg.shortcode,Password:password,Timestamp:timestamp,TransactionType:cfg.type||'CustomerPayBillOnline',Amount:Math.ceil(total),PartyA:formattedPhone,PartyB:cfg.shortcode,PhoneNumber:formattedPhone,CallBackURL:cfg.callbackUrl||'https://example.com/callback',AccountReference:WS.biz_name,TransactionDesc:`Payment for ${s.name}`})
+    });
+    const stkData=await stkRes.json();
+    if(stkData.ResponseCode==='0'){
+      status.style.color='var(--green2)';
+      status.textContent='STK Push sent! Customer should see a prompt on their phone now.';
+    } else {
+      status.style.color='var(--red)';
+      status.textContent='STK Push failed: '+(stkData.errorMessage||stkData.ResponseDescription||'Unknown error');
+    }
+  }catch(e){
+    status.style.color='var(--red)';status.textContent='Error: '+e.message;
+  }
+  document.getElementById('stk-panel').querySelector('button').disabled=false;
+}
+
+// Last sale data for receipt
+let _lastSale=null;
+
 async function recordSale(){
-  const id=document.getElementById('sale-stid').value;const s=STOCK.find(s=>s.id===id);if(!s)return;
+  const id=document.getElementById('sale-stid').value;
+  const s=STOCK.find(s=>s.id===id);if(!s)return;
   const qty=parseInt(document.getElementById('sale-qty').value)||0;
   if(qty<=0){toast('Quantity must be at least 1.','err');return;}
   if(qty>parseInt(s.qty||0)){toast(`Only ${s.qty} ${s.unit} available.`,'err');return;}
   const price=parseFloat(document.getElementById('sale-price').value)||parseFloat(s.selling_price)||0;
   const method=document.getElementById('sale-method').value;
-  const total=qty*price;const newQty=parseInt(s.qty||0)-qty;
+  const total=qty*price;
+  const newQty=parseInt(s.qty||0)-qty;
+  const now=new Date();
+  const saleTime=now.toLocaleString('en-KE',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const incRow={
+    id:uid(),ws_id:WS.id,
+    date:today(),
+    amount:total,
+    category:'Sales',
+    payment_method:method,
+    description:`Sale: ${s.name} x${qty}`,
+    reference:'',
+    branch_id:BRANCHES[0]?.id||null,
+    staff_id:ME.id,
+    staff_name:ME.name,
+    sale_time:saleTime,
+    item_name:s.name,
+    item_qty:qty,
+    unit_price:price
+  };
+  // Store for receipt
+  _lastSale={item:s.name,qty,price,total,method,time:saleTime,staff:ME.name,ref:incRow.id.slice(-6).toUpperCase()};
+
+  if(!navigator.onLine){
+    // OFFLINE — queue the sale
+    const queue=LS.get('pb_offline_queue')||[];
+    queue.push({type:'sale',stockId:id,newQty,incRow,notif:{title:`Sale by ${ME.name}`,body:`${ME.name} sold ${qty}x ${s.name} via ${method} — ${fmt(total)} at ${saleTime}`,ws_id:WS.id}});
+    LS.set('pb_offline_queue',queue);
+    // Update local stock immediately
+    const si=STOCK.findIndex(st=>st.id===id);if(si!==-1)STOCK[si].qty=newQty;
+    if(!INCOME.find(i=>i.id===incRow.id))INCOME.unshift(incRow);
+    closeM('sale-modal');renderStock();checkLowStock();
+    toast(`Sale queued offline. Will sync when internet is back.`,'warn');
+    showReceiptModal();
+    return;
+  }
   try{
     await db.update('stock',id,{qty:newQty});
     const si=STOCK.findIndex(st=>st.id===id);if(si!==-1)STOCK[si].qty=newQty;
-    const incRow={id:uid(),ws_id:WS.id,date:today(),amount:total,category:'Sales',payment_method:method,description:`Sale: ${s.name} x${qty}`,reference:'',branch_id:BRANCHES[0]?.id||null,staff_id:ME.id,staff_name:ME.name};
-    await db.upsert('income',incRow);if(!INCOME.find(i=>i.id===incRow.id))INCOME.unshift(incRow);
-    // Notify owner if staff
-    if(!isOwner()){await db.upsert('notifications',{id:uid(),ws_id:WS.id,title:`Sale by ${ME.name}`,body:`${ME.name} sold ${qty}x ${s.name} via ${method} — ${fmt(total)}`,read:false,created_at:new Date().toISOString()});}
-    closeM('sale-modal');renderStock();checkLowStock();toast(`Sale recorded. Revenue: ${fmt(total)}`,'ok');
+    await db.upsert('income',incRow);
+    if(!INCOME.find(i=>i.id===incRow.id))INCOME.unshift(incRow);
+    // Always notify owner (even if owner made the sale — so it's logged)
+    const notifRow={id:uid(),ws_id:WS.id,title:`Sale by ${ME.name}`,body:`${ME.name} sold ${qty}x ${s.name} via ${method} — ${fmt(total)} at ${saleTime}`,read:false,created_at:now.toISOString()};
+    await db.upsert('notifications',notifRow);
+    if(!NOTIFS.find(n=>n.id===notifRow.id))NOTIFS.unshift(notifRow);
+    renderNotifs();
+    closeM('sale-modal');renderStock();checkLowStock();
+    showReceiptModal();
   }catch(e){toast('Error: '+e.message,'err');}
 }
+
+function showReceiptModal(){
+  if(!_lastSale)return;
+  const s=_lastSale;
+  document.getElementById('rcpt-summary').textContent=`${s.item} x${s.qty} — ${fmt(s.total)} via ${s.method}`;
+  document.getElementById('rcpt-preview').innerHTML=
+    `<strong style="font-size:14px;">${WS.biz_name}</strong><br>
+    ${WS.address||''} | ${WS.contact||''}<br>
+    ──────────────────────────<br>
+    <strong>RECEIPT #${s.ref}</strong><br>
+    Date: ${s.time}<br>
+    Served by: ${s.staff}<br>
+    ──────────────────────────<br>
+    ${s.item} x${s.qty} @ ${fmt(s.price)}<br>
+    ──────────────────────────<br>
+    <strong>TOTAL: ${fmt(s.total)}</strong><br>
+    Payment: ${s.method}<br>
+    ──────────────────────────<br>
+    Thank you for shopping with us!`;
+  // Pre-fill WhatsApp number if customer used STK Push
+  const stkPhone=document.getElementById('stk-phone')?.value||'';
+  if(stkPhone)document.getElementById('rcpt-wa').value=stkPhone;
+  openM('receipt-modal');
+}
+
+function buildReceiptText(){
+  if(!_lastSale)return '';
+  const s=_lastSale;
+  return `*${WS.biz_name}*\n${WS.address||''}\n${WS.contact||''}\n\n*RECEIPT #${s.ref}*\nDate: ${s.time}\nServed by: ${s.staff}\n\n${s.item} x${s.qty} @ ${fmt(s.price)}\n*TOTAL: ${fmt(s.total)}*\nPayment: ${s.method}\n\nThank you for shopping with us!`;
+}
+function sendWhatsAppReceipt(){
+  const num=(document.getElementById('rcpt-wa').value||'').trim().replace(/^0/,'254').replace(/^\+/,'').replace(/\s/g,'');
+  if(!num||num.length<9){toast('Please enter a valid phone number.','err');return;}
+  const text=encodeURIComponent(buildReceiptText());
+  window.open(`https://wa.me/${num}?text=${text}`,'_blank');
+  toast('WhatsApp opened with receipt — tap Send','ok');
+}
+async function sendEmailReceipt(){
+  const email=document.getElementById('rcpt-email').value.trim();
+  const st=document.getElementById('email-rcpt-st');
+  if(!email){st.style.color='var(--red)';st.textContent='Please enter email address.';return;}
+  const cfg=LS.get('pb_emailjs')||{};
+  if(!cfg.serviceId||!cfg.templateId||!cfg.publicKey){
+    st.style.color='var(--amber)';st.textContent='EmailJS not configured. Go to Settings → Email Receipts.';return;
+  }
+  st.style.color='var(--text2)';st.textContent='Sending...';
+  try{
+    const res=await fetch('https://api.emailjs.com/api/v1.0/email/send',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({service_id:cfg.serviceId,template_id:cfg.templateId,user_id:cfg.publicKey,
+        template_params:{to_email:email,to_name:'Valued Customer',biz_name:WS.biz_name,receipt_text:buildReceiptText().replace(/\*/g,''),total:fmt(_lastSale?.total||0),ref:_lastSale?.ref||''}})
+    });
+    if(res.ok){st.style.color='var(--green2)';st.textContent='Email sent successfully!';}
+    else{st.style.color='var(--red)';st.textContent='Failed. Check your EmailJS settings.';}
+  }catch(e){st.style.color='var(--red)';st.textContent='Error: '+e.message;}
+}
+async function sendSMSReceipt(){
+  const phone=(document.getElementById('rcpt-sms').value||'').trim();
+  const st=document.getElementById('sms-rcpt-st');
+  if(!phone){st.style.color='var(--red)';st.textContent='Please enter phone number.';return;}
+  const cfg=LS.get('pb_africastalking')||{};
+  if(!cfg.apiKey||!cfg.username){
+    st.style.color='var(--amber)';st.textContent='Africa\'s Talking not configured. Go to Settings → SMS Receipts.';return;
+  }
+  st.style.color='var(--text2)';st.textContent='Sending SMS...';
+  const s=_lastSale;
+  const msg=`${WS.biz_name}\nReceipt #${s.ref}\n${s.item} x${s.qty}\nTotal: ${fmt(s.total)}\nPmt: ${s.method}\nThank you!`;
+  try{
+    const formattedPhone=phone.replace(/^0/,'+254');
+    const body=new URLSearchParams({username:cfg.username,to:formattedPhone,message:msg,from:cfg.senderId||'ProBooks'});
+    const res=await fetch('https://api.africastalking.com/version1/messaging',{
+      method:'POST',headers:{'apiKey':cfg.apiKey,'Content-Type':'application/x-www-form-urlencoded','Accept':'application/json'},
+      body:body.toString()
+    });
+    const data=await res.json();
+    if(data.SMSMessageData?.Recipients?.[0]?.status==='Success'){
+      st.style.color='var(--green2)';st.textContent='SMS sent successfully!';
+    }else{
+      st.style.color='var(--red)';st.textContent='SMS failed: '+(data.SMSMessageData?.Recipients?.[0]?.status||'Unknown error');
+    }
+  }catch(e){st.style.color='var(--red)';st.textContent='Error: '+e.message;}
+}
+
+// ═══════════════════════════════════════════════
+// OFFLINE SYNC
+// ═══════════════════════════════════════════════
+async function syncOfflineQueue(){
+  const queue=LS.get('pb_offline_queue')||[];
+  if(!queue.length)return;
+  if(!navigator.onLine){toast('Still offline — sync when you have internet.','warn');return;}
+  toast(`Syncing ${queue.length} offline sale${queue.length>1?'s':''}...`,'info');
+  let synced=0;const failed=[];
+  for(const item of queue){
+    try{
+      if(item.type==='sale'){
+        await db.update('stock',item.stockId,{qty:item.newQty});
+        await db.upsert('income',item.incRow);
+        if(item.notif)await db.upsert('notifications',{id:uid(),read:false,created_at:new Date().toISOString(),...item.notif});
+        synced++;
+      }
+    }catch(e){failed.push(item);}
+  }
+  LS.set('pb_offline_queue',failed);
+  if(synced>0)toast(`${synced} sale${synced>1?'s':''} synced successfully!`,'ok');
+  if(failed.length>0)toast(`${failed.length} sale${failed.length>1?'s':''} failed to sync.`,'err');
+  await loadData();renderDashboard();
+}
+window.addEventListener('online',()=>{
+  updateOnline();
+  const q=LS.get('pb_offline_queue')||[];
+  if(q.length>0){toast(`Back online — ${q.length} sale${q.length>1?'s':''} waiting to sync.`,'info');setTimeout(syncOfflineQueue,1500);}
+});
+
 
 function openRestockM(id){const s=STOCK.find(s=>s.id===id);if(!s)return;document.getElementById('restock-stid').value=id;document.getElementById('restock-item-nm').textContent=s.name;document.getElementById('restock-qty').value='';document.getElementById('restock-cost').value='';openM('restock-modal');}
 async function recordRestock(){
