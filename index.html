@@ -1945,6 +1945,348 @@ function dlReport(type){
 }
 
 // ═══════════════════════════════════════════════
+// SUPPLIERS
+// ═══════════════════════════════════════════════
+let SUPPLIERS=[];let SUPPLIER_PAYMENTS=[];
+async function loadSuppliers(){
+  try{
+    SUPPLIERS=await db.select('suppliers',{ws_id:WS.id});
+    SUPPLIER_PAYMENTS=await db.select('supplier_payments',{ws_id:WS.id});
+  }catch(e){SUPPLIERS=LS.get('pb_suppliers')||[];SUPPLIER_PAYMENTS=LS.get('pb_sup_payments')||[];}
+}
+function renderSuppliers(){
+  const search=(document.getElementById('sup-search')?.value||'').toLowerCase();
+  const cat=document.getElementById('sup-cat-f')?.value||'';
+  const cats=[...new Set(SUPPLIERS.map(s=>s.category).filter(Boolean))];
+  const ce=document.getElementById('sup-cat-f');
+  if(ce){const cv=ce.value;ce.innerHTML='<option value="">All Categories</option>'+cats.map(c=>`<option ${c===cv?'selected':''}>${c}</option>`).join('');}
+  let rows=SUPPLIERS.filter(s=>{
+    if(search&&!((s.name||'').toLowerCase().includes(search)||(s.contact||'').toLowerCase().includes(search)))return false;
+    if(cat&&s.category!==cat)return false;
+    return true;
+  });
+  const el=document.getElementById('supplier-cards');
+  if(!el)return;
+  if(!rows.length){el.innerHTML='<div class="card"><div class="card-body" style="text-align:center;color:var(--text3);padding:30px;">No suppliers yet. Add your first supplier.</div></div>';return;}
+  el.innerHTML=rows.map(s=>{
+    const payments=SUPPLIER_PAYMENTS.filter(p=>p.supplier_id===s.id);
+    const totalPaid=payments.reduce((sum,p)=>sum+parseFloat(p.amount||0),0);
+    const lastPayment=payments.sort((a,b)=>b.date?.localeCompare(a.date||'')||0)[0];
+    return`<div class="card" style="margin-bottom:12px;">
+      <div class="card-head">
+        <div>
+          <h3>${s.name}</h3>
+          <span style="font-size:12px;color:var(--text2);">${s.category||''} ${s.payment_terms?'· '+s.payment_terms:''}</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-green btn-sm" onclick="openSupPayment('${s.id}')">Record Payment</button>
+          <button class="btn btn-outline btn-sm" onclick="editSupplier('${s.id}')">Edit</button>
+          <button class="btn btn-red btn-sm" onclick="openCfm('suppliers','${s.id}')">Del</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;font-size:13px;">
+          <div><span style="color:var(--text3);">Contact:</span><br><strong>${s.contact||'—'}</strong></div>
+          <div><span style="color:var(--text3);">Phone:</span><br><a href="tel:${s.phone}" style="color:var(--green2);">${s.phone||'—'}</a></div>
+          <div><span style="color:var(--text3);">Email:</span><br><a href="mailto:${s.email}" style="color:var(--blue);">${s.email||'—'}</a></div>
+          <div><span style="color:var(--text3);">Location:</span><br>${s.address||'—'}</div>
+          <div><span style="color:var(--text3);">Credit Limit:</span><br><strong style="color:var(--gold);">${fmt(s.credit_limit||0)}</strong></div>
+          <div><span style="color:var(--text3);">Total Paid:</span><br><strong style="color:var(--green2);">${fmt(totalPaid)}</strong></div>
+          <div><span style="color:var(--text3);">Last Payment:</span><br>${lastPayment?fmtDate(lastPayment.date):'No payments'}</div>
+          <div><span style="color:var(--text3);">Payments Made:</span><br>${payments.length}</div>
+        </div>
+        ${s.notes?`<div style="margin-top:10px;font-size:12.5px;color:var(--text2);background:var(--bg3);border-radius:var(--r);padding:8px 12px;">${s.notes}</div>`:''}
+        ${payments.length?`<div style="margin-top:12px;"><div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Recent Payments</div><table class="tbl"><thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Ref</th></tr></thead><tbody>${payments.slice(0,3).map(p=>`<tr><td>${fmtDate(p.date)}</td><td class="mono g">${fmt(p.amount)}</td><td>${p.payment_method}</td><td style="color:var(--text3);font-size:12px;">${p.reference||'—'}</td></tr>`).join('')}</tbody></table></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function resetSupplierForm(){
+  document.getElementById('sup-eid').value='';
+  document.getElementById('sup-mtitle').textContent='Add Supplier';
+  ['sup-name','sup-contact','sup-phone','sup-email','sup-address','sup-category','sup-credit','sup-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('sup-terms').value='Cash on Delivery';
+}
+async function saveSupplier(){
+  const name=document.getElementById('sup-name').value.trim();
+  if(!name){toast('Please enter supplier name.','err');return;}
+  const id=document.getElementById('sup-eid').value;
+  const row={ws_id:WS.id,name,contact:document.getElementById('sup-contact').value.trim(),phone:document.getElementById('sup-phone').value.trim(),email:document.getElementById('sup-email').value.trim(),address:document.getElementById('sup-address').value.trim(),category:document.getElementById('sup-category').value.trim(),payment_terms:document.getElementById('sup-terms').value,credit_limit:parseFloat(document.getElementById('sup-credit').value)||0,notes:document.getElementById('sup-notes').value.trim()};
+  try{
+    if(id){await db.update('suppliers',id,row);const i=SUPPLIERS.findIndex(s=>s.id===id);if(i!==-1)SUPPLIERS[i]={...SUPPLIERS[i],...row};}
+    else{row.id=uid();row.created_at=new Date().toISOString();await db.upsert('suppliers',row);SUPPLIERS.push(row);}
+    closeM('supplier-modal');renderSuppliers();toast('Supplier saved.','ok');
+  }catch(e){
+    // Fallback to localStorage if table doesn't exist yet
+    if(e.message?.includes('does not exist')){
+      if(!id){const row2={...row,id:uid()};SUPPLIERS.push(row2);LS.set('pb_suppliers',SUPPLIERS);}
+      closeM('supplier-modal');renderSuppliers();toast('Supplier saved locally.','ok');
+    }else toast('Error: '+e.message,'err');
+  }
+}
+function editSupplier(id){
+  const s=SUPPLIERS.find(s=>s.id===id);if(!s)return;
+  document.getElementById('sup-eid').value=s.id;document.getElementById('sup-mtitle').textContent='Edit Supplier';
+  document.getElementById('sup-name').value=s.name||'';document.getElementById('sup-contact').value=s.contact||'';document.getElementById('sup-phone').value=s.phone||'';document.getElementById('sup-email').value=s.email||'';document.getElementById('sup-address').value=s.address||'';document.getElementById('sup-category').value=s.category||'';document.getElementById('sup-terms').value=s.payment_terms||'Cash on Delivery';document.getElementById('sup-credit').value=s.credit_limit||0;document.getElementById('sup-notes').value=s.notes||'';
+  openM('supplier-modal');
+}
+function openSupPayment(id){
+  const s=SUPPLIERS.find(s=>s.id===id);if(!s)return;
+  document.getElementById('sup-pay-id').value=id;document.getElementById('sup-pay-name').textContent=s.name;document.getElementById('sup-pay-amount').value='';document.getElementById('sup-pay-date').value=today();document.getElementById('sup-pay-ref').value='';document.getElementById('sup-pay-notes').value='';
+  openM('sup-payment-modal');
+}
+async function saveSupplierPayment(){
+  const supId=document.getElementById('sup-pay-id').value;
+  const amount=parseFloat(document.getElementById('sup-pay-amount').value);
+  const date=document.getElementById('sup-pay-date').value;
+  if(!amount||amount<=0){toast('Please enter payment amount.','err');return;}
+  if(!date){toast('Please enter payment date.','err');return;}
+  const row={id:uid(),ws_id:WS.id,supplier_id:supId,amount,date,payment_method:document.getElementById('sup-pay-method').value,reference:document.getElementById('sup-pay-ref').value.trim(),notes:document.getElementById('sup-pay-notes').value.trim(),created_at:new Date().toISOString()};
+  // Also record as expense
+  const expRow={id:uid(),ws_id:WS.id,date,amount,category:'Supplier Payment',payment_method:row.payment_method,description:`Payment to ${SUPPLIERS.find(s=>s.id===supId)?.name||'Supplier'}`,vendor:SUPPLIERS.find(s=>s.id===supId)?.name||'',branch_id:BRANCHES[0]?.id||null,staff_id:ME.id};
+  try{
+    await db.upsert('supplier_payments',row);SUPPLIER_PAYMENTS.push(row);
+    await db.upsert('expenses',expRow);if(!EXPENSES.find(e=>e.id===expRow.id))EXPENSES.unshift(expRow);
+    closeM('sup-payment-modal');renderSuppliers();toast('Payment recorded and added to expenses.','ok');
+  }catch(e){
+    // localStorage fallback
+    SUPPLIER_PAYMENTS.push(row);LS.set('pb_sup_payments',SUPPLIER_PAYMENTS);
+    EXPENSES.unshift(expRow);LS.set('pb_expenses_local',EXPENSES);
+    closeM('sup-payment-modal');renderSuppliers();toast('Payment saved locally.','ok');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// PAYROLL — KRA PAYE compliant, Kenya 2024 rates
+// ═══════════════════════════════════════════════
+let EMPLOYEES=[];let PAYROLL_RUNS=[];
+
+// Kenya PAYE Tax Bands 2024 (monthly)
+function calcPAYE(grossSalary){
+  const BANDS=[
+    {limit:24000,rate:0.10},
+    {limit:8333,rate:0.25},
+    {limit:467667,rate:0.30},
+    {limit:300000,rate:0.325},
+    {limit:Infinity,rate:0.35}
+  ];
+  const PERSONAL_RELIEF=2400; // monthly personal relief KES
+  let tax=0;let remaining=grossSalary;
+  for(const band of BANDS){
+    if(remaining<=0)break;
+    const taxable=Math.min(remaining,band.limit);
+    tax+=taxable*band.rate;
+    remaining-=taxable;
+  }
+  // Apply personal relief
+  tax=Math.max(0,tax-PERSONAL_RELIEF);
+  return Math.round(tax);
+}
+// NSSF Tier I & II (2024 rates)
+function calcNSSF(grossSalary){
+  const TIER1_LIMIT=6000;const TIER2_LIMIT=18000;
+  const TIER1_RATE=0.06;const TIER2_RATE=0.06;
+  const tier1=Math.min(grossSalary,TIER1_LIMIT)*TIER1_RATE;
+  const tier2=Math.max(0,Math.min(grossSalary,TIER2_LIMIT)-TIER1_LIMIT)*TIER2_RATE;
+  return Math.round(tier1+tier2);
+}
+// SHIF (formerly NHIF) — 2.75% of gross from Oct 2024
+function calcSHIF(grossSalary){
+  return Math.round(grossSalary*0.0275);
+}
+// Housing Levy — 1.5% of gross
+function calcHousingLevy(grossSalary){
+  return Math.round(grossSalary*0.015);
+}
+function calcNetPay(emp){
+  const gross=parseFloat(emp.basic_salary||0)+parseFloat(emp.allowances||0);
+  const paye=calcPAYE(gross);
+  const nssf=calcNSSF(gross);
+  const shif=calcSHIF(gross);
+  const housing=calcHousingLevy(gross);
+  const totalDeductions=paye+nssf+shif+housing;
+  const net=gross-totalDeductions;
+  return{gross,paye,nssf,shif,housing,totalDeductions,net};
+}
+async function loadPayroll(){
+  try{
+    EMPLOYEES=await db.select('employees',{ws_id:WS.id});
+    PAYROLL_RUNS=await db.select('payroll_runs',{ws_id:WS.id});
+  }catch(e){EMPLOYEES=LS.get('pb_employees')||[];PAYROLL_RUNS=LS.get('pb_payroll_runs')||[];}
+}
+function renderPayroll(){
+  const now=new Date();
+  document.getElementById('payroll-month').textContent=now.toLocaleString('default',{month:'long',year:'numeric'});
+  // Summary stats
+  const totGross=EMPLOYEES.reduce((s,e)=>s+parseFloat(e.basic_salary||0)+parseFloat(e.allowances||0),0);
+  const totPAYE=EMPLOYEES.reduce((s,e)=>s+calcPAYE(parseFloat(e.basic_salary||0)+parseFloat(e.allowances||0)),0);
+  const totNet=EMPLOYEES.reduce((s,e)=>s+calcNetPay(e).net,0);
+  document.getElementById('payroll-summary').innerHTML=`
+    <div class="stat"><div class="stat-label">Total Employees</div><div class="stat-val" style="color:var(--text1);">${EMPLOYEES.length}</div></div>
+    <div class="stat"><div class="stat-label">Gross Payroll</div><div class="stat-val gold">${fmt(totGross)}</div></div>
+    <div class="stat"><div class="stat-label">Total PAYE (KRA)</div><div class="stat-val r">${fmt(totPAYE)}</div></div>
+    <div class="stat"><div class="stat-label">Net Pay (Take Home)</div><div class="stat-val g">${fmt(totNet)}</div></div>`;
+  // Employee table
+  let h='<thead><tr><th>Employee</th><th>ID/KRA PIN</th><th>Gross</th><th>PAYE</th><th>NSSF</th><th>SHIF</th><th>Housing</th><th>NET PAY</th><th></th></tr></thead><tbody>';
+  if(!EMPLOYEES.length)h+='<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:22px;">No employees yet. Add your first employee.</td></tr>';
+  EMPLOYEES.forEach(emp=>{
+    const c=calcNetPay(emp);
+    h+=`<tr>
+      <td><div style="font-weight:600;">${emp.name}</div><div style="font-size:11.5px;color:var(--text3);">${emp.position||''} · ${emp.department||''}</div></td>
+      <td style="font-size:12px;font-family:var(--mono);">${emp.national_id||'—'}<br><span style="color:var(--green2);">${emp.kra_pin||'No KRA PIN'}</span></td>
+      <td class="mono">${fmt(c.gross)}</td>
+      <td class="mono r">${fmt(c.paye)}</td>
+      <td class="mono r">${fmt(c.nssf)}</td>
+      <td class="mono r">${fmt(c.shif)}</td>
+      <td class="mono r">${fmt(c.housing)}</td>
+      <td class="mono g" style="font-weight:700;">${fmt(c.net)}</td>
+      <td><div style="display:flex;gap:4px;">
+        <button class="btn btn-outline btn-xs" onclick="editEmployee('${emp.id}')">Edit</button>
+        <button class="btn btn-red btn-xs" onclick="openCfm('employees','${emp.id}')">Del</button>
+      </div></td>
+    </tr>`;
+  });
+  h+='</tbody>';document.getElementById('employee-tbl').innerHTML=h;
+  // Payroll history
+  let ph='<thead><tr><th>Month</th><th>Employees</th><th>Gross</th><th>PAYE</th><th>Net Pay</th><th>Status</th><th></th></tr></thead><tbody>';
+  if(!PAYROLL_RUNS.length)ph+='<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px;">No payroll runs yet.</td></tr>';
+  PAYROLL_RUNS.sort((a,b)=>(b.month||'').localeCompare(a.month||'')).forEach(r=>{
+    ph+=`<tr><td>${r.month}</td><td>${r.employee_count}</td><td class="mono">${fmt(r.total_gross)}</td><td class="mono r">${fmt(r.total_paye)}</td><td class="mono g">${fmt(r.total_net)}</td><td><span class="badge b-${r.status==='paid'?'green':'gold'}">${r.status||'pending'}</span></td><td><button class="btn btn-gold btn-xs" onclick="dlPayslips('${r.id}')">Payslips PDF</button></td></tr>`;
+  });
+  ph+='</tbody>';document.getElementById('payroll-history-tbl').innerHTML=ph;
+}
+async function runPayroll(){
+  if(!EMPLOYEES.length){toast('No employees to run payroll for.','err');return;}
+  const now=new Date();
+  const month=now.toLocaleString('default',{month:'long',year:'numeric'});
+  const existing=PAYROLL_RUNS.find(r=>r.month===month);
+  if(existing){toast(`Payroll for ${month} already run. View in history below.`,'warn');return;}
+  const totGross=EMPLOYEES.reduce((s,e)=>s+parseFloat(e.basic_salary||0)+parseFloat(e.allowances||0),0);
+  const totPAYE=EMPLOYEES.reduce((s,e)=>s+calcPAYE(parseFloat(e.basic_salary||0)+parseFloat(e.allowances||0)),0);
+  const totNSSF=EMPLOYEES.reduce((s,e)=>s+calcNSSF(parseFloat(e.basic_salary||0)+parseFloat(e.allowances||0)),0);
+  const totSHIF=EMPLOYEES.reduce((s,e)=>s+calcSHIF(parseFloat(e.basic_salary||0)+parseFloat(e.allowances||0)),0);
+  const totHousing=EMPLOYEES.reduce((s,e)=>s+calcHousingLevy(parseFloat(e.basic_salary||0)+parseFloat(e.allowances||0)),0);
+  const totNet=EMPLOYEES.reduce((s,e)=>s+calcNetPay(e).net,0);
+  const payrollData=EMPLOYEES.map(emp=>{const c=calcNetPay(emp);return{...emp,...c};});
+  const run={id:uid(),ws_id:WS.id,month,employee_count:EMPLOYEES.length,total_gross:totGross,total_paye:totPAYE,total_nssf:totNSSF,total_shif:totSHIF,total_housing:totHousing,total_net:totNet,status:'pending',payroll_data:payrollData,created_at:new Date().toISOString(),created_by:ME.name};
+  try{
+    await db.upsert('payroll_runs',run);PAYROLL_RUNS.unshift(run);
+    // Record as expense
+    const expRow={id:uid(),ws_id:WS.id,date:today(),amount:totGross,category:'Salaries',payment_method:'Bank Transfer',description:`Payroll — ${month} (${EMPLOYEES.length} employees)`,vendor:'',branch_id:BRANCHES[0]?.id||null,staff_id:ME.id};
+    await db.upsert('expenses',expRow);if(!EXPENSES.find(e=>e.id===expRow.id))EXPENSES.unshift(expRow);
+    renderPayroll();toast(`Payroll run for ${month} — Net pay: ${fmt(totNet)}. Check payslips below.`,'ok');
+  }catch(e){
+    PAYROLL_RUNS.unshift(run);LS.set('pb_payroll_runs',PAYROLL_RUNS);
+    renderPayroll();toast(`Payroll run saved locally.`,'ok');
+  }
+}
+function dlPayslips(runId){
+  if(!navigator.onLine){toast('Connect to internet to download PDF.','warn');return;}
+  const run=PAYROLL_RUNS.find(r=>r.id===runId);if(!run)return;
+  const payslips=(run.payroll_data||EMPLOYEES.map(emp=>({...emp,...calcNetPay(emp)}))).map(emp=>`
+    <div style="page-break-after:always;padding:24px;border:1px solid #e2e8f0;margin-bottom:24px;border-radius:8px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #0e7a4e;">
+        <div><div style="font-size:20px;font-weight:800;color:#0e7a4e;">${WS.biz_name}</div><div style="font-size:12px;color:#666;">${WS.address||''} | ${WS.contact||''}</div></div>
+        <div style="text-align:right;"><div style="font-size:16px;font-weight:700;">PAYSLIP</div><div style="font-size:12px;color:#666;">${run.month}</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;font-size:13px;">
+        <div><strong>Employee:</strong> ${emp.name}</div>
+        <div><strong>National ID:</strong> ${emp.national_id||'—'}</div>
+        <div><strong>KRA PIN:</strong> <span style="color:#0e7a4e;font-weight:600;">${emp.kra_pin||'Not provided'}</span></div>
+        <div><strong>Position:</strong> ${emp.position||'—'}</div>
+        <div><strong>Department:</strong> ${emp.department||'—'}</div>
+        <div><strong>Bank Account:</strong> ${emp.bank_account||'—'}</div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px;">
+        <thead><tr><th style="background:#f0f7f4;padding:8px;text-align:left;">Earnings</th><th style="background:#f0f7f4;padding:8px;text-align:right;">Amount</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:7px 8px;border-bottom:1px solid #e5f0ea;">Basic Salary</td><td style="padding:7px 8px;border-bottom:1px solid #e5f0ea;text-align:right;">${fmt(emp.basic_salary)}</td></tr>
+          <tr><td style="padding:7px 8px;border-bottom:1px solid #e5f0ea;">Allowances</td><td style="padding:7px 8px;border-bottom:1px solid #e5f0ea;text-align:right;">${fmt(emp.allowances||0)}</td></tr>
+          <tr style="font-weight:700;background:#f8fafc;"><td style="padding:7px 8px;">Gross Pay</td><td style="padding:7px 8px;text-align:right;color:#0e7a4e;">${fmt(emp.gross)}</td></tr>
+        </tbody>
+      </table>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px;">
+        <thead><tr><th style="background:#fff0f0;padding:8px;text-align:left;">Deductions</th><th style="background:#fff0f0;padding:8px;text-align:right;">Amount</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:7px 8px;border-bottom:1px solid #f5e0e0;">PAYE (KRA)</td><td style="padding:7px 8px;border-bottom:1px solid #f5e0e0;text-align:right;">${fmt(emp.paye)}</td></tr>
+          <tr><td style="padding:7px 8px;border-bottom:1px solid #f5e0e0;">NSSF</td><td style="padding:7px 8px;border-bottom:1px solid #f5e0e0;text-align:right;">${fmt(emp.nssf)}</td></tr>
+          <tr><td style="padding:7px 8px;border-bottom:1px solid #f5e0e0;">SHIF (Health)</td><td style="padding:7px 8px;border-bottom:1px solid #f5e0e0;text-align:right;">${fmt(emp.shif)}</td></tr>
+          <tr><td style="padding:7px 8px;border-bottom:1px solid #f5e0e0;">Housing Levy</td><td style="padding:7px 8px;border-bottom:1px solid #f5e0e0;text-align:right;">${fmt(emp.housing)}</td></tr>
+          <tr style="font-weight:700;background:#fff8f8;"><td style="padding:7px 8px;">Total Deductions</td><td style="padding:7px 8px;text-align:right;color:#e03e3e;">${fmt(emp.totalDeductions)}</td></tr>
+        </tbody>
+      </table>
+      <div style="background:#f0f7f4;border-radius:6px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:15px;font-weight:700;">NET PAY</span>
+        <span style="font-size:22px;font-weight:800;color:#0e7a4e;">${fmt(emp.net)}</span>
+      </div>
+      <div style="margin-top:20px;font-size:11px;color:#999;text-align:center;border-top:1px solid #e2e8f0;padding-top:10px;">Generated by ProBooks Accounting | ${WS.biz_name} | ${run.month}<br>This is a computer-generated payslip and is valid without a signature.</div>
+    </div>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Payslips — ${run.month}</title><link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Sora',sans-serif;background:#fff;color:#111;padding:24px;}@media print{body{padding:0;}.no-print{display:none;}}</style></head><body><div class="no-print" style="text-align:center;padding:12px;background:#f0f7f4;margin-bottom:16px;font-family:sans-serif;"><strong>ProBooks Payslips — ${run.month}</strong> | <a href="javascript:window.print()" style="color:#0e7a4e;font-weight:700;">Print / Save as PDF</a></div>${payslips}</body></html>`);
+  w.document.close();
+}
+function dlPayrollReport(){
+  if(!navigator.onLine){toast('Connect to internet to download PDF.','warn');return;}
+  if(!PAYROLL_RUNS.length){toast('No payroll runs yet.','warn');return;}
+  const run=PAYROLL_RUNS[0];
+  const rows=(run.payroll_data||EMPLOYEES.map(emp=>({...emp,...calcNetPay(emp)}))).map(emp=>`<tr><td>${emp.name}</td><td>${emp.kra_pin||'—'}</td><td>${emp.national_id||'—'}</td><td>${fmt(emp.gross)}</td><td>${fmt(emp.paye)}</td><td>${fmt(emp.nssf)}</td><td>${fmt(emp.shif)}</td><td>${fmt(emp.housing)}</td><td style="font-weight:700;color:#0e7a4e;">${fmt(emp.net)}</td></tr>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Payroll Report — ${run.month}</title><link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Sora',sans-serif;background:#fff;padding:24px;}.rh{display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:3px solid #0e7a4e;margin-bottom:18px;}.rb{font-size:18px;font-weight:800;color:#0e7a4e;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#f0f7f4;padding:8px 10px;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;}td{padding:8px 10px;border-bottom:1px solid #e5f0ea;}.tot{font-weight:700;background:#f8fafc;border-top:2px solid #0e7a4e;}.ft{margin-top:20px;font-size:10px;color:#999;text-align:center;border-top:1px solid #e2e8f0;padding-top:10px;}@media print{body{padding:0;}}</style></head><body>
+  <div class="rh"><div><div class="rb">${WS.biz_name}</div><div style="font-size:12px;color:#666;">${WS.address||''}</div></div><div style="text-align:right;"><div style="font-size:16px;font-weight:700;">Payroll Report</div><div style="font-size:12px;color:#666;">${run.month}</div></div></div>
+  <table><thead><tr><th>Employee</th><th>KRA PIN</th><th>National ID</th><th>Gross</th><th>PAYE</th><th>NSSF</th><th>SHIF</th><th>Housing</th><th>Net Pay</th></tr></thead><tbody>${rows}<tr class="tot"><td colspan="3">TOTALS</td><td>${fmt(run.total_gross)}</td><td>${fmt(run.total_paye)}</td><td>${fmt(run.total_nssf||0)}</td><td>${fmt(run.total_shif||0)}</td><td>${fmt(run.total_housing||0)}</td><td>${fmt(run.total_net)}</td></tr></tbody></table>
+  <div style="margin-top:14px;font-size:12px;color:#333;"><strong>KRA PAYE Due:</strong> ${fmt(run.total_paye)} &nbsp;|&nbsp; <strong>NSSF Due:</strong> ${fmt(run.total_nssf||0)} &nbsp;|&nbsp; <strong>SHIF Due:</strong> ${fmt(run.total_shif||0)} &nbsp;|&nbsp; <strong>Housing Levy Due:</strong> ${fmt(run.total_housing||0)}</div>
+  <div class="ft">ProBooks Accounting | ${WS.biz_name} | Audit-ready payroll record | ${new Date().toLocaleDateString('en-KE',{day:'2-digit',month:'long',year:'numeric'})}</div>
+  <script>window.onload=()=>{window.print();}<\/script></body></html>`);
+  w.document.close();
+}
+
+// Employee form
+let EMPLOYEES_DATA=[];
+function resetEmployeeForm(){
+  document.getElementById('emp-eid').value='';document.getElementById('emp-mtitle').textContent='Add Employee';
+  ['emp-name','emp-id','emp-kra','emp-phone','emp-email','emp-position','emp-dept','emp-bank','emp-account','emp-basic','emp-allowances'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('emp-employment').value='Full Time';
+}
+async function saveEmployee(){
+  const name=document.getElementById('emp-name').value.trim();
+  if(!name){toast('Please enter employee name.','err');return;}
+  const basic=parseFloat(document.getElementById('emp-basic').value)||0;
+  if(!basic){toast('Please enter basic salary.','err');return;}
+  const id=document.getElementById('emp-eid').value;
+  const row={ws_id:WS.id,name,national_id:document.getElementById('emp-id').value.trim(),kra_pin:document.getElementById('emp-kra').value.trim(),phone:document.getElementById('emp-phone').value.trim(),email:document.getElementById('emp-email').value.trim(),position:document.getElementById('emp-position').value.trim(),department:document.getElementById('emp-dept').value.trim(),employment_type:document.getElementById('emp-employment').value,bank_name:document.getElementById('emp-bank').value.trim(),bank_account:document.getElementById('emp-account').value.trim(),basic_salary:basic,allowances:parseFloat(document.getElementById('emp-allowances').value)||0};
+  try{
+    if(id){await db.update('employees',id,row);const i=EMPLOYEES.findIndex(e=>e.id===id);if(i!==-1)EMPLOYEES[i]={...EMPLOYEES[i],...row};}
+    else{row.id=uid();row.created_at=new Date().toISOString();await db.upsert('employees',row);EMPLOYEES.push(row);}
+    closeM('employee-modal');renderPayroll();toast('Employee saved.','ok');
+  }catch(e){
+    if(!id){const r={...row,id:uid()};EMPLOYEES.push(r);}
+    LS.set('pb_employees',EMPLOYEES);closeM('employee-modal');renderPayroll();toast('Employee saved locally.','ok');
+  }
+}
+function editEmployee(id){
+  const emp=EMPLOYEES.find(e=>e.id===id);if(!emp)return;
+  document.getElementById('emp-eid').value=emp.id;document.getElementById('emp-mtitle').textContent='Edit Employee';
+  document.getElementById('emp-name').value=emp.name||'';document.getElementById('emp-id').value=emp.national_id||'';document.getElementById('emp-kra').value=emp.kra_pin||'';document.getElementById('emp-phone').value=emp.phone||'';document.getElementById('emp-email').value=emp.email||'';document.getElementById('emp-position').value=emp.position||'';document.getElementById('emp-dept').value=emp.department||'';document.getElementById('emp-employment').value=emp.employment_type||'Full Time';document.getElementById('emp-bank').value=emp.bank_name||'';document.getElementById('emp-account').value=emp.bank_account||'';document.getElementById('emp-basic').value=emp.basic_salary||0;document.getElementById('emp-allowances').value=emp.allowances||0;
+  openM('employee-modal');
+}
+
+// ═══════════════════════════════════════════════
+// SETTINGS — extra save functions
+// ═══════════════════════════════════════════════
+function saveDarajaConfig(){
+  const cfg={consumerKey:document.getElementById('set-daraja-key').value.trim(),consumerSecret:document.getElementById('set-daraja-secret').value.trim(),shortcode:document.getElementById('set-daraja-sc').value.trim(),passkey:document.getElementById('set-daraja-pk').value.trim(),type:document.getElementById('set-daraja-type').value};
+  LS.set('pb_daraja',cfg);toast('M-Pesa STK Push config saved.','ok');
+}
+function saveEmailJSConfig(){
+  const cfg={serviceId:document.getElementById('set-ejs-svc').value.trim(),templateId:document.getElementById('set-ejs-tpl').value.trim(),publicKey:document.getElementById('set-ejs-key').value.trim()};
+  LS.set('pb_emailjs',cfg);toast('EmailJS config saved.','ok');
+}
+function saveATConfig(){
+  const cfg={username:document.getElementById('set-at-user').value.trim(),apiKey:document.getElementById('set-at-key').value.trim(),senderId:document.getElementById('set-at-sender').value.trim()};
+  LS.set('pb_africastalking',cfg);toast('Africa\'s Talking config saved.','ok');
+}
+
+// ═══════════════════════════════════════════════
 // SETTINGS
 // ═══════════════════════════════════════════════
 function loadSettings(){
