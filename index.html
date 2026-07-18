@@ -17,6 +17,8 @@
 
 <!-- Supabase JS v2 CDN — simple script tag, no module init issues -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- jsPDF for PDF receipt generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -224,18 +226,41 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
 
 /* ── RESPONSIVE ── */
-@media(max-width:768px){
+@media(max-width:900px){
   :root{--sidebar:0px}
-  .sidebar{transform:translateX(-250px);width:250px}
+  .sidebar{transform:translateX(-260px);width:260px;z-index:300}
   .sidebar.open{transform:translateX(0)}
   .sb-overlay.open{display:block}
   .topbar{left:0}.hamburger{display:flex}.main{margin-left:0}
-  .frow{grid-template-columns:1fr}.stat-grid{grid-template-columns:1fr 1fr}.hm{display:none}
+  .frow{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .hm{display:none}
+  .modal{max-width:100%!important;margin:8px}
+  .modal-bg{padding:8px;align-items:flex-end}
+  .dash-grid{grid-template-columns:1fr!important}
 }
-@media(max-width:440px){
-  .stat-val{font-size:18px}.main{padding:14px}
-  .modal{border-radius:var(--r2) var(--r2) 0 0;margin-top:auto;max-height:88vh}
-  .modal-bg{align-items:flex-end;padding:0}
+@media(max-width:520px){
+  :root{--top:52px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .stat-val{font-size:17px}
+  .main{padding:10px}
+  .card-body{padding:12px}
+  .card-head{padding:11px 14px}
+  .tbl th,.tbl td{padding:8px 10px;font-size:12px}
+  .btn{font-size:12.5px;padding:8px 14px}
+  .btn-sm{font-size:11.5px;padding:5px 10px}
+  .btn-xs{font-size:11px;padding:3px 8px}
+  .modal-bg{padding:0;align-items:flex-end}
+  .modal{border-radius:16px 16px 0 0;max-height:92vh;margin:0;max-width:100%!important}
+  .frow{grid-template-columns:1fr}
+  .inv-line-row{grid-template-columns:1fr 46px 90px 24px}
+  h2{font-size:15px!important}
+  .sb-brand{font-size:14px}
+  .tb-title{font-size:14px}
+}
+@media(max-width:360px){
+  .stat-grid{grid-template-columns:1fr}
+  .main{padding:8px}
 }
 </style>
 </head>
@@ -528,10 +553,18 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
       </div>
     </div>
 
-    <!-- REPORTS -->
+    <!-- REPORTS PAGE -->
     <div class="page" id="page-reports">
-      <h2 style="font-size:17px;font-weight:700;margin-bottom:18px;">Reports</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;" id="reports-grid"></div>
+      <h2 style="font-size:17px;font-weight:700;margin-bottom:6px;">Reports</h2>
+      <p style="font-size:12.5px;color:var(--text2);margin-bottom:18px;">All reports are audit-ready and download as PDF.</p>
+      <!-- Period selector for reports -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+        <label style="font-size:12px;color:var(--text2);font-weight:600;">Report Period:</label>
+        <select id="rpt-from" style="background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--r);padding:7px 12px;color:var(--text1);font-family:var(--font);font-size:13px;outline:none;"><option value="">All Time</option></select>
+        <span style="color:var(--text3);">to</span>
+        <select id="rpt-to" style="background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--r);padding:7px 12px;color:var(--text1);font-family:var(--font);font-size:13px;outline:none;"><option value="">Today</option></select>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;" id="reports-grid"></div>
     </div>
 
     <!-- SETTINGS -->
@@ -896,7 +929,99 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
   </div>
 </div>
 
-<div id="toasts"></div>
+<!-- Employee Modal -->
+<div class="modal-bg" id="employee-modal">
+  <div class="modal modal-lg"><div class="modal-head"><h3 id="emp-mtitle">Add Employee</h3><button class="modal-x" onclick="closeM('employee-modal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="emp-eid">
+      <div class="frow">
+        <div class="fg"><label>Full Name</label><input type="text" id="emp-name" placeholder="Employee full name"></div>
+        <div class="fg"><label>National ID Number</label><input type="text" id="emp-id" placeholder="e.g. 12345678"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>KRA PIN <span style="color:var(--green2);">(required for PAYE)</span></label><input type="text" id="emp-kra" placeholder="e.g. A012345678B" style="text-transform:uppercase;"></div>
+        <div class="fg"><label>Employment Type</label>
+          <select id="emp-employment"><option>Full Time</option><option>Part Time</option><option>Contract</option><option>Casual</option></select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>Phone</label><input type="tel" id="emp-phone" placeholder="e.g. 0712345678"></div>
+        <div class="fg"><label>Email</label><input type="email" id="emp-email" placeholder="employee@email.com"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>Position / Job Title</label><input type="text" id="emp-position" placeholder="e.g. Sales Manager"></div>
+        <div class="fg"><label>Department</label><input type="text" id="emp-dept" placeholder="e.g. Sales"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>Bank Name</label><input type="text" id="emp-bank" placeholder="e.g. Equity Bank"></div>
+        <div class="fg"><label>Bank Account Number</label><input type="text" id="emp-account" placeholder="e.g. 1234567890"></div>
+      </div>
+      <div style="background:var(--green-dim);border:1px solid rgba(14,158,99,.3);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--green2);margin-bottom:10px;">Salary & Deductions (auto-calculated)</div>
+        <div class="frow">
+          <div class="fg"><label>Basic Salary (KES/month)</label><input type="number" id="emp-basic" placeholder="e.g. 50000" oninput="previewDeductions()"></div>
+          <div class="fg"><label>Allowances (KES/month)</label><input type="number" id="emp-allowances" placeholder="e.g. 5000" oninput="previewDeductions()"></div>
+        </div>
+        <div id="deduction-preview" style="display:none;font-size:12.5px;background:var(--bg0);border-radius:var(--r);padding:10px 14px;margin-top:4px;">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+            <div><span style="color:var(--text3);">Gross</span><br><strong id="prev-gross" style="color:var(--text1);">0</strong></div>
+            <div><span style="color:var(--text3);">PAYE</span><br><strong id="prev-paye" style="color:var(--red);">0</strong></div>
+            <div><span style="color:var(--text3);">NSSF</span><br><strong id="prev-nssf" style="color:var(--red);">0</strong></div>
+            <div><span style="color:var(--text3);">SHIF</span><br><strong id="prev-shif" style="color:var(--red);">0</strong></div>
+            <div><span style="color:var(--text3);">Housing</span><br><strong id="prev-housing" style="color:var(--red);">0</strong></div>
+            <div><span style="color:var(--text3);">NET PAY</span><br><strong id="prev-net" style="color:var(--green2);font-size:15px;">0</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeM('employee-modal')">Cancel</button><button class="btn btn-green" onclick="saveEmployee()">Save Employee</button></div>
+  </div>
+</div>
+
+<!-- Supplier Modal -->
+<div class="modal-bg" id="supplier-modal">
+  <div class="modal"><div class="modal-head"><h3 id="sup-mtitle">Add Supplier</h3><button class="modal-x" onclick="closeM('supplier-modal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="sup-eid">
+      <div class="frow">
+        <div class="fg"><label>Supplier Name</label><input type="text" id="sup-name" placeholder="e.g. Nairobi Wholesale Ltd"></div>
+        <div class="fg"><label>Contact Person</label><input type="text" id="sup-contact" placeholder="e.g. John Kamau"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>Phone</label><input type="tel" id="sup-phone" placeholder="e.g. 0712345678"></div>
+        <div class="fg"><label>Email</label><input type="email" id="sup-email" placeholder="supplier@email.com"></div>
+      </div>
+      <div class="fg"><label>Address / Location</label><input type="text" id="sup-address" placeholder="e.g. Nairobi CBD, River Road"></div>
+      <div class="frow">
+        <div class="fg"><label>Category / Products Supplied</label><input type="text" id="sup-category" placeholder="e.g. Clothing, Electronics"></div>
+        <div class="fg"><label>Payment Terms</label>
+          <select id="sup-terms"><option>Cash on Delivery</option><option>Net 7 days</option><option>Net 14 days</option><option>Net 30 days</option><option>Net 60 days</option><option>Prepaid</option></select>
+        </div>
+      </div>
+      <div class="fg"><label>Credit Limit (KES)</label><input type="number" id="sup-credit" placeholder="0 = no credit" min="0"></div>
+      <div class="fg"><label>Notes</label><textarea id="sup-notes" style="min-height:55px;" placeholder="Any notes about this supplier"></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeM('supplier-modal')">Cancel</button><button class="btn btn-green" onclick="saveSupplier()">Save Supplier</button></div>
+  </div>
+</div>
+
+<!-- Supplier Payment Modal -->
+<div class="modal-bg" id="sup-payment-modal">
+  <div class="modal" style="max-width:400px;"><div class="modal-head"><h3>Record Payment to Supplier</h3><button class="modal-x" onclick="closeM('sup-payment-modal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="sup-pay-id">
+      <p id="sup-pay-name" style="font-weight:700;font-size:14px;color:var(--green2);margin-bottom:14px;"></p>
+      <div class="frow">
+        <div class="fg"><label>Amount Paid</label><input type="number" id="sup-pay-amount" step="0.01" placeholder="0.00"></div>
+        <div class="fg"><label>Date</label><input type="date" id="sup-pay-date"></div>
+      </div>
+      <div class="fg"><label>Payment Method</label><select id="sup-pay-method"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option><option>Cheque</option></select></div>
+      <div class="fg"><label>Reference / Invoice No</label><input type="text" id="sup-pay-ref" placeholder="e.g. INV-001 or M-Pesa ref"></div>
+      <div class="fg"><label>Notes</label><input type="text" id="sup-pay-notes" placeholder="Optional"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeM('sup-payment-modal')">Cancel</button><button class="btn btn-green" onclick="saveSupplierPayment()">Record Payment</button></div>
+  </div>
+</div>
 <datalist id="st-cats"></datalist>
 
 <script>
@@ -1150,6 +1275,9 @@ async function showApp(){
   window.addEventListener('online',updateOnline);window.addEventListener('offline',updateOnline);
   loadSettings();
   await loadData();
+  await loadSuppliers();
+  await loadPayroll();
+  updateOfflineBadge();
   // Setup Supabase Realtime
   setupRealtime();
   if(isOwner())nav('dashboard');
@@ -1220,7 +1348,7 @@ function nav(pg){
   document.querySelector(`.nav-item[onclick="nav('${pg}')"]`)?.classList.add('active');
   document.getElementById('tb-title').textContent=PAGE_TITLES[pg]||pg;
   closeSB();
-  const renders={dashboard:renderDashboard,income:renderIncome,expenses:renderExpenses,pl:renderPL,invoices:renderInvoices,stock:renderStock,staff:renderStaff,branches:renderBranches,reports:renderReports,settings:loadSettings,'my-sales':renderMySales,ai:initAI};
+  const renders={dashboard:renderDashboard,income:renderIncome,expenses:renderExpenses,pl:renderPL,invoices:renderInvoices,stock:renderStock,staff:renderStaff,branches:renderBranches,reports:renderReports,settings:loadSettings,'my-sales':renderMySales,ai:initAI,suppliers:()=>{loadSuppliers().then(renderSuppliers);},payroll:()=>{loadPayroll().then(renderPayroll);}};
   renders[pg]?.();
 }
 function toggleSB(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sb-overlay').classList.toggle('open');}
@@ -1687,12 +1815,64 @@ function buildReceiptText(){
   const s=_lastSale;
   return `*${WS.biz_name}*\n${WS.address||''}\n${WS.contact||''}\n\n*RECEIPT #${s.ref}*\nDate: ${s.time}\nServed by: ${s.staff}\n\n${s.item} x${s.qty} @ ${fmt(s.price)}\n*TOTAL: ${fmt(s.total)}*\nPayment: ${s.method}\n\nThank you for shopping with us!`;
 }
+function generateReceiptPDF(){
+  if(!_lastSale)return null;
+  const s=_lastSale;
+  try{
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({unit:'mm',format:[80,120]});
+    doc.setFont('helvetica');
+    // Header
+    doc.setFontSize(14);doc.setFont('helvetica','bold');
+    doc.text(WS.biz_name,40,8,{align:'center'});
+    doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text(WS.address||'',40,12,{align:'center'});
+    doc.text(WS.contact||'',40,15,{align:'center'});
+    // Divider
+    doc.setDrawColor(200);doc.line(5,17,75,17);
+    // Receipt details
+    doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text(`RECEIPT #${s.ref}`,40,22,{align:'center'});
+    doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+    doc.text(`Date: ${s.time}`,5,27);
+    doc.text(`Served by: ${s.staff}`,5,31);
+    doc.line(5,33,75,33);
+    // Item
+    doc.text(s.item,5,38);
+    doc.text(`${s.qty} x ${WS.currency} ${parseFloat(s.price).toFixed(2)}`,5,42);
+    doc.line(5,44,75,44);
+    // Total
+    doc.setFontSize(10);doc.setFont('helvetica','bold');
+    doc.text(`TOTAL: ${WS.currency} ${parseFloat(s.total).toFixed(2)}`,40,49,{align:'center'});
+    doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text(`Payment: ${s.method}`,40,53,{align:'center'});
+    doc.line(5,55,75,55);
+    // Footer
+    doc.setFontSize(7);
+    doc.text('Thank you for shopping with us!',40,59,{align:'center'});
+    doc.text('Powered by ProBooks Accounting',40,63,{align:'center'});
+    return doc;
+  }catch(e){console.warn('jsPDF error:',e);return null;}
+}
 function sendWhatsAppReceipt(){
   const num=(document.getElementById('rcpt-wa').value||'').trim().replace(/^0/,'254').replace(/^\+/,'').replace(/\s/g,'');
   if(!num||num.length<9){toast('Please enter a valid phone number.','err');return;}
-  const text=encodeURIComponent(buildReceiptText());
-  window.open(`https://wa.me/${num}?text=${text}`,'_blank');
-  toast('WhatsApp opened with receipt — tap Send','ok');
+  // Try to generate PDF first for download
+  const doc=generateReceiptPDF();
+  if(doc){
+    doc.save(`Receipt_${_lastSale?.ref||'ProBooks'}.pdf`);
+    toast('Receipt PDF downloaded! Now attach it to WhatsApp.','ok');
+    // Open WhatsApp after short delay
+    setTimeout(()=>{
+      const waUrl=`https://wa.me/${num}?text=${encodeURIComponent(`Hi! Here is your receipt from ${WS.biz_name}.\n\nReceipt #${_lastSale?.ref} — ${fmt(_lastSale?.total||0)}\n\nPlease see the attached PDF receipt.`)}`;
+      window.open(waUrl,'_blank');
+    },800);
+  } else {
+    // Fallback to text receipt
+    const text=encodeURIComponent(buildReceiptText());
+    window.open(`https://wa.me/${num}?text=${text}`,'_blank');
+    toast('WhatsApp opened with receipt text','ok');
+  }
 }
 async function sendEmailReceipt(){
   const email=document.getElementById('rcpt-email').value.trim();
@@ -1702,15 +1882,42 @@ async function sendEmailReceipt(){
   if(!cfg.serviceId||!cfg.templateId||!cfg.publicKey){
     st.style.color='var(--amber)';st.textContent='EmailJS not configured. Go to Settings → Email Receipts.';return;
   }
-  st.style.color='var(--text2)';st.textContent='Sending...';
+  st.style.color='var(--text2)';st.textContent='Generating PDF & sending...';
+  // Generate PDF as base64
+  let pdfBase64='';
+  const doc=generateReceiptPDF();
+  if(doc)pdfBase64=doc.output('datauristring');
   try{
     const res=await fetch('https://api.emailjs.com/api/v1.0/email/send',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({service_id:cfg.serviceId,template_id:cfg.templateId,user_id:cfg.publicKey,
-        template_params:{to_email:email,to_name:'Valued Customer',biz_name:WS.biz_name,receipt_text:buildReceiptText().replace(/\*/g,''),total:fmt(_lastSale?.total||0),ref:_lastSale?.ref||''}})
+      body:JSON.stringify({
+        service_id:cfg.serviceId,
+        template_id:cfg.templateId,
+        user_id:cfg.publicKey,
+        template_params:{
+          to_email:email,
+          to_name:'Valued Customer',
+          biz_name:WS.biz_name,
+          biz_contact:WS.contact||'',
+          biz_address:WS.address||'',
+          receipt_number:_lastSale?.ref||'',
+          item_name:_lastSale?.item||'',
+          item_qty:_lastSale?.qty||'',
+          unit_price:fmt(_lastSale?.price||0),
+          total_amount:fmt(_lastSale?.total||0),
+          payment_method:_lastSale?.method||'',
+          sale_time:_lastSale?.time||'',
+          staff_name:_lastSale?.staff||ME.name,
+          receipt_text:buildReceiptText().replace(/\*/g,''),
+        }
+      })
     });
-    if(res.ok){st.style.color='var(--green2)';st.textContent='Email sent successfully!';}
-    else{st.style.color='var(--red)';st.textContent='Failed. Check your EmailJS settings.';}
+    if(res.ok){
+      st.style.color='var(--green2)';st.textContent='Email sent! PDF also downloading...';
+      if(doc)doc.save(`Receipt_${_lastSale?.ref||'ProBooks'}.pdf`);
+    } else {
+      st.style.color='var(--red)';st.textContent='Email failed. Check your EmailJS settings in the Settings page.';
+    }
   }catch(e){st.style.color='var(--red)';st.textContent='Error: '+e.message;}
 }
 async function sendSMSReceipt(){
@@ -1927,21 +2134,316 @@ INVOICES: ${INVOICES.length} total | Unpaid: ${INVOICES.filter(i=>i.status==='un
 // REPORTS
 // ═══════════════════════════════════════════════
 function renderReports(){
-  const rpts=[{title:'Profit & Loss',desc:'Full income vs expense report.',key:'pl'},{title:'Income Report',desc:'All income with categories.',key:'income'},{title:'Expense Report',desc:'All expenses with categories.',key:'expense'},{title:'Stock Report',desc:'Inventory with values.',key:'stock'},{title:'Invoice Report',desc:'All invoices & status.',key:'invoice'}];
-  document.getElementById('reports-grid').innerHTML=rpts.map(r=>`<div class="card"><div class="card-body" style="display:flex;flex-direction:column;gap:10px;"><div style="font-weight:700;font-size:14px;">${r.title}</div><div style="font-size:12.5px;color:var(--text3);">${r.desc}</div><button class="btn btn-gold btn-sm" style="align-self:flex-start;" onclick="dlReport('${r.key}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download PDF</button></div></div>`).join('');
+  // Populate period dropdowns with available months
+  const allDates=[...INCOME.map(i=>i.date),...EXPENSES.map(e=>e.date)].filter(Boolean).sort();
+  const months=[...new Set(allDates.map(d=>d.slice(0,7)))].sort();
+  const fromEl=document.getElementById('rpt-from');const toEl=document.getElementById('rpt-to');
+  if(fromEl){fromEl.innerHTML='<option value="">All Time</option>'+months.map(m=>`<option value="${m}">${m}</option>`).join('');}
+  if(toEl){toEl.innerHTML='<option value="">Today</option>'+[...months].reverse().map(m=>`<option value="${m}">${m}</option>`).join('');}
+  const rpts=[
+    {key:'pl',title:'Profit & Loss',icon:'📊',desc:'Income vs expenses with category breakdown. Shows net profit or loss for any period.',color:'var(--green2)'},
+    {key:'cashflow',title:'Cash Flow Statement',icon:'💧',desc:'Cash coming in vs going out. Shows if the business has enough cash to operate.',color:'var(--blue)'},
+    {key:'cashbook',title:'Cash Book',icon:'📒',desc:'Chronological log of all cash and M-Pesa transactions with running balance.',color:'var(--gold)'},
+    {key:'balancesheet',title:'Balance Sheet',icon:'⚖️',desc:'Assets (stock + cash) vs Liabilities (supplier debts) = Owner\'s Equity.',color:'var(--amber)'},
+    {key:'purchasebook',title:'Purchase Book',icon:'🛒',desc:'All stock purchases from suppliers with dates, quantities, and amounts paid.',color:'#a78bfa'},
+    {key:'reconciliation',title:'Reconciliation',icon:'🔍',desc:'Compare your records by payment method. Catch missing entries and discrepancies.',color:'#f472b6'},
+    {key:'income',title:'Income Report',icon:'📈',desc:'All income records with categories, methods, and staff attribution.',color:'var(--green2)'},
+    {key:'expense',title:'Expense Report',icon:'📉',desc:'All expenses by category, vendor, and payment method.',color:'var(--red)'},
+    {key:'stock',title:'Stock Report',icon:'📦',desc:'Full inventory with quantities, values, and low stock alerts.',color:'var(--text2)'},
+    {key:'invoice',title:'Invoice Report',icon:'🧾',desc:'All invoices with status, amounts due, and outstanding balances.',color:'var(--gold)'},
+  ];
+  document.getElementById('reports-grid').innerHTML=rpts.map(r=>`
+    <div class="card" style="border-top:3px solid ${r.color};">
+      <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:24px;">${r.icon}</div>
+        <div style="font-weight:700;font-size:14px;color:var(--text1);">${r.title}</div>
+        <div style="font-size:12.5px;color:var(--text3);line-height:1.6;flex:1;">${r.desc}</div>
+        <button class="btn btn-gold btn-sm" style="align-self:flex-start;" onclick="dlReport('${r.key}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PDF
+        </button>
+      </div>
+    </div>`).join('');
 }
-function dlReport(type){
+
+function getReportPeriod(){
+  const from=document.getElementById('rpt-from')?.value||'';
+  const to=document.getElementById('rpt-to')?.value||'';
+  const now=new Date().toISOString().split('T')[0];
+  const fs=from?from+'-01':'2000-01-01';
+  const ts=to?to+'-31':now;
+  const label=from||to?`${from||'All'} to ${to||'Today'}`:'All Time';
+  return{fs,ts,label};
+}
+
+function openReport(html,title){
   if(!navigator.onLine){toast('Connect to internet to download PDF.','warn');return;}
-  const c=WS.currency;const fN=n=>`${c} ${parseFloat(n||0).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-  let body='',title='';
-  if(type==='pl'){title='Profit & Loss Report';const tI=INCOME.reduce((s,i)=>s+parseFloat(i.amount||0),0);const tE=EXPENSES.reduce((s,e)=>s+parseFloat(e.amount||0),0);const iC={};INCOME.forEach(i=>{iC[i.category]=(iC[i.category]||0)+parseFloat(i.amount||0);});const eC={};EXPENSES.forEach(e=>{eC[e.category]=(eC[e.category]||0)+parseFloat(e.amount||0);});body=`<h2>Income</h2><table>${Object.entries(iC).map(([c,a])=>`<tr><td>${c}</td><td>${fN(a)}</td></tr>`).join('')}<tr class="tot"><td>Total Income</td><td>${fN(tI)}</td></tr></table><h2>Expenses</h2><table>${Object.entries(eC).map(([c,a])=>`<tr><td>${c}</td><td>${fN(a)}</td></tr>`).join('')}<tr class="tot"><td>Total Expenses</td><td>${fN(tE)}</td></tr></table><h2>Summary</h2><table><tr class="tot"><td>Net ${tI-tE>=0?'Profit':'Loss'}</td><td style="color:${tI-tE>=0?'green':'red'};font-weight:700;">${fN(Math.abs(tI-tE))}</td></tr></table>`;}
-  else if(type==='income'){title='Income Report';body=`<table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Method</th><th>Amount</th></tr></thead><tbody>${INCOME.map(i=>`<tr><td>${fmtDate(i.date)}</td><td>${i.description||''}</td><td>${i.category}</td><td>${i.payment_method}</td><td>${fN(i.amount)}</td></tr>`).join('')}<tr class="tot"><td colspan="4">Total</td><td>${fN(INCOME.reduce((s,i)=>s+parseFloat(i.amount||0),0))}</td></tr></tbody></table>`;}
-  else if(type==='expense'){title='Expense Report';body=`<table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Method</th><th>Vendor</th><th>Amount</th></tr></thead><tbody>${EXPENSES.map(e=>`<tr><td>${fmtDate(e.date)}</td><td>${e.description||''}</td><td>${e.category}</td><td>${e.payment_method}</td><td>${e.vendor||'-'}</td><td>${fN(e.amount)}</td></tr>`).join('')}<tr class="tot"><td colspan="5">Total</td><td>${fN(EXPENSES.reduce((s,e)=>s+parseFloat(e.amount||0),0))}</td></tr></tbody></table>`;}
-  else if(type==='stock'){title='Stock Report';body=`<table><thead><tr><th>Item</th><th>SKU</th><th>Category</th><th>Qty</th><th>Unit</th><th>Cost</th><th>Price</th><th>Value</th></tr></thead><tbody>${STOCK.map(s=>`<tr><td>${s.name}</td><td>${s.sku||'-'}</td><td>${s.category||'-'}</td><td>${s.qty}</td><td>${s.unit}</td><td>${fN(s.cost_price)}</td><td>${fN(s.selling_price)}</td><td>${fN((s.qty||0)*(s.cost_price||0))}</td></tr>`).join('')}<tr class="tot"><td colspan="7">Total Stock Value</td><td>${fN(STOCK.reduce((s,i)=>s+(parseInt(i.qty||0))*(parseFloat(i.cost_price||0)),0))}</td></tr></tbody></table>`;}
-  else if(type==='invoice'){title='Invoice Report';body=`<table><thead><tr><th>#</th><th>Client</th><th>Date</th><th>Due</th><th>Status</th><th>Amount</th></tr></thead><tbody>${INVOICES.map(i=>`<tr><td>${i.inv_number}</td><td>${i.client}</td><td>${fmtDate(i.date)}</td><td>${fmtDate(i.due_date)}</td><td>${i.status}</td><td>${fN(i.total)}</td></tr>`).join('')}</tbody></table>`;}
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title} - ${WS.biz_name}</title><link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Sora',sans-serif;background:#fff;color:#111;padding:32px;max-width:950px;margin:0 auto;}.rh{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:3px solid #0e7a4e;margin-bottom:22px;}.rb{font-size:20px;font-weight:800;color:#0e7a4e;}.rs{font-size:12px;color:#666;}h2{font-size:13.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#0e7a4e;margin:18px 0 8px;}table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:12px;}th{background:#f0f7f4;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:8px 11px;text-align:left;}td{padding:7px 11px;border-bottom:1px solid #e5f0ea;}tr.tot td{font-weight:700;background:#f8fafc;border-top:2px solid #0e7a4e;}.ft{margin-top:28px;padding-top:12px;border-top:1px solid #e5f0ea;font-size:11px;color:#999;text-align:center;}@media print{body{padding:0;}}</style></head><body><div class="rh"><div><div class="rb">${WS.biz_name}</div><div class="rs">${WS.address||''} | ${WS.contact||''}</div></div><div style="text-align:right;"><div style="font-size:17px;font-weight:700;">${title}</div><div style="font-size:12px;color:#666;">${new Date().toLocaleDateString('en-KE',{day:'2-digit',month:'long',year:'numeric'})}</div></div></div>${body}<div class="ft">Generated by ProBooks Accounting — ${WS.biz_name}</div><script>window.onload=()=>{window.print();}<\/script></body></html>`);
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title} — ${WS.biz_name}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Sora',sans-serif;background:#fff;color:#111;padding:28px;max-width:960px;margin:0 auto;}
+  .rh{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:3px solid #0e7a4e;margin-bottom:20px;}
+  .rb{font-size:22px;font-weight:800;color:#0e7a4e;}.rs{font-size:12px;color:#666;margin-top:2px;}
+  .rt{font-size:17px;font-weight:700;}.rp{font-size:12px;color:#666;}
+  h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#0e7a4e;margin:18px 0 8px;padding-bottom:4px;border-bottom:1px solid #e5f0ea;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:14px;}
+  th{background:#f0f7f4;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:8px 11px;text-align:left;}
+  td{padding:7px 11px;border-bottom:1px solid #e5f0ea;}
+  tr.tot td{font-weight:700;background:#f8fafc;border-top:2px solid #0e7a4e;}
+  tr.neg td{color:#e03e3e;} tr.pos td{color:#0e7a4e;}
+  .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+  .scard{background:#f8fafc;border-radius:8px;padding:14px;border-left:3px solid #0e7a4e;}
+  .scard.r{border-left-color:#e03e3e;}.scard.g{border-left-color:#0e7a4e;}.scard.b{border-left-color:#2a7dd4;}
+  .sl{font-size:10.5px;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+  .sv{font-size:20px;font-weight:800;color:#111;}
+  .ft{margin-top:24px;padding-top:12px;border-top:1px solid #e5f0ea;font-size:10.5px;color:#999;text-align:center;}
+  .np{color:#e03e3e;}.pp{color:#0e7a4e;font-weight:700;}
+  @media print{body{padding:0;}.no-print{display:none;}}</style></head><body>
+  <div class="no-print" style="text-align:center;padding:10px;background:#f0f7f4;margin-bottom:14px;font-family:sans-serif;font-size:13px;">
+    <strong>${title} — ${WS.biz_name}</strong> &nbsp;|&nbsp; <a href="javascript:window.print()" style="color:#0e7a4e;font-weight:700;">🖨 Print / Save as PDF</a>
+  </div>${html}
+  <div class="ft">Generated by ProBooks Accounting | ${WS.biz_name} | ${new Date().toLocaleDateString('en-KE',{day:'2-digit',month:'long',year:'numeric'})}</div>
+  <script>window.onload=()=>{window.print();}<\/script></body></html>`);
   w.document.close();
+}
+
+function dlReport(type){
+  const{fs,ts,label}=getReportPeriod();
+  const c=WS.currency;
+  const fN=n=>`${c} ${parseFloat(n||0).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const fmtD=d=>{if(!d)return'';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-KE',{day:'2-digit',month:'short',year:'numeric'});};
+  const rh=(title)=>`<div class="rh"><div><div class="rb">${WS.biz_name}</div><div class="rs">${WS.address||''} ${WS.contact?'| '+WS.contact:''}</div></div><div style="text-align:right;"><div class="rt">${title}</div><div class="rp">Period: ${label}</div></div></div>`;
+
+  if(type==='pl'){
+    const fI=INCOME.filter(i=>i.date&&i.date>=fs&&i.date<=ts);
+    const fE=EXPENSES.filter(e=>e.date&&e.date>=fs&&e.date<=ts);
+    const tI=fI.reduce((s,i)=>s+parseFloat(i.amount||0),0);
+    const tE=fE.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+    const prof=tI-tE;const margin=tI>0?(prof/tI*100):0;
+    const iC={};fI.forEach(i=>{iC[i.category]=(iC[i.category]||0)+parseFloat(i.amount||0);});
+    const eC={};fE.forEach(e=>{eC[e.category]=(eC[e.category]||0)+parseFloat(e.amount||0);});
+    const html=`${rh('Profit & Loss Statement')}
+      <div class="summary">
+        <div class="scard g"><div class="sl">Total Income</div><div class="sv pp">${fN(tI)}</div></div>
+        <div class="scard r"><div class="sl">Total Expenses</div><div class="sv np">${fN(tE)}</div></div>
+        <div class="scard ${prof>=0?'g':'r'}"><div class="sl">Net ${prof>=0?'Profit':'Loss'}</div><div class="sv ${prof>=0?'pp':'np'}">${fN(Math.abs(prof))}</div><div style="font-size:11px;color:#666;margin-top:2px;">Margin: ${margin.toFixed(1)}%</div></div>
+      </div>
+      <h2>Income Breakdown</h2>
+      <table><thead><tr><th>Category</th><th>Amount</th><th>%</th></tr></thead><tbody>
+        ${Object.entries(iC).sort((a,b)=>b[1]-a[1]).map(([c,a])=>`<tr><td>${c}</td><td class="pp">${fN(a)}</td><td>${tI>0?(a/tI*100).toFixed(1):'0'}%</td></tr>`).join('')}
+        <tr class="tot"><td>TOTAL INCOME</td><td class="pp">${fN(tI)}</td><td>100%</td></tr>
+      </tbody></table>
+      <h2>Expense Breakdown</h2>
+      <table><thead><tr><th>Category</th><th>Amount</th><th>%</th></tr></thead><tbody>
+        ${Object.entries(eC).sort((a,b)=>b[1]-a[1]).map(([c,a])=>`<tr><td>${c}</td><td class="np">${fN(a)}</td><td>${tE>0?(a/tE*100).toFixed(1):'0'}%</td></tr>`).join('')}
+        <tr class="tot"><td>TOTAL EXPENSES</td><td class="np">${fN(tE)}</td><td>100%</td></tr>
+      </tbody></table>
+      <h2>Summary</h2>
+      <table><tbody>
+        <tr><td>Gross Income</td><td class="pp" style="font-weight:600;">${fN(tI)}</td></tr>
+        <tr><td>Less: Total Expenses</td><td class="np">(${fN(tE)})</td></tr>
+        <tr class="tot"><td>NET ${prof>=0?'PROFIT':'LOSS'}</td><td class="${prof>=0?'pp':'np'}">${fN(Math.abs(prof))}</td></tr>
+        <tr><td>Profit Margin</td><td>${margin.toFixed(2)}%</td></tr>
+      </tbody></table>`;
+    openReport(html,'Profit & Loss Statement');
+  }
+  else if(type==='cashflow'){
+    const fI=INCOME.filter(i=>i.date&&i.date>=fs&&i.date<=ts);
+    const fE=EXPENSES.filter(e=>e.date&&e.date>=fs&&e.date<=ts);
+    // Group by month
+    const months=[...new Set([...fI.map(i=>i.date.slice(0,7)),...fE.map(e=>e.date.slice(0,7))])].sort();
+    const tI=fI.reduce((s,i)=>s+parseFloat(i.amount||0),0);
+    const tE=fE.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+    const net=tI-tE;
+    let running=0;
+    const monthRows=months.map(m=>{
+      const mI=fI.filter(i=>i.date.startsWith(m)).reduce((s,i)=>s+parseFloat(i.amount||0),0);
+      const mE=fE.filter(e=>e.date.startsWith(m)).reduce((s,e)=>s+parseFloat(e.amount||0),0);
+      const mNet=mI-mE;running+=mNet;
+      return`<tr><td>${m}</td><td class="pp">${fN(mI)}</td><td class="np">(${fN(mE)})</td><td class="${mNet>=0?'pp':'np'}">${fN(mNet)}</td><td class="${running>=0?'pp':'np'}" style="font-weight:600;">${fN(running)}</td></tr>`;
+    }).join('');
+    // By payment method
+    const methods=[...new Set([...fI.map(i=>i.payment_method),...fE.map(e=>e.payment_method)].filter(Boolean))];
+    const methodRows=methods.map(m=>{
+      const mI=fI.filter(i=>i.payment_method===m).reduce((s,i)=>s+parseFloat(i.amount||0),0);
+      const mE=fE.filter(e=>e.payment_method===m).reduce((s,e)=>s+parseFloat(e.amount||0),0);
+      return`<tr><td>${m}</td><td class="pp">${fN(mI)}</td><td class="np">${fN(mE)}</td><td class="${mI-mE>=0?'pp':'np'}">${fN(mI-mE)}</td></tr>`;
+    }).join('');
+    const html=`${rh('Cash Flow Statement')}
+      <div class="summary">
+        <div class="scard g"><div class="sl">Total Cash In</div><div class="sv pp">${fN(tI)}</div></div>
+        <div class="scard r"><div class="sl">Total Cash Out</div><div class="sv np">${fN(tE)}</div></div>
+        <div class="scard ${net>=0?'g':'r'}"><div class="sl">Net Cash Flow</div><div class="sv ${net>=0?'pp':'np'}">${fN(net)}</div></div>
+      </div>
+      <h2>Monthly Cash Flow</h2>
+      <table><thead><tr><th>Month</th><th>Cash In</th><th>Cash Out</th><th>Net Flow</th><th>Running Balance</th></tr></thead><tbody>
+        ${monthRows}
+        <tr class="tot"><td>TOTAL</td><td class="pp">${fN(tI)}</td><td class="np">(${fN(tE)})</td><td class="${net>=0?'pp':'np'}">${fN(net)}</td><td></td></tr>
+      </tbody></table>
+      <h2>Cash Flow by Payment Method</h2>
+      <table><thead><tr><th>Method</th><th>Received</th><th>Paid Out</th><th>Net</th></tr></thead><tbody>${methodRows}</tbody></table>`;
+    openReport(html,'Cash Flow Statement');
+  }
+  else if(type==='cashbook'){
+    const fI=INCOME.filter(i=>i.date&&i.date>=fs&&i.date<=ts);
+    const fE=EXPENSES.filter(e=>e.date&&e.date>=fs&&e.date<=ts);
+    const all=[
+      ...fI.map(i=>({date:i.date,time:i.sale_time||'',desc:i.description||i.category,method:i.payment_method,ref:i.reference||'',staff:i.staff_name||'',debit:0,credit:parseFloat(i.amount||0)})),
+      ...fE.map(e=>({date:e.date,time:'',desc:e.description||e.category,method:e.payment_method,ref:e.vendor||'',staff:'',debit:parseFloat(e.amount||0),credit:0}))
+    ].sort((a,b)=>a.date.localeCompare(b.date));
+    let running=0;
+    const rows=all.map(t=>{
+      running+=t.credit-t.debit;
+      return`<tr><td>${fmtD(t.date)}</td><td>${t.desc}</td><td>${t.method||'—'}</td><td>${t.ref||'—'}</td><td>${t.staff||'—'}</td><td class="pp">${t.credit>0?fN(t.credit):''}</td><td class="np">${t.debit>0?fN(t.debit):''}</td><td class="${running>=0?'pp':'np'}" style="font-weight:600;">${fN(running)}</td></tr>`;
+    }).join('');
+    const totIn=all.reduce((s,t)=>s+t.credit,0);const totOut=all.reduce((s,t)=>s+t.debit,0);
+    const html=`${rh('Cash Book')}
+      <table><thead><tr><th>Date</th><th>Description</th><th>Method</th><th>Ref</th><th>Staff</th><th>Cash In</th><th>Cash Out</th><th>Balance</th></tr></thead><tbody>
+        ${rows||'<tr><td colspan="8" style="text-align:center;color:#999;padding:20px;">No transactions in this period.</td></tr>'}
+        <tr class="tot"><td colspan="4"></td><td>TOTALS</td><td class="pp">${fN(totIn)}</td><td class="np">${fN(totOut)}</td><td class="${totIn-totOut>=0?'pp':'np'}">${fN(totIn-totOut)}</td></tr>
+      </tbody></table>`;
+    openReport(html,'Cash Book');
+  }
+  else if(type==='balancesheet'){
+    const stockValue=STOCK.reduce((s,i)=>s+(parseInt(i.qty||0))*(parseFloat(i.cost_price||0)),0);
+    const stockSellValue=STOCK.reduce((s,i)=>s+(parseInt(i.qty||0))*(parseFloat(i.selling_price||0)),0);
+    const totalIncome=INCOME.reduce((s,i)=>s+parseFloat(i.amount||0),0);
+    const totalExpenses=EXPENSES.reduce((s,i)=>s+parseFloat(i.amount||0),0);
+    const cashBalance=totalIncome-totalExpenses;
+    const supPayments=SUPPLIER_PAYMENTS?.reduce((s,p)=>s+parseFloat(p.amount||0),0)||0;
+    const totalAssets=stockValue+Math.max(0,cashBalance);
+    const totalLiab=Math.max(0,-cashBalance);
+    const equity=totalAssets-totalLiab;
+    const html=`${rh('Balance Sheet')}
+      <p style="font-size:12px;color:#666;margin-bottom:16px;">As at ${new Date().toLocaleDateString('en-KE',{day:'2-digit',month:'long',year:'numeric'})}</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <h2>ASSETS</h2>
+          <table><tbody>
+            <tr><td style="font-weight:600;color:#666;font-size:11px;text-transform:uppercase;">Current Assets</td><td></td></tr>
+            <tr><td style="padding-left:16px;">Cash & Bank Balance</td><td class="pp">${fN(Math.max(0,cashBalance))}</td></tr>
+            <tr><td style="font-weight:600;color:#666;font-size:11px;text-transform:uppercase;padding-top:10px;">Fixed Assets / Inventory</td><td></td></tr>
+            <tr><td style="padding-left:16px;">Stock (at cost)</td><td class="pp">${fN(stockValue)}</td></tr>
+            <tr><td style="padding-left:16px;font-size:11px;color:#999;">Stock (at selling price)</td><td style="font-size:11px;color:#999;">${fN(stockSellValue)}</td></tr>
+            <tr class="tot"><td>TOTAL ASSETS</td><td class="pp">${fN(totalAssets)}</td></tr>
+          </tbody></table>
+        </div>
+        <div>
+          <h2>LIABILITIES & EQUITY</h2>
+          <table><tbody>
+            <tr><td style="font-weight:600;color:#666;font-size:11px;text-transform:uppercase;">Current Liabilities</td><td></td></tr>
+            <tr><td style="padding-left:16px;">Outstanding Invoices (unpaid)</td><td class="np">${fN(INVOICES.filter(i=>i.status==='unpaid').reduce((s,i)=>s+parseFloat(i.total||0),0))}</td></tr>
+            <tr><td style="padding-left:16px;">Overdraft/Negative Cash</td><td class="np">${fN(Math.max(0,-cashBalance))}</td></tr>
+            <tr class="tot"><td>TOTAL LIABILITIES</td><td class="np">${fN(totalLiab)}</td></tr>
+            <tr style="height:12px;"><td></td><td></td></tr>
+            <tr><td style="font-weight:600;color:#666;font-size:11px;text-transform:uppercase;">Owner's Equity</td><td></td></tr>
+            <tr><td style="padding-left:16px;">Retained Earnings</td><td class="${equity>=0?'pp':'np'}">${fN(equity)}</td></tr>
+            <tr class="tot"><td>TOTAL LIABILITIES + EQUITY</td><td class="${totalAssets>=0?'pp':'np'}">${fN(totalAssets)}</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+      <p style="margin-top:14px;font-size:11px;color:#999;">Note: This is a simplified balance sheet based on recorded transactions. For a formal audited balance sheet, consult a certified accountant.</p>`;
+    openReport(html,'Balance Sheet');
+  }
+  else if(type==='purchasebook'){
+    const purchases=EXPENSES.filter(e=>e.date&&e.date>=fs&&e.date<=ts&&(e.category==='Stock Purchase'||e.category==='Supplier Payment')).sort((a,b)=>a.date.localeCompare(b.date));
+    const total=purchases.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+    const rows=purchases.map(p=>`<tr><td>${fmtD(p.date)}</td><td>${p.description||'Stock Purchase'}</td><td>${p.vendor||'—'}</td><td>${p.payment_method||'—'}</td><td>${p.reference||'—'}</td><td class="np">${fN(p.amount)}</td></tr>`).join('');
+    const html=`${rh('Purchase Book')}
+      <table><thead><tr><th>Date</th><th>Description</th><th>Supplier</th><th>Method</th><th>Reference</th><th>Amount</th></tr></thead><tbody>
+        ${rows||'<tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">No purchases in this period.</td></tr>'}
+        <tr class="tot"><td colspan="5">TOTAL PURCHASES</td><td class="np">${fN(total)}</td></tr>
+      </tbody></table>`;
+    openReport(html,'Purchase Book');
+  }
+  else if(type==='reconciliation'){
+    const fI=INCOME.filter(i=>i.date&&i.date>=fs&&i.date<=ts);
+    const fE=EXPENSES.filter(e=>e.date&&e.date>=fs&&e.date<=ts);
+    const methods=[...new Set([...fI.map(i=>i.payment_method),...fE.map(e=>e.payment_method)].filter(Boolean))].sort();
+    const rows=methods.map(m=>{
+      const mI=fI.filter(i=>i.payment_method===m);
+      const mE=fE.filter(e=>e.payment_method===m);
+      const totIn=mI.reduce((s,i)=>s+parseFloat(i.amount||0),0);
+      const totOut=mE.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+      const net=totIn-totOut;
+      return`<tr>
+        <td style="font-weight:600;">${m}</td>
+        <td>${mI.length}</td><td class="pp">${fN(totIn)}</td>
+        <td>${mE.length}</td><td class="np">${fN(totOut)}</td>
+        <td class="${net>=0?'pp':'np'}" style="font-weight:700;">${fN(net)}</td>
+        <td style="color:#999;font-size:11.5px;">Enter your ${m} statement balance to reconcile</td>
+      </tr>
+      <tr style="background:#f8fafc;">
+        <td colspan="7" style="padding:6px 11px;">
+          <table style="width:100%;font-size:12px;margin:0;">
+            <tr><th style="background:transparent;padding:3px 6px;">Date</th><th style="background:transparent;padding:3px 6px;">Description</th><th style="background:transparent;padding:3px 6px;">In</th><th style="background:transparent;padding:3px 6px;">Out</th></tr>
+            ${[...mI.map(i=>({date:i.date,desc:i.description||i.category,in:i.amount,out:0})),...mE.map(e=>({date:e.date,desc:e.description||e.category,in:0,out:e.amount}))].sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5).map(t=>`<tr><td style="padding:3px 6px;">${fmtD(t.date)}</td><td style="padding:3px 6px;">${t.desc}</td><td style="padding:3px 6px;color:#0e7a4e;">${t.in>0?fN(t.in):''}</td><td style="padding:3px 6px;color:#e03e3e;">${t.out>0?fN(t.out):''}</td></tr>`).join('')}
+          </table>
+        </td>
+      </tr>`;
+    }).join('');
+    const totIn=fI.reduce((s,i)=>s+parseFloat(i.amount||0),0);
+    const totOut=fE.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+    const html=`${rh('Reconciliation Report')}
+      <p style="font-size:12px;color:#666;margin-bottom:14px;">Compare your ProBooks records against your bank/M-Pesa statements. Any differences indicate missing or incorrect entries.</p>
+      <table><thead><tr><th>Payment Method</th><th>Txns In</th><th>Amount In</th><th>Txns Out</th><th>Amount Out</th><th>Net Balance</th><th>Notes</th></tr></thead><tbody>
+        ${rows||'<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">No transactions in this period.</td></tr>'}
+        <tr class="tot"><td>TOTALS</td><td></td><td class="pp">${fN(totIn)}</td><td></td><td class="np">${fN(totOut)}</td><td class="${totIn-totOut>=0?'pp':'np'}">${fN(totIn-totOut)}</td><td></td></tr>
+      </tbody></table>`;
+    openReport(html,'Reconciliation Report');
+  }
+  else if(type==='income'){
+    const rows=INCOME.filter(i=>i.date&&i.date>=fs&&i.date<=ts).sort((a,b)=>a.date.localeCompare(b.date));
+    const total=rows.reduce((s,i)=>s+parseFloat(i.amount||0),0);
+    const html=`${rh('Income Report')}
+      <table><thead><tr><th>Date</th><th>Time</th><th>Description</th><th>Category</th><th>Method</th><th>Staff</th><th>Amount</th></tr></thead><tbody>
+        ${rows.map(i=>`<tr><td>${fmtD(i.date)}</td><td style="font-size:11px;color:#666;">${i.sale_time||'—'}</td><td>${i.description||'—'}</td><td>${i.category}</td><td>${i.payment_method}</td><td>${i.staff_name||ME.name}</td><td class="pp">${fN(i.amount)}</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">No income in this period.</td></tr>'}
+        <tr class="tot"><td colspan="6">TOTAL INCOME</td><td class="pp">${fN(total)}</td></tr>
+      </tbody></table>`;
+    openReport(html,'Income Report');
+  }
+  else if(type==='expense'){
+    const rows=EXPENSES.filter(e=>e.date&&e.date>=fs&&e.date<=ts).sort((a,b)=>a.date.localeCompare(b.date));
+    const total=rows.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+    const html=`${rh('Expense Report')}
+      <table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Method</th><th>Vendor</th><th>Amount</th></tr></thead><tbody>
+        ${rows.map(e=>`<tr><td>${fmtD(e.date)}</td><td>${e.description||'—'}</td><td>${e.category}</td><td>${e.payment_method}</td><td>${e.vendor||'—'}</td><td class="np">${fN(e.amount)}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">No expenses in this period.</td></tr>'}
+        <tr class="tot"><td colspan="5">TOTAL EXPENSES</td><td class="np">${fN(total)}</td></tr>
+      </tbody></table>`;
+    openReport(html,'Expense Report');
+  }
+  else if(type==='stock'){
+    const total=STOCK.reduce((s,i)=>s+(parseInt(i.qty||0))*(parseFloat(i.cost_price||0)),0);
+    const sellTotal=STOCK.reduce((s,i)=>s+(parseInt(i.qty||0))*(parseFloat(i.selling_price||0)),0);
+    const thresh=parseInt(WS.low_stock_threshold||5);
+    const html=`${rh('Stock Report')}
+      <div class="summary">
+        <div class="scard g"><div class="sl">Total Items</div><div class="sv">${STOCK.length}</div></div>
+        <div class="scard b"><div class="sl">Stock Value (Cost)</div><div class="sv pp">${fN(total)}</div></div>
+        <div class="scard g"><div class="sl">Stock Value (Selling)</div><div class="sv pp">${fN(sellTotal)}</div></div>
+      </div>
+      <table><thead><tr><th>Item</th><th>SKU</th><th>Category</th><th>Qty</th><th>Unit</th><th>Cost Price</th><th>Selling Price</th><th>Stock Value</th><th>Status</th></tr></thead><tbody>
+        ${STOCK.map(s=>`<tr><td style="font-weight:600;">${s.name}</td><td style="font-size:11px;color:#666;">${s.sku||'—'}</td><td>${s.category||'—'}</td><td style="font-weight:700;${parseInt(s.qty||0)<=thresh?'color:#e03e3e':''}">${s.qty||0}</td><td>${s.unit}</td><td>${fN(s.cost_price)}</td><td>${fN(s.selling_price)}</td><td>${fN((parseInt(s.qty||0))*(parseFloat(s.cost_price||0)))}</td><td style="color:${parseInt(s.qty||0)<=thresh?'#e03e3e':'#0e7a4e'};font-weight:600;">${parseInt(s.qty||0)<=thresh?'LOW':'OK'}</td></tr>`).join('')}
+        <tr class="tot"><td colspan="7">TOTAL STOCK VALUE (Cost)</td><td class="pp">${fN(total)}</td><td></td></tr>
+      </tbody></table>`;
+    openReport(html,'Stock Report');
+  }
+  else if(type==='invoice'){
+    const rows=INVOICES.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const paid=rows.filter(i=>i.status==='paid').reduce((s,i)=>s+parseFloat(i.total||0),0);
+    const unpaid=rows.filter(i=>i.status==='unpaid').reduce((s,i)=>s+parseFloat(i.total||0),0);
+    const html=`${rh('Invoice Report')}
+      <div class="summary">
+        <div class="scard g"><div class="sl">Total Invoices</div><div class="sv">${rows.length}</div></div>
+        <div class="scard g"><div class="sl">Total Paid</div><div class="sv pp">${fN(paid)}</div></div>
+        <div class="scard r"><div class="sl">Outstanding</div><div class="sv np">${fN(unpaid)}</div></div>
+      </div>
+      <table><thead><tr><th>#</th><th>Client</th><th>Date</th><th>Due Date</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+        ${rows.map(i=>`<tr><td class="mono" style="font-size:11.5px;">${i.inv_number}</td><td>${i.client}</td><td>${fmtD(i.date)}</td><td style="${i.status==='unpaid'&&i.due_date&&i.due_date<new Date().toISOString().split('T')[0]?'color:#e03e3e;font-weight:700;':''}">${fmtD(i.due_date)||'—'}</td><td class="${i.status==='paid'?'pp':''}" style="font-weight:600;">${fN(i.total)}</td><td style="color:${i.status==='paid'?'#0e7a4e':'#d4a017'};font-weight:700;">${(i.status||'').toUpperCase()}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">No invoices yet.</td></tr>'}
+        <tr class="tot"><td colspan="4">TOTAL</td><td>${fN(paid+unpaid)}</td><td></td></tr>
+      </tbody></table>`;
+    openReport(html,'Invoice Report');
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -2291,9 +2793,32 @@ function saveATConfig(){
 // ═══════════════════════════════════════════════
 function loadSettings(){
   if(!WS)return;
-  document.getElementById('set-biz').value=WS.biz_name||'';document.getElementById('set-type').value=WS.biz_type||'Retail';document.getElementById('set-cur').value=WS.currency||'KES';document.getElementById('set-contact').value=WS.contact||'';document.getElementById('set-addr').value=WS.address||'';document.getElementById('set-vat').value=WS.vat_number||'';document.getElementById('set-threshold').value=WS.low_stock_threshold||5;
+  document.getElementById('set-biz').value=WS.biz_name||'';
+  document.getElementById('set-type').value=WS.biz_type||'Retail';
+  document.getElementById('set-cur').value=WS.currency||'KES';
+  document.getElementById('set-contact').value=WS.contact||'';
+  document.getElementById('set-addr').value=WS.address||'';
+  document.getElementById('set-vat').value=WS.vat_number||'';
+  document.getElementById('set-threshold').value=WS.low_stock_threshold||5;
   document.getElementById('set-aikey').value=LS.get('pb_aikey')||'';
   updateShareFields();
+  // Load Daraja config
+  const daraja=LS.get('pb_daraja')||{};
+  if(document.getElementById('set-daraja-key'))document.getElementById('set-daraja-key').value=daraja.consumerKey||'';
+  if(document.getElementById('set-daraja-secret'))document.getElementById('set-daraja-secret').value=daraja.consumerSecret||'';
+  if(document.getElementById('set-daraja-sc'))document.getElementById('set-daraja-sc').value=daraja.shortcode||'';
+  if(document.getElementById('set-daraja-pk'))document.getElementById('set-daraja-pk').value=daraja.passkey||'';
+  if(document.getElementById('set-daraja-type')&&daraja.type)document.getElementById('set-daraja-type').value=daraja.type;
+  // Load EmailJS config
+  const ejs=LS.get('pb_emailjs')||{};
+  if(document.getElementById('set-ejs-svc'))document.getElementById('set-ejs-svc').value=ejs.serviceId||'';
+  if(document.getElementById('set-ejs-tpl'))document.getElementById('set-ejs-tpl').value=ejs.templateId||'';
+  if(document.getElementById('set-ejs-key'))document.getElementById('set-ejs-key').value=ejs.publicKey||'';
+  // Load Africa's Talking config
+  const at=LS.get('pb_africastalking')||{};
+  if(document.getElementById('set-at-user'))document.getElementById('set-at-user').value=at.username||'';
+  if(document.getElementById('set-at-key'))document.getElementById('set-at-key').value=at.apiKey||'';
+  if(document.getElementById('set-at-sender'))document.getElementById('set-at-sender').value=at.senderId||'';
 }
 function updateShareFields(){
   const url=LS.get('pb_sb_url','');const key=LS.get('pb_sb_key','');
@@ -2317,6 +2842,40 @@ function changePw(){const old=document.getElementById('pw-old').value;const np=d
 function openM(id){document.getElementById(id).classList.add('open');}
 function closeM(id){document.getElementById(id).classList.remove('open');}
 function toast(msg,type='ok'){const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(12px)';el.style.transition='all .3s';setTimeout(()=>el.remove(),300);},3200);}
+
+function previewDeductions(){
+  const basic=parseFloat(document.getElementById('emp-basic')?.value)||0;
+  const allowances=parseFloat(document.getElementById('emp-allowances')?.value)||0;
+  const preview=document.getElementById('deduction-preview');
+  if(!preview)return;
+  if(!basic){preview.style.display='none';return;}
+  const gross=basic+allowances;
+  const paye=calcPAYE(gross);
+  const nssf=calcNSSF(gross);
+  const shif=calcSHIF(gross);
+  const housing=calcHousingLevy(gross);
+  const net=gross-paye-nssf-shif-housing;
+  preview.style.display='block';
+  document.getElementById('prev-gross').textContent=fmt(gross);
+  document.getElementById('prev-paye').textContent=fmt(paye);
+  document.getElementById('prev-nssf').textContent=fmt(nssf);
+  document.getElementById('prev-shif').textContent=fmt(shif);
+  document.getElementById('prev-housing').textContent=fmt(housing);
+  document.getElementById('prev-net').textContent=fmt(net);
+}
+
+function updateOfflineBadge(){
+  const q=LS.get('pb_offline_queue')||[];
+  const bar=document.getElementById('offline-sync-bar');
+  const syncBtn=document.getElementById('sync-btn');
+  if(q.length>0){
+    if(bar){bar.style.display='flex';document.getElementById('offline-sync-msg').textContent=`${q.length} offline sale${q.length>1?'s':''} waiting to sync`;}
+    if(syncBtn)syncBtn.style.display='flex';
+  } else {
+    if(bar)bar.style.display='none';
+    if(syncBtn)syncBtn.style.display='none';
+  }
+}
 
 // ═══════════════════════════════════════════════
 // INIT
