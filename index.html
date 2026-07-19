@@ -643,7 +643,8 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
             <button class="btn btn-outline" onclick="changePw()">Update Password</button>
           </div>
         </div>
-      </div>
+      </div><!-- /max-width wrapper -->
+    </div><!-- /page-settings -->
 
       <!-- SUPPLIERS PAGE -->
       <div class="page" id="page-suppliers">
@@ -677,14 +678,11 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
             </button>
           </div>
         </div>
-        <!-- Payroll Summary -->
         <div id="payroll-summary" class="stat-grid" style="margin-bottom:18px;"></div>
-        <!-- Employees Table -->
         <div class="card" style="margin-bottom:18px;">
           <div class="card-head"><h3>Employees</h3><span style="font-size:12px;color:var(--text3);" id="payroll-month"></span></div>
           <div class="card-body np"><table class="tbl" id="employee-tbl"></table></div>
         </div>
-        <!-- Payroll History -->
         <div class="card">
           <div class="card-head"><h3>Payroll History</h3><button class="btn btn-gold btn-sm" onclick="dlPayrollReport()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export PDF</button></div>
           <div class="card-body np"><table class="tbl" id="payroll-history-tbl"></table></div>
@@ -694,7 +692,7 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
     </div><!-- /main -->
   </div><!-- /app -->
 
-<!-- Sync offline button shown on stock page too -->
+<!-- Sync offline button -->
 <div id="offline-sync-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--amber-dim);border-top:1.5px solid var(--amber);padding:10px 20px;display:none;align-items:center;justify-content:space-between;z-index:400;">
   <span style="font-size:13px;color:var(--amber);" id="offline-sync-msg">Offline sales pending sync</span>
   <button class="btn btn-outline btn-sm" onclick="syncOfflineQueue()" style="border-color:var(--amber);color:var(--amber);">Sync Now</button>
