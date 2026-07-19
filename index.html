@@ -538,7 +538,13 @@ html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(-
 
     <!-- AI -->
     <div class="page" id="page-ai">
-      <h2 style="font-size:17px;font-weight:700;margin-bottom:4px;">AI Accountant</h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <h2 style="font-size:17px;font-weight:700;">AI Accountant</h2>
+        <button onclick="clearAIChat()" style="background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--r);padding:6px 12px;color:var(--text2);font-family:var(--font);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;" title="Clear chat history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Clear Chat
+        </button>
+      </div>
       <p style="font-size:12.5px;color:var(--text2);margin-bottom:14px;">Powered by <strong style="color:var(--green2);">OpenRouter AI</strong> (free) — reads your live business data.</p>
       <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;" id="ai-quicks"></div>
       <div class="card" style="height:calc(100vh - var(--top) - 200px);display:flex;flex-direction:column;">
@@ -2140,6 +2146,13 @@ function toggleNotifs(){const dd=document.getElementById('notif-drop');dd.classL
 // AI ACCOUNTANT
 // ═══════════════════════════════════════════════
 const AI_QUICKS=['Show profit & loss summary','Detect unusual expenses','Calculate VAT (16%)','Which product sells most?','Compare this month vs last','Top expense categories?','Check for potential fraud','Calculate PAYE on salary expenses'];
+function clearAIChat(){
+  const msgs=document.getElementById('ai-msgs');
+  if(!msgs)return;
+  msgs.innerHTML='';
+  addAIMsg('bot','Chat cleared. Hello again! I have access to all your live business data. Ask me anything about your finances, tax, or business health.');
+  toast('Chat cleared.','ok');
+}
 function initAI(){
   document.getElementById('ai-quicks').innerHTML=AI_QUICKS.map(q=>`<button class="ai-quick" onclick="sendAIQ('${q}')">${q}</button>`).join('');
   const msgs=document.getElementById('ai-msgs');
